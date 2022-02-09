@@ -16,3 +16,8 @@
 # patchwork
 *.json
 *.md
+
+
+# lkml
+*.cove
+*.mbx
