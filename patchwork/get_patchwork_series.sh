@@ -78,7 +78,7 @@ get_patchwork_series_day()
 		fi
 
 		DATE=`echo ${DAY} | sed "s/-/\//g"`
-		SUBJECT=`get_object_by_id ${ID} "name"`
+		SUBJECT=`get_object_by_id ${ID} "name" "patches[0].name"`
 		VERSION=`get_object_by_id ${ID} "version"`
 		TOTAL=`get_object_by_id ${ID} "total"`
 		AUTHOR=`get_object_by_id ${ID} "submitter.name" "submitter.email"`
@@ -87,7 +87,7 @@ get_patchwork_series_day()
 		LIST_ARCHIVE_URL=`get_object_by_id ${ID} "cover_letter.list_archive_url" "patches[0].list_archive_url"`
 
 		cd ..
-		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | ${ID} | v${VERSION} ☐☑ | [PatchWork v${VERSION},0/${TOTAL}](${LIST_ARCHIVE_URL}) |" | tee -a ${DAY}.md
+		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | ${ID} | v${VERSION} ☐☑ | [LORE v${VERSION},0/${TOTAL}](${LIST_ARCHIVE_URL}) |" | tee -a ${DAY}.md
 		DIRECTORY=`object_to_directory "${SUBJECT}"`
 		mv ${ID} ${ID}_${DIRECTORY}
 		cd ${ID}_${DIRECTORY}
