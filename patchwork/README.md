@@ -1,13 +1,17 @@
 # 1 描述
 -------
 
+
 | 脚本 | 描述 |
 |:----:|:----:|
 | get_patchwork_project.sh | 获取 patchwork 上所有的 project 列表(id 和 name 信息), 输出到 project/projects_list.md 中 |
 | get_patchwork_series.sh | 获取 patchwork 上指定 project ID(-p 指定) 上指定日期(-d 指定) 的所有提交的补丁以及补丁集合 series. 输出到对应日期的目录中. |
 
 
-# 2 get_patchwork_project.sh
+# 2 脚本使用
+-------
+
+## 2.1 get_patchwork_project.sh
 -------
 
 
@@ -108,7 +112,7 @@ cat project/projects_list.md
 |  403  |  CXL  |
 |  405  |  MPTCP  |
 
-# 3 get_patchwork_series.sh
+## 2.2 get_patchwork_series.sh
 -------
 
 ```cpp
@@ -128,3 +132,12 @@ cat 2022-01-24/2022-01-24.md
 | 2022/01/24} | Ard Biesheuvel <ardb@kernel.org> | [mm: make 'highmem' symbol ro_after_init](https://patchwork.kernel.org/project/linux-mm/patch/20220124170555.1054480-1-ardb@kernel.org/) | 607949 | v1 ☐☑ | [PatchWork v1,0/1](https://lore.kernel.org/r/20220124170555.1054480-1-ardb@kernel.org) |
 | 2022/01/24} | Zi Yan <zi.yan@sent.com> | [mm: page_alloc: avoid merging non-fallbackable pageblocks with others.](https://patchwork.kernel.org/project/linux-mm/patch/20220124175957.1261961-1-zi.yan@sent.com/) | 608000 | v1 ☐☑ | [PatchWork v1,0/1](https://lore.kernel.org/r/20220124175957.1261961-1-zi.yan@sent.com) |
 | 2022/01/24} | andrey.konovalov@linux.dev <andrey.konovalov@linux.dev> | [kasan, vmalloc, arm64: add vmalloc tagging support for SW/HW_TAGS](https://patchwork.kernel.org/project/linux-mm/cover/cover.1643047180.git.andreyknvl@google.com/) | 608001 | v6 ☐☑ | [PatchWork v6,0/39](https://lore.kernel.org/r/cover.1643047180.git.andreyknvl@google.com) |
+
+
+
+# 3 附录 PatchWork API 概述
+-------
+
+相关 API 接口, 请查阅 [PatchWork API url](https://patchwork.kernel.org/api)
+
+https://patchwork.kernel.org/api/series/?project=365&archive=both&format=json&submitter=201165
