@@ -15,12 +15,12 @@ get_series_from_file()
 	#cat ${COVER_FILE} | grep "Subject" | sed 's/Subject: //g' # sed -r 's/Subject: (.*)/\1/'
 
 	#SUBJECT=`cat ${COVER_FILE}    | grep "Subject"	    | sed -r 's/Subject: (.*)/\1/'`
-	SUBJECT=`cat ${COVER_FILE}    | grep "Subject"	    | sed -r 's/Subject: \[PATCH(.*)\] (.*)/\2/'`
+	SUBJECT=`cat ${COVER_FILE}    | grep "Subject"	    | head -n 1 | sed -r 's/Subject: \[PATCH(.*)\] (.*)/\2/'`
 
 
-	VERSION=`cat ${COVER_FILE}    | grep "Subject"      | sed -r 's/Subject:.*v([0-9]{1,}).*/\1/'`
-	CURRENT=`cat ${COVER_FILE}    | grep "Subject"      | sed -r 's/Subject: \[PATCH.*([0-9]{1,})\/([0-9]{1,})\] (.*)/\1/'`
-	TOTAL=`cat ${COVER_FILE}      | grep "Subject"      | sed -r 's/Subject: \[PATCH.*([0-9]{1,})\/([0-9]{1,})\] (.*)/\2/'`
+	VERSION=`cat ${COVER_FILE}    | grep "Subject"      | head -n 1 | sed -r 's/Subject:.*v([0-9]{1,}).*/\1/'`
+	CURRENT=`cat ${COVER_FILE}    | grep "Subject"      | head -n 1 | sed -r 's/Subject: \[PATCH.*([0-9]{1,})\/([0-9]{1,})\] (.*)/\1/'`
+	TOTAL=`cat ${COVER_FILE}      | grep "Subject"      | head -n 1 | sed -r 's/Subject: \[PATCH.*([0-9]{1,})\/([0-9]{1,})\] (.*)/\2/'`
 	if [ ${#VERSION} -gt 10 ]; then
 		VERSION="1"
 	fi
@@ -33,14 +33,14 @@ get_series_from_file()
 
 
 
-	DATE_STR=`cat ${COVER_FILE}   | grep "Date"	    | sed -r 's/Date: (.*) [-|+]([0-9]{1,}).*/\1/'`
+	DATE_STR=`cat ${COVER_FILE}   | grep "Date"	    | head -n 1 | sed -r 's/Date: (.*) [-|+]([0-9]{1,}).*/\1/'`
 	DATE_VALUE=`date -d "${DATE_STR}" +%s`
 	DATE=`date -d @${DATE_VALUE}  "+%Y/%m/%d"`
 
-	AUTHOR=`cat ${COVER_FILE}     | grep "From:"         | sed -r 's/From: (.*) <(.*)>/\1/'`
-	EMAIL=`cat ${COVER_FILE}      | grep "From:"         | sed -r 's/From: (.*) <(.*)>/\2/'`
+	AUTHOR=`cat ${COVER_FILE}     | grep "From:"        | head -n 1 | sed -r 's/From: (.*) <(.*)>/\1/'`
+	EMAIL=`cat ${COVER_FILE}      | grep "From:"        | head -n 1 | sed -r 's/From: (.*) <(.*)>/\2/'`
 
-	MESSAGE_ID=`cat ${COVER_FILE} | grep "Message-Id: " | sed -r 's/Message-Id: <(.*)>/\1/'`
+	MESSAGE_ID=`cat ${COVER_FILE} | grep "Message-Id: " | head -n 1 | sed -r 's/Message-Id: <(.*)>/\1/'`
 	WEB_URL=https://lore.kernel.org/all/${MESSAGE_ID}
 	LIST_ARCHIVE_URL=${WEB_URL}
 
