@@ -45,12 +45,12 @@ get_series_from_file()
 	LIST_ARCHIVE_URL=${WEB_URL}
 
 	echo "---"
-	echo "| 时间  | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |" | tee ${MESSAGE_ID}.md
-	echo "|:-----:|:----:|:----:|:----:|:------------:|:----:|" | tee -a ${MESSAGE_ID}.md
+	echo "| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |" | tee ${MESSAGE_ID}.md
+	echo "|:---:|:----:|:---:|:----:|:---------:|:----:|" | tee -a ${MESSAGE_ID}.md
 	if [ x"${TOTAL}" = x ]; then
-		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | ${ID} | v${VERSION} ☐☑✓ | [LORE](${LIST_ARCHIVE_URL}) |" | tee -a ${MESSAGE_ID}.md
+		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | TODO | v${VERSION} ☐☑✓ | [LORE](${LIST_ARCHIVE_URL}) |" | tee -a ${MESSAGE_ID}.md
 	else
-		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | ${ID} | v${VERSION} ☐☑✓ | [LORE v${VERSION},0/${TOTAL}](${LIST_ARCHIVE_URL}) |" | tee -a ${MESSAGE_ID}.md
+		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | TODO | v${VERSION} ☐☑✓ | [LORE v${VERSION},0/${TOTAL}](${LIST_ARCHIVE_URL}) |" | tee -a ${MESSAGE_ID}.md
 	fi
 }
 
