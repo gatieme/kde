@@ -50,7 +50,7 @@ get_series_from_file()
 	if [ x"${TOTAL}" = x ]; then
 		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | TODO | v${VERSION} ☐☑✓ | [LORE](${LIST_ARCHIVE_URL}) |" | tee -a ${MESSAGE_ID}.md
 	else
-		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | TODO | v${VERSION} ☐☑✓ | [LORE v${VERSION},0/${TOTAL}](${LIST_ARCHIVE_URL}) |" | tee -a ${MESSAGE_ID}.md
+		echo "| ${DATE} | ${AUTHOR} <${EMAIL}> | [${SUBJECT}](${WEB_URL}) | TODO | v${VERSION} ☐☑✓ | [${DATE}, LORE v${VERSION}, 0/${TOTAL}](${LIST_ARCHIVE_URL}) |" | tee -a ${MESSAGE_ID}.md
 	fi
 }
 
