@@ -7,7 +7,6 @@ import subprocess
 from tqdm import tqdm
 
 
-
 class LKML:
     def __init__(self, work_dir = None, lkml_id = None):
         # input
@@ -131,7 +130,7 @@ class LKML:
         message_id_match = re.search(r'Message-Id: <(.*)>', content)
         if message_id_match:
             self.message_id = message_id_match.group(1)
-            self.web_url = f"https://lore.kernel.org/all/{self.message_id}"
+            self.web_url = self.message_id_to_url(self.message_id)
             self.archive_url = self.web_url
         else:
             self.message_id = ""
@@ -175,6 +174,11 @@ class LKML:
         except Exception as e:
             print(f"发生错误: {e}")
 
+    def message_id_to_url(self, message_id):
+        return f"https://lore.kernel.org/all/{self.message_id}"
+
+    def url_to_message_id(self, url):
+        return f"https://lore.kernel.org/all/{self.message_id}"
 
 
 if __name__ == "__main__":

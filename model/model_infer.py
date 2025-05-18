@@ -24,12 +24,15 @@ class ModelInference:
 
     def inference(self, messages):
         self.response = self.client.chat.completions.create(
-            model = 'Qwen/Qwen3-32B',  # ModelScope Model-Id
+            #model = 'Qwen/Qwen3-32B',  # ModelScope Model-Id
+            model = 'Qwen/Qwen3-235B-A22B',  # ModelScope Model-Id
             messages = messages,
             stream = True,
             temperature = 0,    # 设置 temperature 为 0 以实现贪心解码
             top_p = 1,          # 可设置为 1，通常结合 temperature=0 可不特别关注
             #top_k = 1,          # 设置 top_k 为 1，只选择概率最高的词
+            presence_penalty = 0,
+            frequency_penalty = 0,
             extra_body = self.extra_body
         )
         answer = ""
@@ -38,26 +41,19 @@ class ModelInference:
             thinking_chunk = chunk.choices[0].delta.reasoning_content
             answer_chunk = chunk.choices[0].delta.content
             if thinking_chunk != '':
+                print(thinking_chunk, end='', flush=True)
                 answer += thinking_chunk
             elif answer_chunk != '':
+                if not done_thinking:
+                    #print('\n\n === Final Answer ===\n')
+                    done_thinking = True
+                print(answer_chunk, end='', flush=True)
                 answer += answer_chunk
         self.answer = answer
         return self.answer
 
-
     def show(self):
-        done_thinking = False
-        for chunk in self.response:
-            thinking_chunk = chunk.choices[0].delta.reasoning_content
-            answer_chunk = chunk.choices[0].delta.content
-            if thinking_chunk != '':
-                print(thinking_chunk, end='', flush=True)
-            elif answer_chunk != '':
-                if not done_thinking:
-                    print('\n\n === Final Answer ===\n')
-                    done_thinking = True
-                print(answer_chunk, end='', flush=True)
-        self.answer_chunk
+        print(self.answer)
 
     def get_answer(self):
         return self.answer
@@ -78,9 +74,16 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"发生错误: {e}")
 
+    mi = ModelInference()
+
     from model_request import ModelRequest
+
     mr = ModelRequest("summary", content)
     mr.show()
-    mi = ModelInference()
+    res = mi.inference(mr.get_messages())
+    mi.show()
+
+    mr.set_request("analysis", content)
+    mr.show()
     res = mi.inference(mr.get_messages())
     mi.show()

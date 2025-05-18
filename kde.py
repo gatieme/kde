@@ -29,14 +29,18 @@ def replace_newline_with_br(text):
     return text.replace('\n', '<br>')
 
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("请提供一个参数")
-
+def lkml_run(lkml_message_id):
     # Download LKML Message
-    lkml = LKML(work_dir = "/home/chengjian/Work/GitHub/people/kde/lkml", lkml_id = sys.argv[1])
+    print("=====================")
+    print("#Step 1: Download LKML Mesage")
+    print("=====================")
+    lkml = LKML(work_dir = "/home/chengjian/Work/GitHub/people/kde/lkml", lkml_id = lkml_message_id)
     lkml.cover_series()
+    lkml.show()
 
+    print("=====================")
+    print("#Step 2: Summary LKML Mesage")
+    print("=====================")
     # Model Request
     model_req = ModelRequest("summary", lkml.get_content())
     messages = model_req.get_messages()
@@ -44,8 +48,24 @@ if __name__ == "__main__":
     # User Qwen3 Model for Inference
     model_infer = ModelInference()
     model_infer.inference(messages)
+    #model_infer.show()
 
     summary = replace_newline_with_br(add_space_after_punctuation(chinese_to_english_punctuation(model_infer.get_answer())))
     #summary = model_infer.get_answer()
     lkml.set_summary(summary)
     lkml.show()
+
+    print("=====================")
+    print("#Step 3: Analysis LKML Mesage")
+    print("=====================")
+    model_req.set_request("analysis", lkml.get_content())
+    messages = model_req.get_messages()
+    model_infer.inference(messages)
+    #model_infer.show()
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("请提供一个参数")
+
+    lkml_run(lkml_message_id = sys.argv[1])
