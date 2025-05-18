@@ -39,10 +39,10 @@ def lkml_run(lkml_message_id):
     lkml.show()
 
     print("=====================")
-    print("#Step 2: Summary LKML Mesage")
+    print("#Step 2: Summary LKML (Cover) Message")
     print("=====================")
     # Model Request
-    model_req = ModelRequest("summary", lkml.get_content())
+    model_req = ModelRequest("summary", lkml.get_content(file_type = "cover"))
     messages = model_req.get_messages()
 
     # User Qwen3 Model for Inference
@@ -56,12 +56,21 @@ def lkml_run(lkml_message_id):
     lkml.show()
 
     print("=====================")
-    print("#Step 3: Analysis LKML Mesage")
+    print("#Step 3: Analysis LKML (Cover) Message")
     print("=====================")
-    model_req.set_request("analysis", lkml.get_content())
+    model_req.set_request("analysis", lkml.get_content(file_type = "cover"))
     messages = model_req.get_messages()
     model_infer.inference(messages)
     #model_infer.show()
+
+    print("=====================")
+    print("#Step 4: Analysis LKML (Cover and MailBox) Message")
+    print("=====================")
+    model_req.set_request("analysis", lkml.get_content(file_type = "both"))
+    messages = model_req.get_messages()
+    model_infer.inference(messages)
+    #model_infer.show()
+
 
 
 if __name__ == "__main__":

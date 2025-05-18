@@ -61,13 +61,25 @@ class LKML:
     def cover_mbx(self):
         # 列出当前目录下的文件
         cover_files = [f for f in os.listdir(self.work_folder) if f.endswith('.cover')]
-        if not cover_files:
-            cover_files = [f for f in os.listdir(self.work_folder) if f.endswith('.mbx')]
         if cover_files:
             self.cover_file = os.path.join(self.work_folder, cover_files[0])
+            print(f"Downloading Cover File: {self.cover_file}")
         else:
             self.cover_file = None
-        return self.cover_file
+
+        mbx_files = [f for f in os.listdir(self.work_folder) if f.endswith('.mbx')]
+        if mbx_files:
+            self.mbx_file = os.path.join(self.work_folder, mbx_files[0])
+            print(f"Downloading MailBox File: {self.mbx_file}")
+        else:
+            self.mbx_file = None
+
+        if self.cover_file != None:
+            return self.cover_file
+        elif self.mbx_file != None:
+            return self.mbx_file
+        else:
+            return None
 
     # 根据 cover 获取 LKML 补丁的相关信息
     def get_series(self):
@@ -157,22 +169,39 @@ class LKML:
                 md_file.write(f"| {self.date} | {self.author} <{self.email}> | [{self.subject}]({self.web_url}) | {self.summary} | v{self.version} ☐☑✓ | [{date}, LORE v{self.version}, 0/{self.total}]({self.archive_url}) |\n")
 
     def cover_series(self):
-        #self.b4_am()
-        self.cover_mbx()
+        if self.cover_mbx() != None:
+            print("Already Downloaded LKML (Cover and MailBox) Message")
+        else:
+            print("Use B4 Downloading LKML (Cover and MailBox) Message")
+            self.b4_am()
+            self.cover_mbx()
         self.get_series()
         #self.show()
 
-    def get_content(self):
-        try:
-        # 打开文件
-            with open(self.cover_file, 'r', encoding='utf-8') as file:
-                # 读取文件全部内容到字符串
-                content = file.read()
-                return content
-        except FileNotFoundError:
-            print("文件未找到，请检查文件路径。")
-        except Exception as e:
-            print(f"发生错误: {e}")
+    def get_content(self, file_type = "both"):
+        files_to_read = []
+        if file_type == "both":
+            files_to_read = [self.cover_file, self.mbx_file]
+        elif file_type == "cover":
+            files_to_read = [self.cover_file]
+        elif file_type == "mbx":
+            files_to_read = [self.mbx_file]
+        else:
+            files_to_read = [self.cover_file]
+
+        content = ""
+        for file_path in files_to_read:
+            try:
+                print("Read File ", file_path)
+                # 打开文件
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    # 读取文件全部内容到字符串
+                    content += file.read() + "\n"
+            except FileNotFoundError:
+                print("文件未找到，请检查文件路径。")
+            except Exception as e:
+                print(f"发生错误: {e}")
+        return content
 
     def message_id_to_url(self, message_id):
         return f"https://lore.kernel.org/all/{self.message_id}"
@@ -188,6 +217,8 @@ if __name__ == "__main__":
 
     lkml_1 = LKML(lkml_id = sys.argv[1])
     lkml_1.cover_series()
+    print(lkml_1.get_content("cover"))
 
     lkml_2 = LKML(work_dir = "/home/chengjian/Work/GitHub/people/kde/lkml", lkml_id = sys.argv[1])
     lkml_2.cover_series()
+    print(lkml_2.get_content("both"))
