@@ -7,7 +7,7 @@ class ModelInference:
     def __init__(self, content = None):
         self.client = OpenAI(
             base_url='https://api-inference.modelscope.cn/v1/',
-            api_key='5d37abc4-db90-4069-a1d2-d28c6760addb', # ModelScope Token
+            api_key='a51566bb-dfc8-472b-b643-f8dc265992a7', # ModelScope Token
         )
 
         # set extra_body for thinking control
@@ -18,7 +18,7 @@ class ModelInference:
             # "thinking_budget": 4096
         }
 
-        self.model = 'Qwen/Qwen3-32B',  # ModelScope Model-Id
+        self.model = 'Qwen/Qwen3-235B-A22B',  # ModelScope Model-Id
         self.response = None
         self.answer = None
 
@@ -49,6 +49,7 @@ class ModelInference:
                     done_thinking = True
                 print(answer_chunk, end='', flush=True)
                 answer += answer_chunk
+        print("\n")
         self.answer = answer
         return self.answer
 
