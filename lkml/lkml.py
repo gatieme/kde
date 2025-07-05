@@ -54,6 +54,7 @@ class LKML:
             returncode = process.wait()
             if returncode != 0:
                 print(f"命令执行失败，返回码: {returncode}")
+            assert returncode == 0, "Downloading LKML(Cover and MailBox) Failed, Please RETRY..."
         except Exception as e:
             print(f"发生错误: {e}")
 
@@ -83,7 +84,14 @@ class LKML:
 
     # 根据 cover 获取 LKML 补丁的相关信息
     def get_series(self):
-        with open(self.cover_file, 'r') as file:
+        if self.cover_file != None:
+            file_path = self.cover_file
+        elif self.mbx_file != None:
+            file_path = self.mbx_file
+        else:
+            file_path = None
+            return False
+        with open(file_path, 'r') as file:
             content = file.read()
 
         # 提取主题
@@ -148,6 +156,7 @@ class LKML:
             self.message_id = ""
             self.web_url = ""
             self.archive_url = ""
+        return True
 
     def show(self):
             print("| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |")
@@ -175,11 +184,13 @@ class LKML:
             print("Use B4 Downloading LKML (Cover and MailBox) Message")
             self.b4_am()
             self.cover_mbx()
-        self.get_series()
+        assert self.get_series() == True, "Downloading LKML(Cover and MailBox) Failed, Please RETRY..."
         #self.show()
 
     def get_content(self, file_type = "both"):
         files_to_read = []
+        if self.cover_file == None:
+            file_type = "mbx"
         if file_type == "both":
             files_to_read = [self.cover_file, self.mbx_file]
         elif file_type == "cover":

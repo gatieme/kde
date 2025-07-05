@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
+import argparse
+
 from lkml import LKML
 from model import ModelInference, ModelRequest
 
@@ -29,7 +31,7 @@ def replace_newline_with_br(text):
     return text.replace('\n', '<br>')
 
 
-def lkml_run(lkml_message_id):
+def lkml_run(lkml_message_id, level):
     # Download LKML Message
     print("=====================")
     print("#Step 1: Download LKML Mesage")
@@ -55,6 +57,9 @@ def lkml_run(lkml_message_id):
     lkml.set_summary(summary)
     lkml.show()
 
+    if level == 'simple':
+        return
+
     print("=====================")
     print("#Step 3: Analysis LKML (Cover) Message")
     print("=====================")
@@ -74,7 +79,12 @@ def lkml_run(lkml_message_id):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("请提供一个参数")
+    parser = argparse.ArgumentParser(description='执行不同级别的操作')
+    group = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument('--lkml', type=str, help='设置URL参数')
+    group.add_argument('--simple', action='store_const', dest='level', const='simple', help='简化分析补丁, 只执行 SUMMARY')
+    group.add_argument('--detail', action='store_const', dest='level', const='detail', help='详细分析补丁, 将先执行 SUMMARY, 然后对邮件 COVER 和 LETTER 分别进行总结')
+    args = parser.parse_args()
 
-    lkml_run(lkml_message_id = sys.argv[1])
+    print(args.level)
+    lkml_run(lkml_message_id = args.lkml, level = args.level)
