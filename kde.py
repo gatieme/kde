@@ -2,8 +2,7 @@
 import sys
 import argparse
 
-from lkml import LKML
-from model import ModelInference, ModelRequest
+from lkml.lkml_agent import run_lkml_agent
 
 
 def chinese_to_english_punctuation(text):
@@ -32,59 +31,90 @@ def replace_newline_with_br(text):
 
 
 def lkml_run(lkml_message_id, level):
-    # Download LKML Message
-    print("=====================")
-    print("#Step 1: Download LKML Mesage")
-    print("=====================")
-    lkml = LKML(work_dir = "/home/chengjian/Work/GitHub/people/kde/lkml", lkml_id = lkml_message_id)
-    lkml.cover_series()
-    lkml.show()
+    """运行 LKML agent 分析补丁"""
+    try:
+        run_lkml_agent(lkml_id=lkml_message_id, level=level)
+    except Exception as e:
+        print(f"运行 LKML agent 失败: {e}")
+        sys.exit(1)
 
-    print("=====================")
-    print("#Step 2: Summary LKML (Cover) Message")
-    print("=====================")
-    # Model Request
-    model_req = ModelRequest("summary", lkml.get_content(file_type = "cover"))
-    messages = model_req.get_messages()
 
-    # User Qwen3 Model for Inference
-    model_infer = ModelInference()
-    model_infer.inference(messages)
-    #model_infer.show()
+def rss_run(source=None, max_articles=None):
+    """运行 RSS agent 分析文章"""
+    try:
+        # 导入必要的模块
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), 'rss'))
 
-    summary = replace_newline_with_br(add_space_after_punctuation(chinese_to_english_punctuation(model_infer.get_answer())))
-    #summary = model_infer.get_answer()
-    lkml.set_summary(summary)
-    lkml.show()
+        # 导入整个模块
+        import rss.rss_agent as rss_agent
 
-    if level == 'simple':
-        return
+        # 设置 RSS 源
+        if source:
+            rss_agent.RSS_SOURCES = [s for s in rss_agent.ALL_RSS_SOURCES if s["name"] == source]
 
-    print("=====================")
-    print("#Step 3: Analysis LKML (Cover) Message")
-    print("=====================")
-    model_req.set_request("analysis", lkml.get_content(file_type = "cover"))
-    messages = model_req.get_messages()
-    model_infer.inference(messages)
-    #model_infer.show()
+        # 设置最大文章数
+        if max_articles:
+            rss_agent.MAX_ARTICLES = max_articles
 
-    print("=====================")
-    print("#Step 4: Analysis LKML (Cover and MailBox) Message")
-    print("=====================")
-    model_req.set_request("analysis", lkml.get_content(file_type = "both"))
-    messages = model_req.get_messages()
-    model_infer.inference(messages)
-    #model_infer.show()
+        # 构建 RSS agent
+        agent = rss_agent.build_graph()
 
+        # 初始化状态
+        initial_state = rss_agent.AgentState(messages=[
+            {"role": "system", "content": "你是一个 RSS 分析智能体，负责读取、分析和总结 LWN 和 Phoronix 的技术文章。"}
+        ])
+
+        # 运行 agent
+        result = agent.invoke(initial_state)
+
+    except Exception as e:
+        print(f"运行 RSS agent 失败: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='执行不同级别的操作')
+    import os
+    parser = argparse.ArgumentParser(description='KDE 项目入口')
+
+    # 添加互斥组，确保只能选择一种模式
     group = parser.add_mutually_exclusive_group(required=True)
-    parser.add_argument('--lkml', type=str, help='设置URL参数')
-    group.add_argument('--simple', action='store_const', dest='level', const='simple', help='简化分析补丁, 只执行 SUMMARY')
-    group.add_argument('--detail', action='store_const', dest='level', const='detail', help='详细分析补丁, 将先执行 SUMMARY, 然后对邮件 COVER 和 LETTER 分别进行总结')
+    group.add_argument('--lkml', type=str, help='指定 LKML message-id 进行分析')
+    group.add_argument('--rss', type=str, nargs='?', const='all', help='运行 RSS agent 分析技术文章，可指定源 (LWN/Phoronix)')
+
+    # 添加级别参数
+    parser.add_argument('--level', '-level', type=str, default='simple',
+                       help='对于 lkml: simple/detail; 对于 rss: 文章数量')
+
     args = parser.parse_args()
 
-    print(args.level)
-    lkml_run(lkml_message_id = args.lkml, level = args.level)
+    if args.lkml:
+        # 运行 LKML agent
+        level = args.level
+        if level not in ['simple', 'detail']:
+            level = 'simple'
+
+        print(f"运行 LKML agent (级别: {level})")
+        print(f"分析 message-id: {args.lkml}")
+        print()
+        lkml_run(lkml_message_id=args.lkml, level=level)
+    elif args.rss:
+        # 运行 RSS agent
+        source = args.rss if args.rss != 'all' else None
+
+        # 解析文章数量
+        max_articles = None
+        try:
+            max_articles = int(args.level)
+        except ValueError:
+            pass
+
+        print(f"运行 RSS agent")
+        if source:
+            print(f"源: {source}")
+        if max_articles:
+            print(f"最大文章数: {max_articles}")
+        print()
+        rss_run(source=source, max_articles=max_articles)
+
