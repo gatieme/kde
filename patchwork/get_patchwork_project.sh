@@ -16,7 +16,8 @@ get_patchwork_project()
 	do
 		ID=`echo ${project} | jq -r ".id"`
 		NAME=`echo ${project} | jq -r ".name"`
-		echo "| " $ID " | " $NAME " |" | tee -a projects_list.md
+		EMAIL=`echo ${project} | jq -r ".list_email"`
+		echo "| " $ID " | " $NAME " |" $EMAIL " |" | tee -a projects_list.md
 	done
 
 	cd ..
@@ -25,8 +26,8 @@ get_patchwork_project()
 }
 
 
-echo "| ID | PROJECT |" | tee projects_list.md
-echo "|:--:|:-------:|" | tee -a projects_list.md
+echo "| ID | PROJECT | EMAIL |" | tee projects_list.md
+echo "|:--:|:-------:|:-----:|" | tee -a projects_list.md
 
 if [ ! -d "project" ]; then
 	mkdir project
