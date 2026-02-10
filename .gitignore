@@ -16,8 +16,12 @@
 # patchwork
 *.json
 *.md
+patchwork/series/
 
 
 # lkml
 *.cove
 *.mbx
+
+# pycache
+__pycache__
