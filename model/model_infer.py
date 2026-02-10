@@ -7,7 +7,7 @@ class ModelInference:
     def __init__(self, content = None):
         self.client = OpenAI(
             base_url='https://api-inference.modelscope.cn/v1/',
-            api_key='a51566bb-dfc8-472b-b643-f8dc265992a7', # ModelScope Token
+            api_key='ms-f18d4fbb-6900-430c-b8a4-09a68e59c1cd', # ModelScope Token
         )
 
         # set extra_body for thinking control
