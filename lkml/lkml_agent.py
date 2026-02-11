@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import re
 import datetime
 import subprocess
@@ -9,6 +10,8 @@ from langgraph.graph.message import add_messages
 from typing import Annotated, List, Dict, Any, Optional
 from dataclasses import dataclass, field
 
+# 添加项目根目录到 Python 路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from model import ModelInference, ModelRequest
 
 @dataclass
@@ -278,13 +281,33 @@ def run_lkml_agent(lkml_id: str, level: str = "simple", work_dir: str = None):
     result = agent.invoke(initial_state)
     return result
 
+def parse_args():
+    """解析命令行参数"""
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="LKML 补丁分析智能体",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  python lkml_agent.py --message_id=20250621235745.3994-1-atomlin@atomlin.co --level=simple  # 简要分析
+  python lkml_agent.py --message_id=20250621235745.3994-1-atomlin@atomlin.co --level=detail  # 详细分析
+"""
+    )
+    parser.add_argument(
+        "--message_id",
+        type=str,
+        required=True,
+        help="指定 LKML 补丁的 message-id"
+    )
+    parser.add_argument(
+        "--level",
+        type=str,
+        choices=["simple", "detail"],
+        default="simple",
+        help="分析级别: simple (简要分析) 或 detail (详细分析)"
+    )
+    return parser.parse_args()
+
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print("请提供 LKML message-id")
-        sys.exit(1)
-
-    lkml_id = sys.argv[1]
-    level = sys.argv[2] if len(sys.argv) > 2 else "simple"
-
-    run_lkml_agent(lkml_id, level)
+    args = parse_args()
+    run_lkml_agent(args.message_id, args.level)
