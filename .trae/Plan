@@ -1,0 +1,111 @@
+# KDE 项目计划
+
+## 项目架构
+
+### 核心组件
+- **kde.py**: 项目主入口，负责调度不同的 agent
+- **lkml/**: LKML 补丁分析模块
+  - **lkml_agent.py**: 使用 langgraph 实现的 LKML 补丁分析 agent
+  - **lkml.py**: 原始的 LKML 补丁分析实现
+- **rss/**: RSS 文章分析模块
+  - **rss_agent.py**: 使用 langgraph 实现的 RSS 文章分析 agent
+- **model/**: 模型推理模块
+  - **model_infer.py**: 模型推理实现
+  - **model_request.py**: 模型请求构建
+- **patchwork/**: Patchwork 解析脚本
+- **cgit/**: Git 仓库解析脚本
+
+## 工作流程
+
+### LKML 补丁分析流程
+1. **获取补丁**: 使用 b4 工具下载指定 message-id 的补丁
+2. **解析信息**: 提取补丁的基本信息（作者、日期、主题、版本等）
+3. **生成摘要**: 对补丁内容进行总结
+4. **详细分析**: 在 detail 级别下对补丁进行深入分析
+5. **输出结果**: 根据级别参数输出分析结果
+
+### RSS 文章分析流程
+1. **检测保护**: 检测网站的防爬虫机制
+2. **获取订阅**: 从指定源获取 RSS 订阅
+3. **获取内容**: 下载文章完整内容
+4. **分析内容**: 分析文章内容，识别内核相关信息
+5. **生成摘要**: 为每篇文章生成摘要
+6. **输出结果**: 展示分析结果
+
+## 功能说明
+
+### 1. LKML 补丁分析
+- **命令格式**: `python3 kde.py --level=simple|detail --lkml <message-id>`
+- **参数说明**:
+  - `--level=simple`: 简单分析，仅生成摘要
+  - `--level=detail`: 详细分析，生成摘要并进行深入分析
+  - `--lkml <message-id>`: 指定要分析的 LKML 补丁 message-id
+
+### 2. RSS 文章分析
+- **命令格式**: `python3 kde.py --rss=[LWN|Phoronix] --level=<文章数量>`
+- **参数说明**:
+  - `--rss=[LWN|Phoronix]`: 指定 RSS 源，不指定则分析所有源
+  - `--level=<文章数量>`: 限制获取的文章数量
+
+## 依赖关系
+
+### 内部依赖
+- **kde.py** → **lkml/lkml_agent.py**
+- **kde.py** → **rss/rss_agent.py**
+- **lkml/lkml_agent.py** → **model/model_infer.py**
+- **lkml/lkml_agent.py** → **model/model_request.py**
+- **rss/rss_agent.py** → **model/model_infer.py**
+
+### 外部依赖
+- **b4**: 用于下载 LKML 补丁
+- **langgraph**: 用于构建状态管理和工作流
+- **feedparser**: 用于解析 RSS 订阅
+- **requests/httpx/playwright**: 用于网络请求
+- **beautifulsoup4**: 用于解析 HTML 内容
+- **openai**: 用于模型推理
+
+## 配置说明
+
+### 环境变量
+- **OPENAI_API_KEY**: OpenAI API 密钥
+- **OPENAI_BASE_URL**: OpenAI API 基础 URL
+
+### 配置文件
+- **rss/.env**: RSS agent 环境配置
+
+## 使用示例
+
+### 1. 分析 LKML 补丁
+```bash
+# 简单模式
+python3 kde.py --level=simple --lkml 20260122161647.142704-2-realwujing@gmail.com
+
+# 详细模式
+python3 kde.py --level=detail --lkml 20260122161647.142704-2-realwujing@gmail.com
+```
+
+### 2. 分析 RSS 文章
+```bash
+# 分析 LWN 源的 2 篇文章
+python3 kde.py --rss=LWN --level=2
+
+# 分析所有源的文章
+python3 kde.py --rss
+```
+
+## 扩展计划
+
+### 1. 功能扩展
+- 添加对更多 RSS 源的支持
+- 增强 LKML 补丁分析的深度
+- 添加对 Patchwork 和 cgit 脚本的集成
+
+### 2. 性能优化
+- 优化补丁下载和解析速度
+- 改进模型推理效率
+- 增加缓存机制减少重复操作
+
+### 3. 用户体验
+- 添加更多命令行选项
+- 提供更详细的输出格式
+- 支持结果导出为不同格式
