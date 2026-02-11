@@ -11,17 +11,17 @@ from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from typing import Annotated, List, Dict, Any, Optional
 from dataclasses import dataclass, field
-from openai import OpenAI
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 from urllib.parse import urljoin, urlparse
 
-load_dotenv()
+# 导入模型推理模块
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from model import ModelInference, ModelRequest
 
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    base_url=os.getenv("OPENAI_BASE_URL")
-)
+load_dotenv()
 
 ALL_RSS_SOURCES = [
     {
@@ -394,13 +394,15 @@ def generate_summary_text(article: Dict[str, Any]) -> str:
 """
 
     try:
-        response = client.chat.completions.create(
-            model="Qwen/Qwen3-235B-A22B",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=400,
-            temperature=0.3
-        )
-        return response.choices[0].message.content.strip()
+        # 使用 ModelRequest 构建请求
+        model_req = ModelRequest("summary", prompt)
+        messages = model_req.get_messages()
+
+        # 使用 ModelInference 进行推理
+        model_infer = ModelInference()
+        model_infer.inference(messages)
+
+        return model_infer.get_answer().strip()
     except Exception as e:
         print(f"    API 调用失败: {e}")
         return f"{title[:100]}..."
