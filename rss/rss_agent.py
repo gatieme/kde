@@ -2,6 +2,7 @@
 
 import os
 import sys
+import datetime
 import feedparser
 import requests
 import httpx
@@ -68,7 +69,8 @@ def detect_protection(state: AgentState) -> AgentState:
         print(f"  结果: {result['status']}")
         if result.get("method_used"):
             print(f"  可用方法: {result['method_used']}")
-        print()
+        else:
+            print(f"  无可用方法!!!")
 
     state.protection_info = protection_info
     state.messages.append({"role": "system", "content": f"防爬虫检测完成: {protection_info}"})
@@ -157,13 +159,99 @@ def fetch_with_httpx(url: str, check_only: bool = False) -> Optional[str]:
 
 def fetch_with_playwright(url: str, check_only: bool = False) -> Optional[str]:
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, slow_mo=100)
-        page = browser.new_page()
-        page.set_viewport_size({"width": 1920, "height": 1080})
-        page.goto(url, timeout=15000)
-        page.wait_for_load_state("domcontentloaded", timeout=15000)
-        page.wait_for_timeout(2000)
+        # 使用更真实的浏览器配置
+        browser = p.chromium.launch(
+            headless=False,  # 尝试使用非无头模式，有些网站对无头浏览器限制更严格
+            slow_mo=300,  # 增加延迟，更接近人类操作
+            args=[
+                "--disable-blink-features=AutomationControlled",  # 禁用自动化控制标记
+                "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "--disable-extensions",
+                "--disable-dev-shm-usage",
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-accelerated-2d-canvas",
+                "--no-first-run",
+                "--no-zygote",
+                "--disable-gpu"
+            ]
+        )
+
+        # 创建浏览器上下文，添加更多真实特征
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            viewport={"width": 1920, "height": 1080},
+            permissions=["geolocation", "notifications"],
+            geolocation={"latitude": 37.7749, "longitude": -122.4194},
+            locale="en-US",
+            timezone_id="America/New_York",
+            color_scheme="light",
+            reduced_motion="no-preference",
+            # 添加一些默认的 cookies，模拟已访问过网站
+            storage_state={
+                "cookies": [
+                    {
+                        "name": "visited",
+                        "value": "true",
+                        "domain": ".phoronix.com",
+                        "path": "/",
+                        "expires": int((datetime.datetime.now() + datetime.timedelta(days=30)).timestamp()),
+                        "httpOnly": False,
+                        "secure": False,
+                        "sameSite": "Lax"
+                    }
+                ],
+                "origins": [
+                    {
+                        "origin": "https://www.phoronix.com",
+                        "localStorage": [
+                            {
+                                "name": "user_preferences",
+                                "value": '{"theme": "light", "notifications": false}'
+                            }
+                        ]
+                    }
+                ]
+            }
+        )
+
+        page = context.new_page()
+
+        # 模拟真实用户的浏览行为
+        # 1. 先访问一个常见网站，建立浏览历史
+        page.goto("https://www.google.com", timeout=30000)
+        page.wait_for_load_state("networkidle", timeout=30000)
+        page.wait_for_timeout(1000)
+
+        # 2. 然后访问目标网站
+        page.goto(url, timeout=30000)
+
+        # 3. 等待页面完全加载，包括可能的验证码
+        page.wait_for_load_state("networkidle", timeout=30000)
+
+        # 4. 模拟鼠标移动和滚动
+        page.mouse.move(100, 100)
+        page.wait_for_timeout(500)
+        page.mouse.wheel(0, 200)
+        page.wait_for_timeout(500)
+        page.mouse.wheel(0, 200)
+        page.wait_for_timeout(500)
+
+        # 5. 检查是否有验证码
+        if "captcha" in page.content().lower() or "verify" in page.content().lower() or "please wait" in page.content().lower():
+            print("检测到验证码或验证页面，尝试等待...")
+            # 等待更长时间，可能需要手动干预
+            page.wait_for_timeout(10000)
+            # 再次滚动页面
+            page.mouse.wheel(0, 200)
+            page.wait_for_timeout(2000)
+
         content = page.content()
+
+        # 6. 打印页面标题，以便调试
+        print(f"页面标题: {page.title()}")
+
+        context.close()
         browser.close()
         return content
 
@@ -261,11 +349,36 @@ def fetch_article_content(state: AgentState) -> AgentState:
                         soup = BeautifulSoup(response.content, "html.parser")
                 elif method == "playwright":
                     with sync_playwright() as p:
-                        browser = p.chromium.launch(headless=True)
-                        page = browser.new_page()
-                        page.goto(article["link"], timeout=15000)
-                        page.wait_for_load_state("domcontentloaded", timeout=15000)
+                        # 使用更真实的浏览器配置
+                        browser = p.chromium.launch(
+                            headless=True,
+                            slow_mo=200,  # 增加延迟，更接近人类操作
+                            args=[
+                                "--disable-blink-features=AutomationControlled",  # 禁用自动化控制标记
+                                "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                            ]
+                        )
+
+                        context = browser.new_context(
+                            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                            viewport={"width": 1920, "height": 1080},
+                            permissions=["geolocation"],
+                            geolocation={"latitude": 37.7749, "longitude": -122.4194},
+                            locale="en-US",
+                            timezone_id="America/New_York"
+                        )
+
+                        page = context.new_page()
+                        page.goto(article["link"], timeout=30000)
+                        page.wait_for_load_state("networkidle", timeout=30000)
+
+                        # 检查是否有验证码
+                        if "captcha" in page.content().lower() or "verify" in page.content().lower():
+                            print("检测到验证码，尝试等待用户交互...")
+                            page.wait_for_timeout(5000)
+
                         soup = BeautifulSoup(page.content(), "html.parser")
+                        context.close()
                         browser.close()
 
                 article_body = soup.find("div", class_="content")
