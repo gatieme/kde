@@ -197,7 +197,14 @@ def run_lkml_analysis(state: CGitAgentState) -> CGitAgentState:
                 message_id = message_id_match.group(1)
                 print(f"从 Lore 链接提取 message-id: {message_id}")
                 # 运行 LKML 代理分析
-                run_lkml_agent(lkml_id=message_id, level=state.level)
+                try:
+                    print("尝试运行 LKML 代理...")
+                    run_lkml_agent(lkml_id=message_id, level=state.level)
+                    print("LKML 代理运行成功")
+                except Exception as e:
+                    print(f"运行 LKML 代理失败: {e}")
+                    import traceback
+                    traceback.print_exc()
             else:
                 # 格式2: https://patch.msgid.link/20260114130528.GB831285@noisy.programming.kicks-ass.net
                 msgid_match = re.search(r'https?://[^/]+/(.*)', state.patchset_link)
@@ -205,19 +212,35 @@ def run_lkml_analysis(state: CGitAgentState) -> CGitAgentState:
                     message_id = msgid_match.group(1)
                     print(f"从补丁链接提取 message-id: {message_id}")
                     # 运行 LKML 代理分析
-                    run_lkml_agent(lkml_id=message_id, level=state.level)
+                    try:
+                        print("尝试运行 LKML 代理...")
+                        run_lkml_agent(lkml_id=message_id, level=state.level)
+                        print("LKML 代理运行成功")
+                    except Exception as e:
+                        print(f"运行 LKML 代理失败: {e}")
+                        import traceback
+                        traceback.print_exc()
                 else:
                     # 尝试直接使用链接作为 message-id
                     print(f"尝试直接使用链接作为 message-id: {state.patchset_link}")
                     try:
+                        print("尝试运行 LKML 代理...")
                         run_lkml_agent(lkml_id=state.patchset_link, level=state.level)
+                        print("LKML 代理运行成功")
                     except Exception as e:
                         print(f"直接使用链接失败: {e}")
+                        import traceback
+                        traceback.print_exc()
                         print("无法从 patchset 链接提取 message-id")
+        else:
+            print("没有 patchset 链接，跳过 LKML 代理分析")
 
     except Exception as e:
         print(f"运行 LKML 代理失败: {e}")
+        import traceback
+        traceback.print_exc()
 
+    print("\n=== LKML 代理分析完成 ===\n")
     return state
 
 def output_results(state: CGitAgentState) -> CGitAgentState:
@@ -227,11 +250,21 @@ def output_results(state: CGitAgentState) -> CGitAgentState:
     print(f"分析级别: {state.level}")
     print()
 
-    # 打印基本信息
-    print("| 时间 | 作者 | 特性 | 描述 | 链接 |")
-    print("|:---:|:----:|:---:|:----:|:----:|")
+    # 打印 Markdown 表格（与原始脚本格式一致）
+    print("---")
+    print("| 时间  | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |")
+    print("|:-----:|:----:|:----:|:----:|:------------:|:----:|")
 
-    print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {state.summary} | [CGIT]({state.web_url}) |")
+    # 提取版本信息（如果有）
+    version = "1"
+    version_match = re.search(r'Subject:.*v([0-9]{1,}).*', state.content)
+    if version_match:
+        version = version_match.group(1)
+        if len(version) > 10:
+            version = "1"
+
+    # 打印表格行
+    print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {state.summary} | v{version} ☐☑✓ | [CGIT]({state.web_url}) |")
 
     # 如果是 detail 级别，打印详细分析
     if state.level == "detail" and state.analysis:
