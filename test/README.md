@@ -1,0 +1,114 @@
+# 测试目录
+
+## 测试脚本说明
+
+本目录包含测试脚本，用于测试 KDE 项目中所有可能的命令组合及其正确性。
+
+### 测试脚本
+
+- **test_all_commands.py** - 测试所有命令组合的 Python 脚本
+- **test.sh** - 测试所有命令组合的 Bash 脚本
+- **test_lkml.sh** - LKML agent 专项测试脚本
+- **test_rss.sh** - RSS agent 专项测试脚本
+- **test_all.sh** - 一键式运行所有测试脚本的总脚本
+
+## 测试内容
+
+### 1. LKML 相关测试
+
+- **LKML 简单模式测试（通过 kde.py）** - 通过 kde.py 测试 LKML agent 的简单模式分析
+- **LKML 详细模式测试（通过 kde.py）** - 通过 kde.py 测试 LKML agent 的详细模式分析
+- **LKML 简单模式测试（直接调用）** - 直接调用 lkml_agent.py 测试简单模式分析
+- **LKML 详细模式测试（直接调用）** - 直接调用 lkml_agent.py 测试详细模式分析
+
+### 2. RSS 相关测试
+
+- **RSS 所有源测试** - 测试 RSS agent 分析所有源的文章
+- **RSS LWN 源测试** - 测试 RSS agent 分析 LWN 源的文章
+- **RSS Phoronix 源测试** - 测试 RSS agent 分析 Phoronix 源的文章
+- **RSS LWN 源限制文章数测试** - 测试 RSS agent 分析 LWN 源的 2 篇文章
+- **RSS Phoronix 源限制文章数测试** - 测试 RSS agent 分析 Phoronix 源的 3 篇文章
+- **RSS agent 帮助信息测试** - 测试 RSS agent 的帮助信息显示
+
+### 3. 帮助信息测试
+
+- **帮助信息测试** - 测试显示帮助信息
+
+## 使用方法
+
+### 运行所有测试
+
+#### 使用 Python 脚本：
+
+```bash
+cd test
+python3 test_all_commands.py
+```
+
+#### 使用 Bash 脚本：
+
+```bash
+cd test
+chmod +x test.sh
+./test.sh
+```
+
+#### 使用一键式总测试脚本：
+
+```bash
+cd test
+chmod +x test_all.sh test_lkml.sh test_rss.sh
+./test_all.sh
+```
+
+### 运行专项测试
+
+#### 运行 LKML agent 专项测试：
+
+```bash
+cd test
+chmod +x test_lkml.sh
+./test_lkml.sh
+```
+
+#### 运行 RSS agent 专项测试：
+
+```bash
+cd test
+chmod +x test_rss.sh
+./test_rss.sh
+```
+
+### 运行单个测试
+
+如果需要运行单个测试，可以修改 `test_all_commands.py` 文件，注释掉不需要的测试命令，然后运行脚本。
+
+## 测试结果说明
+
+测试脚本会为每个测试命令显示以下信息：
+
+- 测试名称和描述
+- 执行的命令
+- 执行时间
+- 返回码
+- 标准输出和标准错误
+
+测试通过会显示 `✓ 测试通过!`，测试失败会显示 `✗ 测试失败!`，测试异常会显示 `✗ 测试异常:`。
+
+## 注意事项
+
+1. **网络连接** - 测试需要网络连接，因为需要下载补丁和文章内容
+2. **API 密钥** - 确保 `.env` 文件中配置了正确的 API 密钥
+3. **执行时间** - 完整测试可能需要较长时间，因为需要下载和分析多个补丁和文章
+4. **请求频率** - 测试脚本会在每个测试之间添加 2 秒的间隔，以避免请求过于频繁
+
+## 故障排除
+
+如果测试失败，可以检查以下几点：
+
+1. 确保所有依赖已安装
+2. 确保 `.env` 文件配置正确
+3. 确保网络连接正常
+4. 确保 b4 工具已安装（用于 LKML 测试）
+
+如果问题仍然存在，可以查看测试输出中的详细错误信息。

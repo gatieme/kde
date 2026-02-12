@@ -15,7 +15,6 @@
 
 # patchwork
 *.json
-*.md
 patchwork/series/
 
 
