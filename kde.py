@@ -3,6 +3,7 @@ import sys
 import argparse
 
 from lkml.lkml_agent import run_lkml_agent
+from cgit.cgit_agent import run_cgit_agent
 
 
 def chinese_to_english_punctuation(text):
@@ -74,6 +75,15 @@ def rss_run(source=None, max_articles=None):
         sys.exit(1)
 
 
+def cgit_run(commit_id, level):
+    """运行 CGit agent 分析 commit"""
+    try:
+        run_cgit_agent(commit_id=commit_id, level=level)
+    except Exception as e:
+        print(f"运行 CGit agent 失败: {e}")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     import os
     parser = argparse.ArgumentParser(description='KDE 项目入口')
@@ -82,6 +92,7 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--lkml', type=str, help='指定 LKML message-id 进行分析')
     group.add_argument('--rss', type=str, nargs='?', const='all', help='运行 RSS agent 分析技术文章，可指定源 (LWN/Phoronix)')
+    group.add_argument('--cgit', type=str, help='指定 Linux 内核 commit ID 进行分析')
 
     # 添加级别参数
     parser.add_argument('--level', '-level', type=str, default='simple',
@@ -117,4 +128,14 @@ if __name__ == "__main__":
             print(f"最大文章数: {max_articles}")
         print()
         rss_run(source=source, max_articles=max_articles)
+    elif args.cgit:
+        # 运行 CGit agent
+        level = args.level
+        if level not in ['simple', 'detail']:
+            level = 'simple'
+
+        print(f"运行 CGit agent (级别: {level})")
+        print(f"分析 commit ID: {args.cgit}")
+        print()
+        cgit_run(commit_id=args.cgit, level=level)
 
