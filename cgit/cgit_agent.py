@@ -134,7 +134,7 @@ def analyze_commit(state: CGitAgentState) -> CGitAgentState:
         model_req = ModelRequest("summary", state.content)
         messages = model_req.get_messages()
 
-        model_infer = ModelInference()
+        model_infer = ModelInference(verbose=state.verbose)
         model_infer.inference(messages)
 
         state.summary = model_infer.get_answer()
@@ -149,7 +149,7 @@ def analyze_commit(state: CGitAgentState) -> CGitAgentState:
             model_req = ModelRequest("analysis", state.content)
             messages = model_req.get_messages()
 
-            model_infer = ModelInference()
+            model_infer = ModelInference(verbose=state.verbose)
             model_infer.inference(messages)
 
             state.analysis = model_infer.get_answer()

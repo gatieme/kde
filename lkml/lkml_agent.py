@@ -183,7 +183,7 @@ def analyze_patch(state: LKMLAgentState) -> LKMLAgentState:
             model_req = ModelRequest("analysis", cover_content)
             messages = model_req.get_messages()
 
-            model_infer = ModelInference()
+            model_infer = ModelInference(verbose=state.verbose)
             model_infer.inference(messages)
 
             state.analysis = model_infer.get_answer()
@@ -204,7 +204,7 @@ def analyze_patch(state: LKMLAgentState) -> LKMLAgentState:
             model_req.set_request("analysis", combined_content)
             messages = model_req.get_messages()
 
-            model_infer = ModelInference()
+            model_infer = ModelInference(verbose=state.verbose)
             model_infer.inference(messages)
 
             if state.verbose >= 2:
@@ -236,7 +236,7 @@ def generate_summary(state: LKMLAgentState) -> LKMLAgentState:
         model_req = ModelRequest("summary", content_to_analyze)
         messages = model_req.get_messages()
 
-        model_infer = ModelInference()
+        model_infer = ModelInference(verbose=state.verbose)
         model_infer.inference(messages)
 
         state.summary = model_infer.get_answer()

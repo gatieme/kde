@@ -513,12 +513,13 @@ def generate_summary_text(article: Dict[str, Any]) -> str:
         messages = model_req.get_messages()
 
         # 使用 ModelInference 进行推理
-        model_infer = ModelInference()
+        model_infer = ModelInference(verbose=VERBOSE)
         model_infer.inference(messages)
 
         return model_infer.get_answer().strip()
     except Exception as e:
-        print(f"    API 调用失败: {e}")
+        if VERBOSE >= 2:
+            print(f"    API 调用失败: {e}")
         return f"{title[:100]}..."
 
 def output_results(state: AgentState) -> AgentState:

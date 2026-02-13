@@ -4,7 +4,7 @@ from openai import OpenAI
 
 
 class ModelInference:
-    def __init__(self, content = None):
+    def __init__(self, content = None, verbose=0):
         self.client = OpenAI(
             base_url='https://api-inference.modelscope.cn/v1/',
             api_key='ms-f18d4fbb-6900-430c-b8a4-09a68e59c1cd', # ModelScope Token
@@ -21,8 +21,13 @@ class ModelInference:
         self.model = 'Qwen/Qwen3-235B-A22B',  # ModelScope Model-Id
         self.response = None
         self.answer = None
+        self.verbose = verbose
 
     def inference(self, messages):
+        # 根据 verbose 级别决定是否显示模型思考中
+        if self.verbose < 2:
+            print("模型思考中...")
+
         self.response = self.client.chat.completions.create(
             #model = 'Qwen/Qwen3-32B',  # ModelScope Model-Id
             model = 'Qwen/Qwen3-235B-A22B',  # ModelScope Model-Id
@@ -41,15 +46,18 @@ class ModelInference:
             thinking_chunk = chunk.choices[0].delta.reasoning_content
             answer_chunk = chunk.choices[0].delta.content
             if thinking_chunk != '':
-                print(thinking_chunk, end='', flush=True)
+                if self.verbose >= 2:
+                    print(thinking_chunk, end='', flush=True)
                 answer += thinking_chunk
             elif answer_chunk != '':
                 if not done_thinking:
                     #print('\n\n === Final Answer ===\n')
                     done_thinking = True
-                print(answer_chunk, end='', flush=True)
+                if self.verbose >= 2:
+                    print(answer_chunk, end='', flush=True)
                 answer += answer_chunk
-        print("\n")
+        if self.verbose >= 2:
+            print("\n")
         self.answer = answer
         return self.answer
 
