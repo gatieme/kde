@@ -34,9 +34,11 @@ class LKMLAgentState:
     summary: str = "TODO"
     content: str = ""
     analysis: str = ""
+    verbose: int = 0
 
 def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
-    print("=== 下载 LKML 补丁 ===\n")
+    if state.verbose >= 2:
+        print("=== 下载 LKML 补丁 ===\n")
 
     # 创建工作目录
     if not state.work_dir:
@@ -52,12 +54,18 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
         command = ["b4", "am", state.lkml_id]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
-        for line in process.stdout:
-            print(line, end='')
+        if state.verbose >= 3:
+            for line in process.stdout:
+                print(line, end='')
+        else:
+            # 静默执行，只捕获返回码
+            output = process.communicate()[0]
 
         returncode = process.wait()
         if returncode != 0:
             print(f"命令执行失败，返回码: {returncode}")
+            if state.verbose >= 3:
+                print(output)
             raise Exception(f"下载补丁失败，返回码: {returncode}")
 
         # 查找下载的文件
@@ -67,11 +75,13 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
 
         if cover_files:
             state.cover_file = os.path.join(state.work_dir, cover_files[0])
-            print(f"找到 Cover 文件: {state.cover_file}")
+            if state.verbose >= 2:
+                print(f"找到 Cover 文件: {state.cover_file}")
 
         if mbx_files:
             state.mbx_file = os.path.join(state.work_dir, mbx_files[0])
-            print(f"找到 MailBox 文件: {state.mbx_file}")
+            if state.verbose >= 2:
+                print(f"找到 MailBox 文件: {state.mbx_file}")
 
     finally:
         # 恢复原目录
@@ -80,7 +90,8 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
     return state
 
 def parse_patch(state: LKMLAgentState) -> LKMLAgentState:
-    print("=== 解析补丁信息 ===\n")
+    if state.verbose >= 2:
+        print("=== 解析补丁信息 ===\n")
 
     # 选择要解析的文件
     file_to_parse = state.cover_file if state.cover_file else state.mbx_file
@@ -138,13 +149,14 @@ def parse_patch(state: LKMLAgentState) -> LKMLAgentState:
         # 提取内容
         state.content = content
 
-        print(f"作者: {state.author} <{state.email}>")
-        print(f"日期: {state.date}")
-        print(f"主题: {state.subject}")
-        print(f"版本: v{state.version}")
-        if state.total:
-            print(f"补丁: {state.current}/{state.total}")
-        print(f"链接: {state.web_url}")
+        if state.verbose >= 2:
+            print(f"作者: {state.author} <{state.email}>")
+            print(f"日期: {state.date}")
+            print(f"主题: {state.subject}")
+            print(f"版本: v{state.version}")
+            if state.total:
+                print(f"补丁: {state.current}/{state.total}")
+            print(f"链接: {state.web_url}")
 
     except Exception as e:
         print(f"解析补丁失败: {e}")
@@ -153,7 +165,8 @@ def parse_patch(state: LKMLAgentState) -> LKMLAgentState:
     return state
 
 def analyze_patch(state: LKMLAgentState) -> LKMLAgentState:
-    print("=== 分析补丁内容 ===\n")
+    if state.verbose >= 2:
+        print("=== 分析补丁内容 ===\n")
 
     # 只有 detail 级别才进行详细分析
     if state.level != "detail":
@@ -162,7 +175,8 @@ def analyze_patch(state: LKMLAgentState) -> LKMLAgentState:
     try:
         # 分析 cover 文件
         if state.cover_file:
-            print("分析 Cover 文件...")
+            if state.verbose >= 2:
+                print("分析 Cover 文件...")
             with open(state.cover_file, 'r', encoding='utf-8') as file:
                 cover_content = file.read()
 
@@ -173,11 +187,13 @@ def analyze_patch(state: LKMLAgentState) -> LKMLAgentState:
             model_infer.inference(messages)
 
             state.analysis = model_infer.get_answer()
-            print("Cover 文件分析完成")
+            if state.verbose >= 2:
+                print("Cover 文件分析完成")
 
         # 分析 cover 和 mailbox
         if state.cover_file and state.mbx_file:
-            print("\n分析 Cover 和 MailBox 文件...")
+            if state.verbose >= 2:
+                print("\n分析 Cover 和 MailBox 文件...")
             with open(state.cover_file, 'r', encoding='utf-8') as file:
                 cover_content = file.read()
 
@@ -191,7 +207,8 @@ def analyze_patch(state: LKMLAgentState) -> LKMLAgentState:
             model_infer = ModelInference()
             model_infer.inference(messages)
 
-            print("Cover 和 MailBox 文件分析完成")
+            if state.verbose >= 2:
+                print("Cover 和 MailBox 文件分析完成")
 
     except Exception as e:
         print(f"分析补丁失败: {e}")
@@ -199,7 +216,8 @@ def analyze_patch(state: LKMLAgentState) -> LKMLAgentState:
     return state
 
 def generate_summary(state: LKMLAgentState) -> LKMLAgentState:
-    print("=== 生成补丁摘要 ===\n")
+    if state.verbose >= 2:
+        print("=== 生成补丁摘要 ===\n")
 
     try:
         # 选择要分析的文件内容
@@ -222,8 +240,9 @@ def generate_summary(state: LKMLAgentState) -> LKMLAgentState:
         model_infer.inference(messages)
 
         state.summary = model_infer.get_answer()
-        print("摘要生成完成")
-        print(f"摘要: {state.summary[:100]}...")
+        if state.verbose >= 2:
+            print("摘要生成完成")
+            print(f"摘要: {state.summary[:100]}...")
 
     except Exception as e:
         print(f"生成摘要失败: {e}")
@@ -232,7 +251,8 @@ def generate_summary(state: LKMLAgentState) -> LKMLAgentState:
     return state
 
 def output_results(state: LKMLAgentState) -> LKMLAgentState:
-    print("=== 输出结果 ===\n")
+    if state.verbose >= 2:
+        print("=== 输出结果 ===\n")
 
     # 打印基本信息
     print("| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |")
@@ -245,8 +265,10 @@ def output_results(state: LKMLAgentState) -> LKMLAgentState:
 
     # 如果是 detail 级别，打印详细分析
     if state.level == "detail" and state.analysis:
-        print("\n=== 详细分析 ===\n")
-        print(state.analysis)
+        if state.verbose >= 2:
+            print("\n=== 详细分析 ===\n")
+        if state.verbose >= 3:
+            print(state.analysis)
 
     return state
 
@@ -268,14 +290,15 @@ def build_lkml_agent():
 
     return workflow.compile()
 
-def run_lkml_agent(lkml_id: str, level: str = "simple", work_dir: str = None):
+def run_lkml_agent(lkml_id: str, level: str = "simple", work_dir: str = None, verbose: int = 0):
     agent = build_lkml_agent()
 
     initial_state = LKMLAgentState(
         messages=[{"role": "system", "content": "你是一个 LKML 补丁分析智能体，负责下载、解析和分析 Linux 内核邮件列表中的补丁。"}],
         lkml_id=lkml_id,
         level=level,
-        work_dir=work_dir
+        work_dir=work_dir,
+        verbose=verbose
     )
 
     result = agent.invoke(initial_state)

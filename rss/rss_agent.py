@@ -39,6 +39,7 @@ ALL_RSS_SOURCES = [
 
 RSS_SOURCES = ALL_RSS_SOURCES.copy()
 MAX_ARTICLES = None
+VERBOSE = 0
 
 @dataclass
 class AgentState:

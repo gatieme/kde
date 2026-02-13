@@ -32,9 +32,11 @@ class CGitAgentState:
     analysis: str = ""
     patchset_link: str = ""
     has_patchset: bool = False
+    verbose: int = 0
 
 def fetch_commit(state: CGitAgentState) -> CGitAgentState:
-    print("=== 下载 commit 信息 ===\n")
+    if state.verbose >= 2:
+        print("=== 下载 commit 信息 ===\n")
 
     # 创建工作目录
     if not state.work_dir:
@@ -53,15 +55,22 @@ def fetch_commit(state: CGitAgentState) -> CGitAgentState:
         command = ["wget", commit_url, "-O", state.commit_id]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
-        for line in process.stdout:
-            print(line, end='')
+        if state.verbose >= 3:
+            for line in process.stdout:
+                print(line, end='')
+        else:
+            # 静默执行，只捕获返回码
+            output = process.communicate()[0]
 
         returncode = process.wait()
         if returncode != 0:
             print(f"命令执行失败，返回码: {returncode}")
+            if state.verbose >= 3:
+                print(output)
             raise Exception(f"下载 commit 失败，返回码: {returncode}")
 
-        print(f"成功下载 commit: {state.commit_id}")
+        if state.verbose >= 2:
+            print(f"成功下载 commit: {state.commit_id}")
 
     finally:
         # 恢复原目录
@@ -70,7 +79,8 @@ def fetch_commit(state: CGitAgentState) -> CGitAgentState:
     return state
 
 def parse_commit(state: CGitAgentState) -> CGitAgentState:
-    print("=== 解析 commit 信息 ===\n")
+    if state.verbose >= 2:
+        print("=== 解析 commit 信息 ===\n")
 
     if not state.commit_file:
         raise Exception("没有找到可解析的 commit 文件")
@@ -103,10 +113,11 @@ def parse_commit(state: CGitAgentState) -> CGitAgentState:
         # 提取内容
         state.content = content
 
-        print(f"作者: {state.author} <{state.email}>")
-        print(f"日期: {state.date}")
-        print(f"主题: {state.subject}")
-        print(f"链接: {state.web_url}")
+        if state.verbose >= 2:
+            print(f"作者: {state.author} <{state.email}>")
+            print(f"日期: {state.date}")
+            print(f"主题: {state.subject}")
+            print(f"链接: {state.web_url}")
 
     except Exception as e:
         print(f"解析 commit 失败: {e}")
@@ -115,7 +126,8 @@ def parse_commit(state: CGitAgentState) -> CGitAgentState:
     return state
 
 def analyze_commit(state: CGitAgentState) -> CGitAgentState:
-    print("=== 分析 commit 内容 ===\n")
+    if state.verbose >= 2:
+        print("=== 分析 commit 内容 ===\n")
 
     try:
         # 生成摘要
@@ -126,12 +138,14 @@ def analyze_commit(state: CGitAgentState) -> CGitAgentState:
         model_infer.inference(messages)
 
         state.summary = model_infer.get_answer()
-        print("摘要生成完成")
-        print(f"摘要: {state.summary[:100]}...")
+        if state.verbose >= 2:
+            print("摘要生成完成")
+            print(f"摘要: {state.summary[:100]}...")
 
         # 只有 detail 级别才进行详细分析
         if state.level == "detail":
-            print("进行详细分析...")
+            if state.verbose >= 2:
+                print("进行详细分析...")
             model_req = ModelRequest("analysis", state.content)
             messages = model_req.get_messages()
 
@@ -139,7 +153,8 @@ def analyze_commit(state: CGitAgentState) -> CGitAgentState:
             model_infer.inference(messages)
 
             state.analysis = model_infer.get_answer()
-            print("详细分析完成")
+            if state.verbose >= 2:
+                print("详细分析完成")
 
     except Exception as e:
         print(f"分析 commit 失败: {e}")
@@ -148,7 +163,8 @@ def analyze_commit(state: CGitAgentState) -> CGitAgentState:
     return state
 
 def check_patchset(state: CGitAgentState) -> CGitAgentState:
-    print("=== 检查 patchset 链接 ===\n")
+    if state.verbose >= 2:
+        print("=== 检查 patchset 链接 ===\n")
 
     try:
         # 从 commit 内容中提取 Link 字段（支持带尖括号和不带尖括号两种格式）
@@ -156,25 +172,30 @@ def check_patchset(state: CGitAgentState) -> CGitAgentState:
         if link_match:
             state.patchset_link = link_match.group(1)
             state.has_patchset = True
-            print(f"找到 patchset 链接: {state.patchset_link}")
+            if state.verbose >= 2:
+                print(f"找到 patchset 链接: {state.patchset_link}")
         else:
             # 尝试从其他字段中提取
-            print("未找到 Link 字段，尝试从其他字段提取...")
+            if state.verbose >= 2:
+                print("未找到 Link 字段，尝试从其他字段提取...")
             # 检查是否有 Lore 链接
             lore_match = re.search(r'https?://lore\.kernel\.org/.*', state.content)
             if lore_match:
                 state.patchset_link = lore_match.group(0)
                 state.has_patchset = True
-                print(f"找到 Lore 链接: {state.patchset_link}")
+                if state.verbose >= 2:
+                    print(f"找到 Lore 链接: {state.patchset_link}")
             else:
                 # 检查是否有其他类型的补丁链接
                 other_match = re.search(r'https?://.*patch.*', state.content)
                 if other_match:
                     state.patchset_link = other_match.group(0)
                     state.has_patchset = True
-                    print(f"找到其他补丁链接: {state.patchset_link}")
+                    if state.verbose >= 2:
+                        print(f"找到其他补丁链接: {state.patchset_link}")
                 else:
-                    print("未找到 patchset 链接")
+                    if state.verbose >= 2:
+                        print("未找到 patchset 链接")
                     state.has_patchset = False
 
     except Exception as e:
@@ -184,71 +205,91 @@ def check_patchset(state: CGitAgentState) -> CGitAgentState:
     return state
 
 def run_lkml_analysis(state: CGitAgentState) -> CGitAgentState:
-    print("=== 运行 LKML 代理分析 patchset ===\n")
+    if state.verbose >= 2:
+        print("=== 运行 LKML 代理分析 patchset ===\n")
 
     try:
         if state.has_patchset and state.patchset_link:
-            print(f"使用 {state.level} 级别分析 patchset")
-            
+            if state.verbose >= 2:
+                print(f"使用 {state.level} 级别分析 patchset")
+
             # 从 patchset 链接中提取 message-id
             # 格式1: https://lore.kernel.org/all/20250621235745.3994-1-atomlin@atomlin.co
             message_id_match = re.search(r'https?://lore\.kernel\.org/all/(.*)', state.patchset_link)
             if message_id_match:
                 message_id = message_id_match.group(1)
-                print(f"从 Lore 链接提取 message-id: {message_id}")
+                if state.verbose >= 2:
+                    print(f"从 Lore 链接提取 message-id: {message_id}")
                 # 运行 LKML 代理分析
                 try:
-                    print("尝试运行 LKML 代理...")
-                    run_lkml_agent(lkml_id=message_id, level=state.level)
-                    print("LKML 代理运行成功")
+                    if state.verbose >= 2:
+                        print("尝试运行 LKML 代理...")
+                    run_lkml_agent(lkml_id=message_id, level=state.level, verbose=state.verbose)
+                    if state.verbose >= 2:
+                        print("LKML 代理运行成功")
                 except Exception as e:
                     print(f"运行 LKML 代理失败: {e}")
-                    import traceback
-                    traceback.print_exc()
+                    if state.verbose >= 3:
+                        import traceback
+                        traceback.print_exc()
             else:
                 # 格式2: https://patch.msgid.link/20260114130528.GB831285@noisy.programming.kicks-ass.net
                 msgid_match = re.search(r'https?://[^/]+/(.*)', state.patchset_link)
                 if msgid_match:
                     message_id = msgid_match.group(1)
-                    print(f"从补丁链接提取 message-id: {message_id}")
+                    if state.verbose >= 2:
+                        print(f"从补丁链接提取 message-id: {message_id}")
                     # 运行 LKML 代理分析
                     try:
-                        print("尝试运行 LKML 代理...")
-                        run_lkml_agent(lkml_id=message_id, level=state.level)
-                        print("LKML 代理运行成功")
+                        if state.verbose >= 2:
+                            print("尝试运行 LKML 代理...")
+                        run_lkml_agent(lkml_id=message_id, level=state.level, verbose=state.verbose)
+                        if state.verbose >= 2:
+                            print("LKML 代理运行成功")
                     except Exception as e:
                         print(f"运行 LKML 代理失败: {e}")
-                        import traceback
-                        traceback.print_exc()
+                        if state.verbose >= 3:
+                            import traceback
+                            traceback.print_exc()
                 else:
                     # 尝试直接使用链接作为 message-id
-                    print(f"尝试直接使用链接作为 message-id: {state.patchset_link}")
+                    if state.verbose >= 2:
+                        print(f"尝试直接使用链接作为 message-id: {state.patchset_link}")
                     try:
-                        print("尝试运行 LKML 代理...")
-                        run_lkml_agent(lkml_id=state.patchset_link, level=state.level)
-                        print("LKML 代理运行成功")
+                        if state.verbose >= 2:
+                            print("尝试运行 LKML 代理...")
+                        run_lkml_agent(lkml_id=state.patchset_link, level=state.level, verbose=state.verbose)
+                        if state.verbose >= 2:
+                            print("LKML 代理运行成功")
                     except Exception as e:
                         print(f"直接使用链接失败: {e}")
-                        import traceback
-                        traceback.print_exc()
-                        print("无法从 patchset 链接提取 message-id")
+                        if state.verbose >= 3:
+                            import traceback
+                            traceback.print_exc()
+                        if state.verbose >= 2:
+                            print("无法从 patchset 链接提取 message-id")
         else:
-            print("没有 patchset 链接，跳过 LKML 代理分析")
+            if state.verbose >= 2:
+                print("没有 patchset 链接，跳过 LKML 代理分析")
 
     except Exception as e:
         print(f"运行 LKML 代理失败: {e}")
-        import traceback
-        traceback.print_exc()
+        if state.verbose >= 3:
+            import traceback
+            traceback.print_exc()
 
-    print("\n=== LKML 代理分析完成 ===\n")
+    if state.verbose >= 2:
+        print("\n=== LKML 代理分析完成 ===\n")
     return state
 
 def output_results(state: CGitAgentState) -> CGitAgentState:
-    print("=== 输出结果 ===\n")
+    if state.verbose >= 2:
+        print("=== 输出结果 ===\n")
 
     # 打印分析级别
-    print(f"分析级别: {state.level}")
-    print()
+    if state.verbose >= 1:
+        print(f"分析级别: {state.level}")
+        print()
 
     # 打印 Markdown 表格（与原始脚本格式一致）
     print("---")
@@ -268,19 +309,23 @@ def output_results(state: CGitAgentState) -> CGitAgentState:
 
     # 如果是 detail 级别，打印详细分析
     if state.level == "detail" and state.analysis:
-        print("\n=== 详细分析 ===\n")
-        print(state.analysis)
+        if state.verbose >= 2:
+            print("\n=== 详细分析 ===\n")
+        if state.verbose >= 3:
+            print(state.analysis)
 
     # 打印 patchset 信息
     if state.has_patchset:
-        print("\n=== Patchset 信息 ===\n")
-        print(f"Patchset 链接: {state.patchset_link}")
-        print(f"已触发 LKML 代理使用 {state.level} 级别分析 patchset")
+        if state.verbose >= 2:
+            print("\n=== Patchset 信息 ===\n")
+            print(f"Patchset 链接: {state.patchset_link}")
+            print(f"已触发 LKML 代理使用 {state.level} 级别分析 patchset")
     else:
-        print("\n=== Patchset 信息 ===\n")
-        print("未找到 patchset 链接")
-        if state.level == "detail":
-            print("只对当前 commit 进行了详细分析")
+        if state.verbose >= 2:
+            print("\n=== Patchset 信息 ===\n")
+            print("未找到 patchset 链接")
+            if state.level == "detail":
+                print("只对当前 commit 进行了详细分析")
 
     return state
 
@@ -304,14 +349,15 @@ def build_cgit_agent():
 
     return workflow.compile()
 
-def run_cgit_agent(commit_id: str, level: str = "simple", work_dir: str = None):
+def run_cgit_agent(commit_id: str, level: str = "simple", work_dir: str = None, verbose: int = 0):
     agent = build_cgit_agent()
 
     initial_state = CGitAgentState(
         messages=[{"role": "system", "content": "你是一个 CGit commit 分析智能体，负责下载、解析和分析 Linux 内核的 commit 信息。"}],
         commit_id=commit_id,
         level=level,
-        work_dir=work_dir
+        work_dir=work_dir,
+        verbose=verbose
     )
 
     result = agent.invoke(initial_state)
