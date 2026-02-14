@@ -26,7 +26,7 @@ class ModelInference:
 
     def inference(self, messages):
         # 根据 verbose 级别决定是否显示模型思考中
-        if self.verbose < 2:
+        if self.verbose < 1:
             print("模型思考中...")
 
         self.response = self.client.chat.completions.create(

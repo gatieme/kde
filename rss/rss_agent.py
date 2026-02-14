@@ -262,6 +262,10 @@ def fetch_rss_feeds(state: AgentState) -> AgentState:
 
     all_articles = []
 
+    # 打印状态消息（无 -v 时）
+    if VERBOSE < 1:
+        print("获取 RSS 订阅中...")
+
     # 使用 tqdm 创建进度条
     if VERBOSE >= 1:
         with tqdm(total=len(RSS_SOURCES), desc="获取 RSS 订阅", unit="个") as pbar:
@@ -283,6 +287,10 @@ def fetch_rss_feeds(state: AgentState) -> AgentState:
                     print(f"  ❌ 无法获取 {source['name']} RSS")
 
                 all_articles.extend(articles)
+                pbar.update(1)
+            # 确保进度条显示到 100%
+            pbar.n = len(RSS_SOURCES)
+            pbar.refresh()
     else:
         sources_iter = RSS_SOURCES
 
@@ -353,16 +361,18 @@ def fetch_rss_with_method(url: str, source_name: str, method: str) -> List[Dict]
 def fetch_article_content(state: AgentState) -> AgentState:
     print("\n=== 获取文章完整内容 ===\n")
 
+    # 打印状态消息（无 -v 时）
+    if VERBOSE < 1:
+        print("获取文章内容中...")
+
     # 使用 tqdm 创建进度条
     if VERBOSE >= 1:
         with tqdm(total=len(state.articles), desc="获取文章内容", unit="篇") as pbar:
             for i, article in enumerate(state.articles):
-                if VERBOSE >= 1:
-                    print(f"[{i+1}/{len(state.articles)}] 获取: {article['title'][:60]}...")
+                print(f"[{i+1}/{len(state.articles)}] 获取: {article['title'][:60]}...")
 
                 if article["content"]:
-                    if VERBOSE >= 1:
-                        print("  已有内容，跳过")
+                    print("  已有内容，跳过")
                     pbar.update(1)
                     continue
 
@@ -374,54 +384,41 @@ def fetch_article_content(state: AgentState) -> AgentState:
                     try:
                         if method == "requests":
                             # 添加进度条到 requests 请求
-                            if VERBOSE >= 1:
-                                def progress_hook(t):
-                                    last_b = [0]
-                                    def inner(b, bsize, tsize=None):
-                                        if tsize is not None:
-                                            t.total = tsize
-                                        t.update((b - last_b[0]) * bsize)
-                                        last_b[0] = b
-                                    return inner
+                            def progress_hook(t):
+                                last_b = [0]
+                                def inner(b, bsize, tsize=None):
+                                    if tsize is not None:
+                                        t.total = tsize
+                                    t.update((b - last_b[0]) * bsize)
+                                    last_b[0] = b
+                                return inner
 
-                                with tqdm(unit='B', unit_scale=True, miniters=1, desc=f"  下载 {article['title'][:30]}...") as t:
-                                    response = requests.get(article["link"], headers={
-                                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                                    }, timeout=15, stream=True, hooks=[dict(response=progress_hook(t))])
-                                    response.raise_for_status()
-                                    content = response.content
-                                    # 确保进度条显示到 100%
-                                    t.n = t.total
-                                    t.refresh()
-                            else:
+                            with tqdm(unit='B', unit_scale=True, miniters=1, desc=f"  下载 {article['title'][:30]}...") as t:
                                 response = requests.get(article["link"], headers={
                                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                                }, timeout=15)
+                                }, timeout=15, stream=True, hooks=[dict(response=progress_hook(t))])
                                 response.raise_for_status()
                                 content = response.content
+                                # 确保进度条显示到 100%
+                                t.n = t.total
+                                t.refresh()
                             soup = BeautifulSoup(content, "html.parser")
                         elif method == "httpx":
                             with httpx.Client(timeout=15, follow_redirects=True) as client:
-                                if VERBOSE >= 1:
-                                    # httpx 没有直接的进度条支持，使用模拟进度
-                                    with tqdm(desc=f"  下载 {article['title'][:30]}...", unit="B", unit_scale=True) as t:
-                                        response = client.get(article["link"])
-                                        response.raise_for_status()
-                                        content = response.content
-                                        t.total = len(content)
-                                        t.update(len(content))
-                                        # 确保进度条显示到 100%
-                                        t.n = t.total
-                                        t.refresh()
-                                else:
+                                # httpx 没有直接的进度条支持，使用模拟进度
+                                with tqdm(desc=f"  下载 {article['title'][:30]}...", unit="B", unit_scale=True) as t:
                                     response = client.get(article["link"])
                                     response.raise_for_status()
                                     content = response.content
+                                    t.total = len(content)
+                                    t.update(len(content))
+                                    # 确保进度条显示到 100%
+                                    t.n = t.total
+                                    t.refresh()
                             soup = BeautifulSoup(content, "html.parser")
                         elif method == "playwright":
-                            if VERBOSE >= 1:
-                                print(f"  使用 playwright 打开: {article['title'][:60]}...")
-                            
+                            print(f"  使用 playwright 打开: {article['title'][:60]}...")
+
                             with sync_playwright() as p:
                                 # 使用更真实的浏览器配置
                                 browser = p.chromium.launch(
@@ -448,8 +445,7 @@ def fetch_article_content(state: AgentState) -> AgentState:
 
                                 # 检查是否有验证码
                                 if "captcha" in page.content().lower() or "verify" in page.content().lower():
-                                    if VERBOSE >= 1:
-                                        print("检测到验证码，尝试等待用户交互...")
+                                    print("检测到验证码，尝试等待用户交互...")
                                     page.wait_for_timeout(5000)
 
                                 soup = BeautifulSoup(page.content(), "html.parser")
@@ -473,12 +469,10 @@ def fetch_article_content(state: AgentState) -> AgentState:
 
                 if full_content:
                     article["content"] = full_content
-                    if VERBOSE >= 1:
-                        print(f"  ✅ 获取成功 ({len(full_content)} 字符)")
+                    print(f"  ✅ 获取成功 ({len(full_content)} 字符)")
                 else:
                     article["content"] = article["summary"]
-                    if VERBOSE >= 1:
-                        print(f"  ⚠️ 使用摘要替代")
+                    print(f"  ⚠️ 使用摘要替代")
                 pbar.update(1)
             # 确保进度条显示到 100%
             pbar.n = len(state.articles)

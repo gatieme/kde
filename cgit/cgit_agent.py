@@ -56,12 +56,15 @@ def fetch_commit(state: CGitAgentState) -> CGitAgentState:
         command = ["wget", commit_url, "-O", state.commit_id]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
+        # 打印状态消息（无 -v 时）
+        if state.verbose < 1:
+            print("下载 commit 信息中...")
+
         if state.verbose >= 3:
             for line in process.stdout:
                 print(line, end='')
         elif state.verbose >= 1:
             # 使用 tqdm 显示进度条
-            print("下载 commit 信息中...")
             with tqdm(total=100, desc="下载进度", unit="%") as pbar:
                 # 读取输出并更新进度条
                 for line in process.stdout:
