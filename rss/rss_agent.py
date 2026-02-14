@@ -266,9 +266,8 @@ def fetch_rss_feeds(state: AgentState) -> AgentState:
     if VERBOSE < 1:
         print("获取 RSS 订阅中...")
 
-    # 使用 tqdm 创建进度条
     if VERBOSE >= 1:
-        with tqdm(total=len(RSS_SOURCES), desc="获取 RSS 订阅", unit="个") as pbar:
+        with tqdm(total=len(RSS_SOURCES), desc="获取 RSS 源列表进度", unit="个") as pbar:
             for source in RSS_SOURCES:
                 print(f"获取 {source['name']} RSS: {source['url']}")
 
@@ -288,7 +287,6 @@ def fetch_rss_feeds(state: AgentState) -> AgentState:
 
                 all_articles.extend(articles)
                 pbar.update(1)
-            # 确保进度条显示到 100%
             pbar.n = len(RSS_SOURCES)
             pbar.refresh()
     else:
@@ -365,9 +363,8 @@ def fetch_article_content(state: AgentState) -> AgentState:
     if VERBOSE < 1:
         print("获取文章内容中...")
 
-    # 使用 tqdm 创建进度条
     if VERBOSE >= 1:
-        with tqdm(total=len(state.articles), desc="获取文章内容", unit="篇") as pbar:
+        with tqdm(total=len(state.articles), desc="获取文章完整内容进度", unit="篇") as pbar:
             for i, article in enumerate(state.articles):
                 print(f"[{i+1}/{len(state.articles)}] 获取: {article['title'][:60]}...")
 
@@ -393,26 +390,23 @@ def fetch_article_content(state: AgentState) -> AgentState:
                                     last_b[0] = b
                                 return inner
 
-                            with tqdm(unit='B', unit_scale=True, miniters=1, desc=f"  下载 {article['title'][:30]}...") as t:
+                            with tqdm(unit='B', unit_scale=True, miniters=1, desc=f"  下载文章内容: {article['title'][:30]}...") as t:
                                 response = requests.get(article["link"], headers={
                                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                                 }, timeout=15, stream=True, hooks=[dict(response=progress_hook(t))])
                                 response.raise_for_status()
                                 content = response.content
-                                # 确保进度条显示到 100%
                                 t.n = t.total
                                 t.refresh()
                             soup = BeautifulSoup(content, "html.parser")
                         elif method == "httpx":
                             with httpx.Client(timeout=15, follow_redirects=True) as client:
-                                # httpx 没有直接的进度条支持，使用模拟进度
-                                with tqdm(desc=f"  下载 {article['title'][:30]}...", unit="B", unit_scale=True) as t:
+                                with tqdm(desc=f"  下载文章内容: {article['title'][:30]}...", unit="B", unit_scale=True) as t:
                                     response = client.get(article["link"])
                                     response.raise_for_status()
                                     content = response.content
                                     t.total = len(content)
                                     t.update(len(content))
-                                    # 确保进度条显示到 100%
                                     t.n = t.total
                                     t.refresh()
                             soup = BeautifulSoup(content, "html.parser")
