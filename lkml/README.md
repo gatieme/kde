@@ -32,6 +32,8 @@ LKML Agent 的工作流程由以下几个主要步骤组成：
 - **智能分析** - 使用模型对补丁内容进行分析，生成摘要和详细分析
 - **多级分析** - 支持 simple 和 detail 两个级别的分析深度
 - **结果输出** - 以表格形式展示分析结果，包括补丁的基本信息和分析内容
+- **进度条显示** - 在 verbose 模式下显示补丁下载和分析的进度
+- **详细日志控制** - 通过 verbose 级别控制日志输出的详细程度
 
 ### 技术实现
 
@@ -40,6 +42,8 @@ LKML Agent 的工作流程由以下几个主要步骤组成：
 - **信息解析** - 使用正则表达式解析补丁信息
 - **模型推理** - 集成模型推理模块，对补丁内容进行分析
 - **结果展示** - 以 Markdown 表格形式展示分析结果
+- **进度条实现** - 使用 tqdm 库实现进度条显示
+- **日志控制** - 通过 verbose 级别参数控制日志输出
 
 ## 使用说明
 
@@ -50,13 +54,25 @@ LKML Agent 主要通过 kde.py 进行调用，支持以下命令格式：
 #### 简单模式（仅生成摘要）
 
 ```bash
-python3 ../kde.py --level=simple --lkml <message-id>
+python3 ../kde.py lkml <message-id> simple
 ```
 
 #### 详细模式（生成摘要并进行深入分析）
 
 ```bash
-python3 ../kde.py --level=detail --lkml <message-id>
+python3 ../kde.py lkml <message-id> detail
+```
+
+#### 详细模式（显示进度条）
+
+```bash
+python3 ../kde.py lkml <message-id> detail -v
+```
+
+#### 详细模式（显示最详细的日志）
+
+```bash
+python3 ../kde.py lkml <message-id> detail -vvv
 ```
 
 ### 直接调用
@@ -64,13 +80,15 @@ python3 ../kde.py --level=detail --lkml <message-id>
 也可以直接调用 lkml_agent.py 进行测试：
 
 ```bash
-python3 lkml_agent.py <message-id> [simple|detail]
+python3 lkml_agent.py --message_id=<message-id> --level=simple
+python3 lkml_agent.py --message_id=<message-id> --level=detail
 ```
 
 ### 参数说明
 
 - `<message-id>` - LKML 补丁的 message-id，例如：`20260122161647.142704-2-realwujing@gmail.com`
-- `--level=simple|detail` - 分析级别，simple 仅生成摘要，detail 进行深入分析
+- `simple|detail` - 分析级别，simple 仅生成摘要，detail 进行深入分析
+- `-v, --verbose` - 详细模式，显示进度条和详细日志
 
 ## 依赖关系
 
@@ -91,13 +109,13 @@ python3 lkml_agent.py <message-id> [simple|detail]
 ### 分析 LKML 补丁（简单模式）
 
 ```bash
-python3 ../kde.py --level=simple --lkml 20260122161647.142704-2-realwujing@gmail.com
+python3 ../kde.py lkml 20260122161647.142704-2-realwujing@gmail.com simple
 ```
 
-### 分析 LKML 补丁（详细模式）
+### 分析 LKML 补丁（详细模式，显示进度条）
 
 ```bash
-python3 ../kde.py --level=detail --lkml 20260122161647.142704-2-realwujing@gmail.com
+python3 ../kde.py lkml 20260122161647.142704-2-realwujing@gmail.com detail -v
 ```
 
 ## 输出示例
@@ -113,6 +131,10 @@ python3 ../kde.py --level=detail --lkml 20260122161647.142704-2-realwujing@gmail
 ### 详细模式输出
 
 在简单模式输出的基础上，还会包含对补丁的详细分析内容。
+
+### 详细模式输出（带进度条）
+
+当使用 `-v` 参数时，会显示补丁下载和分析的进度条，以及更详细的日志信息。
 
 ## 扩展计划
 
@@ -133,3 +155,4 @@ python3 ../kde.py --level=detail --lkml 20260122161647.142704-2-realwujing@gmail
 - 添加更多命令行选项
 - 提供更详细的输出格式
 - 支持结果导出为不同格式
+- 增强进度条和日志的用户体验
