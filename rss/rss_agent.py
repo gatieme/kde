@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 from urllib.parse import urljoin, urlparse
+from tqdm import tqdm
 
 # 导入模型推理模块
 import sys
@@ -261,24 +262,52 @@ def fetch_rss_feeds(state: AgentState) -> AgentState:
 
     all_articles = []
 
-    for source in RSS_SOURCES:
-        print(f"获取 {source['name']} RSS: {source['url']}")
+    # 使用 tqdm 创建进度条
+    if VERBOSE >= 1:
+        with tqdm(total=len(RSS_SOURCES), desc="获取 RSS 订阅", unit="个") as pbar:
+            for source in RSS_SOURCES:
+                print(f"获取 {source['name']} RSS: {source['url']}")
 
-        protection = state.protection_info.get(source["name"], {})
-        available_methods = protection.get("available_methods", [])
+                protection = state.protection_info.get(source["name"], {})
+                available_methods = protection.get("available_methods", [])
 
-        articles = []
-        for method in available_methods:
-            print(f"  尝试使用 {method}...")
-            articles = fetch_rss_with_method(source["url"], source["name"], method)
-            if articles:
-                print(f"  ✅ 成功获取 {len(articles)} 篇文章")
-                break
+                articles = []
+                for method in available_methods:
+                    print(f"  尝试使用 {method}...")
+                    articles = fetch_rss_with_method(source["url"], source["name"], method)
+                    if articles:
+                        print(f"  ✅ 成功获取 {len(articles)} 篇文章")
+                        break
 
-        if not articles:
-            print(f"  ❌ 无法获取 {source['name']} RSS")
+                if not articles:
+                    print(f"  ❌ 无法获取 {source['name']} RSS")
 
-        all_articles.extend(articles)
+                all_articles.extend(articles)
+    else:
+        sources_iter = RSS_SOURCES
+
+        for source in sources_iter:
+            if VERBOSE >= 1:
+                print(f"获取 {source['name']} RSS: {source['url']}")
+
+            protection = state.protection_info.get(source["name"], {})
+            available_methods = protection.get("available_methods", [])
+
+            articles = []
+            for method in available_methods:
+                if VERBOSE >= 1:
+                    print(f"  尝试使用 {method}...")
+                articles = fetch_rss_with_method(source["url"], source["name"], method)
+                if articles:
+                    if VERBOSE >= 1:
+                        print(f"  ✅ 成功获取 {len(articles)} 篇文章")
+                    break
+
+            if not articles:
+                if VERBOSE >= 1:
+                    print(f"  ❌ 无法获取 {source['name']} RSS")
+
+            all_articles.extend(articles)
 
     if MAX_ARTICLES and len(all_articles) > MAX_ARTICLES:
         print(f"\n限制文章数量到 {MAX_ARTICLES} 篇")
@@ -324,85 +353,226 @@ def fetch_rss_with_method(url: str, source_name: str, method: str) -> List[Dict]
 def fetch_article_content(state: AgentState) -> AgentState:
     print("\n=== 获取文章完整内容 ===\n")
 
-    for i, article in enumerate(state.articles):
-        print(f"[{i+1}/{len(state.articles)}] 获取: {article['title'][:60]}...")
+    # 使用 tqdm 创建进度条
+    if VERBOSE >= 1:
+        with tqdm(total=len(state.articles), desc="获取文章内容", unit="篇") as pbar:
+            for i, article in enumerate(state.articles):
+                if VERBOSE >= 1:
+                    print(f"[{i+1}/{len(state.articles)}] 获取: {article['title'][:60]}...")
 
-        if article["content"]:
-            print("  已有内容，跳过")
-            continue
+                if article["content"]:
+                    if VERBOSE >= 1:
+                        print("  已有内容，跳过")
+                    pbar.update(1)
+                    continue
 
-        protection = state.protection_info.get(article["source"], {})
-        available_methods = protection.get("available_methods", ["requests"])
+                protection = state.protection_info.get(article["source"], {})
+                available_methods = protection.get("available_methods", ["requests"])
 
-        full_content = None
-        for method in available_methods:
-            try:
-                if method == "requests":
-                    response = requests.get(article["link"], headers={
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                    }, timeout=15)
-                    response.raise_for_status()
-                    soup = BeautifulSoup(response.content, "html.parser")
-                elif method == "httpx":
-                    with httpx.Client(timeout=15, follow_redirects=True) as client:
-                        response = client.get(article["link"])
-                        response.raise_for_status()
-                        soup = BeautifulSoup(response.content, "html.parser")
-                elif method == "playwright":
-                    with sync_playwright() as p:
-                        # 使用更真实的浏览器配置
-                        browser = p.chromium.launch(
-                            headless=True,
-                            slow_mo=200,  # 增加延迟，更接近人类操作
-                            args=[
-                                "--disable-blink-features=AutomationControlled",  # 禁用自动化控制标记
-                                "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                            ]
-                        )
+                full_content = None
+                for method in available_methods:
+                    try:
+                        if method == "requests":
+                            # 添加进度条到 requests 请求
+                            if VERBOSE >= 1:
+                                def progress_hook(t):
+                                    last_b = [0]
+                                    def inner(b, bsize, tsize=None):
+                                        if tsize is not None:
+                                            t.total = tsize
+                                        t.update((b - last_b[0]) * bsize)
+                                        last_b[0] = b
+                                    return inner
 
-                        context = browser.new_context(
-                            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                            viewport={"width": 1920, "height": 1080},
-                            permissions=["geolocation"],
-                            geolocation={"latitude": 37.7749, "longitude": -122.4194},
-                            locale="en-US",
-                            timezone_id="America/New_York"
-                        )
+                                with tqdm(unit='B', unit_scale=True, miniters=1, desc=f"  下载 {article['title'][:30]}...") as t:
+                                    response = requests.get(article["link"], headers={
+                                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                                    }, timeout=15, stream=True, hooks=[dict(response=progress_hook(t))])
+                                    response.raise_for_status()
+                                    content = response.content
+                                    # 确保进度条显示到 100%
+                                    t.n = t.total
+                                    t.refresh()
+                            else:
+                                response = requests.get(article["link"], headers={
+                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                                }, timeout=15)
+                                response.raise_for_status()
+                                content = response.content
+                            soup = BeautifulSoup(content, "html.parser")
+                        elif method == "httpx":
+                            with httpx.Client(timeout=15, follow_redirects=True) as client:
+                                if VERBOSE >= 1:
+                                    # httpx 没有直接的进度条支持，使用模拟进度
+                                    with tqdm(desc=f"  下载 {article['title'][:30]}...", unit="B", unit_scale=True) as t:
+                                        response = client.get(article["link"])
+                                        response.raise_for_status()
+                                        content = response.content
+                                        t.total = len(content)
+                                        t.update(len(content))
+                                        # 确保进度条显示到 100%
+                                        t.n = t.total
+                                        t.refresh()
+                                else:
+                                    response = client.get(article["link"])
+                                    response.raise_for_status()
+                                    content = response.content
+                            soup = BeautifulSoup(content, "html.parser")
+                        elif method == "playwright":
+                            if VERBOSE >= 1:
+                                print(f"  使用 playwright 打开: {article['title'][:60]}...")
+                            
+                            with sync_playwright() as p:
+                                # 使用更真实的浏览器配置
+                                browser = p.chromium.launch(
+                                    headless=True,
+                                    slow_mo=200,  # 增加延迟，更接近人类操作
+                                    args=[
+                                        "--disable-blink-features=AutomationControlled",  # 禁用自动化控制标记
+                                        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                                    ]
+                                )
 
-                        page = context.new_page()
-                        page.goto(article["link"], timeout=30000)
-                        page.wait_for_load_state("networkidle", timeout=30000)
+                                context = browser.new_context(
+                                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                                    viewport={"width": 1920, "height": 1080},
+                                    permissions=["geolocation"],
+                                    geolocation={"latitude": 37.7749, "longitude": -122.4194},
+                                    locale="en-US",
+                                    timezone_id="America/New_York"
+                                )
 
-                        # 检查是否有验证码
-                        if "captcha" in page.content().lower() or "verify" in page.content().lower():
-                            print("检测到验证码，尝试等待用户交互...")
-                            page.wait_for_timeout(5000)
+                                page = context.new_page()
+                                page.goto(article["link"], timeout=30000)
+                                page.wait_for_load_state("networkidle", timeout=30000)
 
-                        soup = BeautifulSoup(page.content(), "html.parser")
-                        context.close()
-                        browser.close()
+                                # 检查是否有验证码
+                                if "captcha" in page.content().lower() or "verify" in page.content().lower():
+                                    if VERBOSE >= 1:
+                                        print("检测到验证码，尝试等待用户交互...")
+                                    page.wait_for_timeout(5000)
 
-                article_body = soup.find("div", class_="content")
-                if not article_body:
-                    article_body = soup.find("div", id="content")
-                if not article_body:
-                    article_body = soup.find("article")
-                if not article_body:
-                    article_body = soup.find("main")
+                                soup = BeautifulSoup(page.content(), "html.parser")
+                                context.close()
+                                browser.close()
 
-                if article_body:
-                    full_content = article_body.get_text(strip=True)
-                    break
+                        article_body = soup.find("div", class_="content")
+                        if not article_body:
+                            article_body = soup.find("div", id="content")
+                        if not article_body:
+                            article_body = soup.find("article")
+                        if not article_body:
+                            article_body = soup.find("main")
 
-            except Exception as e:
+                        if article_body:
+                            full_content = article_body.get_text(strip=True)
+                            break
+
+                    except Exception as e:
+                        continue
+
+                if full_content:
+                    article["content"] = full_content
+                    if VERBOSE >= 1:
+                        print(f"  ✅ 获取成功 ({len(full_content)} 字符)")
+                else:
+                    article["content"] = article["summary"]
+                    if VERBOSE >= 1:
+                        print(f"  ⚠️ 使用摘要替代")
+                pbar.update(1)
+            # 确保进度条显示到 100%
+            pbar.n = len(state.articles)
+            pbar.refresh()
+    else:
+        articles_iter = state.articles
+
+        for i, article in enumerate(articles_iter):
+            if VERBOSE >= 1:
+                print(f"[{i+1}/{len(state.articles)}] 获取: {article['title'][:60]}...")
+
+            if article["content"]:
+                if VERBOSE >= 1:
+                    print("  已有内容，跳过")
                 continue
 
-        if full_content:
-            article["content"] = full_content
-            print(f"  ✅ 获取成功 ({len(full_content)} 字符)")
-        else:
-            article["content"] = article["summary"]
-            print(f"  ⚠️ 使用摘要替代")
+            protection = state.protection_info.get(article["source"], {})
+            available_methods = protection.get("available_methods", ["requests"])
+
+            full_content = None
+            for method in available_methods:
+                try:
+                    if method == "requests":
+                        response = requests.get(article["link"], headers={
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                        }, timeout=15)
+                        response.raise_for_status()
+                        soup = BeautifulSoup(response.content, "html.parser")
+                    elif method == "httpx":
+                        with httpx.Client(timeout=15, follow_redirects=True) as client:
+                            response = client.get(article["link"])
+                            response.raise_for_status()
+                            soup = BeautifulSoup(response.content, "html.parser")
+                    elif method == "playwright":
+                        if VERBOSE >= 1:
+                            print(f"  使用 playwright 打开: {article['title'][:60]}...")
+                        
+                        with sync_playwright() as p:
+                            # 使用更真实的浏览器配置
+                            browser = p.chromium.launch(
+                                headless=True,
+                                slow_mo=200,  # 增加延迟，更接近人类操作
+                                args=[
+                                    "--disable-blink-features=AutomationControlled",  # 禁用自动化控制标记
+                                    "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                                ]
+                            )
+
+                            context = browser.new_context(
+                                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                                viewport={"width": 1920, "height": 1080},
+                                permissions=["geolocation"],
+                                geolocation={"latitude": 37.7749, "longitude": -122.4194},
+                                locale="en-US",
+                                timezone_id="America/New_York"
+                            )
+
+                            page = context.new_page()
+                            page.goto(article["link"], timeout=30000)
+                            page.wait_for_load_state("networkidle", timeout=30000)
+
+                            # 检查是否有验证码
+                            if "captcha" in page.content().lower() or "verify" in page.content().lower():
+                                if VERBOSE >= 1:
+                                    print("检测到验证码，尝试等待用户交互...")
+                                page.wait_for_timeout(5000)
+
+                            soup = BeautifulSoup(page.content(), "html.parser")
+                            context.close()
+                            browser.close()
+
+                    article_body = soup.find("div", class_="content")
+                    if not article_body:
+                        article_body = soup.find("div", id="content")
+                    if not article_body:
+                        article_body = soup.find("article")
+                    if not article_body:
+                        article_body = soup.find("main")
+
+                    if article_body:
+                        full_content = article_body.get_text(strip=True)
+                        break
+
+                except Exception as e:
+                    continue
+
+            if full_content:
+                article["content"] = full_content
+                if VERBOSE >= 1:
+                    print(f"  ✅ 获取成功 ({len(full_content)} 字符)")
+            else:
+                article["content"] = article["summary"]
+                if VERBOSE >= 1:
+                    print(f"  ⚠️ 使用摘要替代")
 
     state.messages.append({"role": "system", "content": "文章内容获取完成"})
     return state

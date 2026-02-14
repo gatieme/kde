@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from openai import OpenAI
+from tqdm import tqdm
 
 
 class ModelInference:
@@ -42,20 +43,46 @@ class ModelInference:
         )
         answer = ""
         done_thinking = False
-        for chunk in self.response:
-            thinking_chunk = chunk.choices[0].delta.reasoning_content
-            answer_chunk = chunk.choices[0].delta.content
-            if thinking_chunk != '':
-                if self.verbose >= 2:
-                    print(thinking_chunk, end='', flush=True)
-                answer += thinking_chunk
-            elif answer_chunk != '':
-                if not done_thinking:
-                    #print('\n\n === Final Answer ===\n')
-                    done_thinking = True
-                if self.verbose >= 2:
-                    print(answer_chunk, end='', flush=True)
-                answer += answer_chunk
+        
+        # 使用 tqdm 显示进度条
+        if self.verbose >= 1 and self.verbose < 2:
+            with tqdm(total=100, desc="模型推理进度", unit="%") as pbar:
+                for chunk in self.response:
+                    thinking_chunk = chunk.choices[0].delta.reasoning_content
+                    answer_chunk = chunk.choices[0].delta.content
+                    if thinking_chunk != '':
+                        if self.verbose >= 2:
+                            print(thinking_chunk, end='', flush=True)
+                        answer += thinking_chunk
+                        pbar.update(1)
+                    elif answer_chunk != '':
+                        if not done_thinking:
+                            #print('\n\n === Final Answer ===\n')
+                            done_thinking = True
+                        if self.verbose >= 2:
+                            print(answer_chunk, end='', flush=True)
+                        answer += answer_chunk
+                        pbar.update(1)
+                # 确保进度条显示到 100%
+                pbar.n = 100
+                pbar.refresh()
+        else:
+            # 不使用进度条
+            for chunk in self.response:
+                thinking_chunk = chunk.choices[0].delta.reasoning_content
+                answer_chunk = chunk.choices[0].delta.content
+                if thinking_chunk != '':
+                    if self.verbose >= 2:
+                        print(thinking_chunk, end='', flush=True)
+                    answer += thinking_chunk
+                elif answer_chunk != '':
+                    if not done_thinking:
+                        #print('\n\n === Final Answer ===\n')
+                        done_thinking = True
+                    if self.verbose >= 2:
+                        print(answer_chunk, end='', flush=True)
+                    answer += answer_chunk
+        
         if self.verbose >= 2:
             print("\n")
         self.answer = answer

@@ -9,6 +9,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from typing import Annotated, List, Dict, Any, Optional
 from dataclasses import dataclass, field
+from tqdm import tqdm
 
 # 添加项目根目录到 Python 路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -58,6 +59,27 @@ def fetch_commit(state: CGitAgentState) -> CGitAgentState:
         if state.verbose >= 3:
             for line in process.stdout:
                 print(line, end='')
+        elif state.verbose >= 1:
+            # 使用 tqdm 显示进度条
+            print("下载 commit 信息中...")
+            with tqdm(total=100, desc="下载进度", unit="%") as pbar:
+                # 读取输出并更新进度条
+                for line in process.stdout:
+                    # 这里简单地模拟进度，实际可以根据 wget 的输出解析真实进度
+                    if "%" in line:
+                        # 尝试从 wget 输出中提取进度百分比
+                        try:
+                            progress = int(re.search(r'(\d+)%', line).group(1))
+                            pbar.n = progress
+                            pbar.refresh()
+                        except:
+                            pass
+                    else:
+                        # 如果没有百分比信息，就模拟进度
+                        pbar.update(1)
+                # 确保进度条显示到 100%
+                pbar.n = 100
+                pbar.refresh()
         else:
             # 静默执行，只捕获返回码
             output = process.communicate()[0]
