@@ -367,10 +367,10 @@ def build_cgit_agent():
     workflow.set_entry_point("fetch_commit")
     workflow.add_edge("fetch_commit", "parse_commit")
     workflow.add_edge("parse_commit", "analyze_commit")
-    workflow.add_edge("analyze_commit", "check_patchset")
+    workflow.add_edge("analyze_commit", "output_results")
+    workflow.add_edge("output_results", "check_patchset")
     workflow.add_edge("check_patchset", "run_lkml_analysis")
-    workflow.add_edge("run_lkml_analysis", "output_results")
-    workflow.add_edge("output_results", END)
+    workflow.add_edge("run_lkml_analysis", END)
 
     return workflow.compile()
 
