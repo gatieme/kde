@@ -41,9 +41,10 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
     if state.verbose >= 2:
         print("=== 下载 LKML 补丁 ===\n")
 
-    # 创建工作目录
     if not state.work_dir:
-        state.work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), state.lkml_id)
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        cache_root = os.path.join(repo_root, "output", "lkml")
+        state.work_dir = os.path.join(cache_root, state.lkml_id)
     os.makedirs(state.work_dir, exist_ok=True)
 
     # 切换到工作目录

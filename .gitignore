@@ -24,3 +24,6 @@ patchwork/series/
 
 # pycache
 __pycache__
+
+# output cache
+output/

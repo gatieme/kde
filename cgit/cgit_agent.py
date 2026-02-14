@@ -39,9 +39,10 @@ def fetch_commit(state: CGitAgentState) -> CGitAgentState:
     if state.verbose >= 2:
         print("=== 下载 commit 信息 ===\n")
 
-    # 创建工作目录
     if not state.work_dir:
-        state.work_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), state.commit_id)
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        cache_root = os.path.join(repo_root, "output", "cgit")
+        state.work_dir = os.path.join(cache_root, state.commit_id)
     os.makedirs(state.work_dir, exist_ok=True)
 
     # 切换到工作目录

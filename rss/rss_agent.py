@@ -3,6 +3,7 @@
 import os
 import sys
 import datetime
+import hashlib
 import feedparser
 import requests
 import httpx
@@ -48,6 +49,7 @@ class AgentState:
     articles: List[Dict[str, Any]] = field(default_factory=list)
     summaries: List[Dict[str, Any]] = field(default_factory=list)
     protection_info: Dict[str, Any] = field(default_factory=dict)
+    work_dir: str = ""
 
 KERNEL_KEYWORDS = [
     "kernel", "linux kernel", "linux-kernel", "内核",
@@ -359,9 +361,14 @@ def fetch_rss_with_method(url: str, source_name: str, method: str) -> List[Dict]
 def fetch_article_content(state: AgentState) -> AgentState:
     print("\n=== 获取文章完整内容 ===\n")
 
-    # 打印状态消息（无 -v 时）
     if VERBOSE < 1:
         print("获取文章内容中...")
+
+    if not state.work_dir:
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        cache_root = os.path.join(repo_root, "output", "rss")
+        state.work_dir = cache_root
+    os.makedirs(state.work_dir, exist_ok=True)
 
     if VERBOSE >= 1:
         with tqdm(total=len(state.articles), desc="获取文章完整内容进度", unit="篇") as pbar:
@@ -464,6 +471,22 @@ def fetch_article_content(state: AgentState) -> AgentState:
                 if full_content:
                     article["content"] = full_content
                     print(f"  ✅ 获取成功 ({len(full_content)} 字符)")
+
+                    article_id = hashlib.md5(article["link"].encode()).hexdigest()[:12]
+                    cache_file = os.path.join(state.work_dir, f"{article_id}.txt")
+                    try:
+                        with open(cache_file, 'w', encoding='utf-8') as f:
+                            f.write(f"标题: {article['title']}\n")
+                            f.write(f"链接: {article['link']}\n")
+                            f.write(f"来源: {article['source']}\n")
+                            f.write(f"时间: {article.get('published', '')}\n")
+                            f.write(f"\n{'='*80}\n")
+                            f.write(full_content)
+                        if VERBOSE >= 2:
+                            print(f"  💾 已缓存到: {cache_file}")
+                    except Exception as e:
+                        if VERBOSE >= 2:
+                            print(f"  ⚠️ 缓存保存失败: {e}")
                 else:
                     article["content"] = article["summary"]
                     print(f"  ⚠️ 使用摘要替代")
