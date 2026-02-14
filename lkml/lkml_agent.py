@@ -78,7 +78,7 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
             with tqdm(total=100, desc="LKML 补丁下载进度", unit="%") as pbar:
                 last_progress = 0
                 no_output_count = 0
-                max_no_output_count = 2
+                max_no_output_count = 6
                 select_timeout = 5
 
                 import select
@@ -89,9 +89,9 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
                         if not readable:
                             no_output_count += 1
                             if state.verbose >= 2:
-                                print(f"警告: {(no_output_count * select_timeout)} 秒无输出，检查进程状态。[尝试次数 {no_output_count}/{max_no_output_count}]...")
+                                print(f"警告: {(no_output_count * select_timeout):2d} 秒无输出，检查进程状态。[尝试次数 {no_output_count}/{max_no_output_count}]...")
                             if no_output_count >= max_no_output_count:
-                                print(f"警告: 连续 {(no_output_count * select_timeout)} 秒无输出，任务即将终止...")
+                                print(f"警告: 连续 {(no_output_count * select_timeout):2d} 秒无输出，任务即将终止...")
                                 if process.poll() is not None:
                                     break
                                 else:
