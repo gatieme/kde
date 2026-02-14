@@ -50,43 +50,73 @@ def fetch_commit(state: CGitAgentState) -> CGitAgentState:
     os.chdir(state.work_dir)
 
     try:
-        # 下载 commit 补丁
         commit_url = f"https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/patch/?id={state.commit_id}"
         state.commit_file = os.path.join(state.work_dir, state.commit_id)
 
-        command = ["wget", commit_url, "-O", state.commit_id]
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        command = ["wget", commit_url, "-O", state.commit_id, "--timeout=300"]
 
-        # 打印状态消息（无 -v 时）
+        if state.verbose >= 2:
+            print(f"执行命令: {' '.join(command)}")
+
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+
         if state.verbose < 1:
             print("下载 commit 信息中...")
 
         if state.verbose >= 3:
             for line in process.stdout:
                 print(line, end='')
+            for line in process.stderr:
+                print(line, end='', file=sys.stderr)
         elif state.verbose >= 1:
             commit_id_short = state.commit_id[:12] if state.commit_id else "unknown"
             with tqdm(total=100, desc=f"CGit commit {commit_id_short} 下载进度", unit="%") as pbar:
-                for line in process.stdout:
-                    if "%" in line:
-                        try:
-                            progress = int(re.search(r'(\d+)%', line).group(1))
-                            pbar.n = progress
-                            pbar.refresh()
-                        except:
-                            pass
-                    else:
-                        pbar.update(1)
+                last_progress = 0
+                import select
+
+                while True:
+                    try:
+                        readable, _, _ = select.select([process.stdout], [], [], 5)
+                        if not readable:
+                            continue
+
+                        line = process.stdout.readline()
+                        if not line:
+                            break
+                        line = line.strip()
+
+                        if "%" in line:
+                            try:
+                                progress = int(re.search(r'(\d+)%', line).group(1))
+                                if progress > last_progress:
+                                    pbar.update(progress - last_progress)
+                                    last_progress = progress
+                            except:
+                                pbar.update(0.5)
+                        elif "Download" in line or "Length" in line:
+                            pbar.update(0.5)
+                    except Exception as e:
+                        if process.poll() is not None:
+                            break
+                        else:
+                            if state.verbose >= 2:
+                                print(f"警告: 读取输出时发生错误: {e}")
+                            break
+
                 pbar.n = 100
                 pbar.refresh()
         else:
-            # 静默执行，只捕获返回码
             output = process.communicate()[0]
 
         returncode = process.wait()
         if returncode != 0:
             print(f"命令执行失败，返回码: {returncode}")
-            if state.verbose >= 3:
+            if state.verbose >= 3 and 'output' in locals():
                 print(output)
             raise Exception(f"下载 commit 失败，返回码: {returncode}")
 

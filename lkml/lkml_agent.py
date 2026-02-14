@@ -5,6 +5,8 @@ import sys
 import re
 import datetime
 import subprocess
+import time
+import select
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from typing import Annotated, List, Dict, Any, Optional
@@ -52,31 +54,110 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
     os.chdir(state.work_dir)
 
     try:
-        # 使用 b4 工具下载补丁
         command = ["b4", "am", state.lkml_id]
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
-        # 打印状态消息（无 -v 时）
+        if state.verbose >= 2:
+            print(f"执行命令: {' '.join(command)}")
+
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+
         if state.verbose < 1:
             print("下载补丁中...")
 
         if state.verbose >= 3:
             for line in process.stdout:
                 print(line, end='')
+            for line in process.stderr:
+                print(line, end='', file=sys.stderr)
         elif state.verbose >= 1:
             with tqdm(total=100, desc="LKML 补丁下载进度", unit="%") as pbar:
-                for line in process.stdout:
-                    pbar.update(1)
+                last_progress = 0
+                no_output_count = 0
+                max_no_output = 5
+
+                import select
+
+                while True:
+                    try:
+                        readable, _, _ = select.select([process.stdout], [], [], 5)
+                        if not readable:
+                            no_output_count += 1
+                            if no_output_count > max_no_output:
+                                if state.verbose >= 2:
+                                    print(f"警告: {max_no_output} 秒无输出，检查进程状态...")
+                                if process.poll() is not None:
+                                    break
+                                else:
+                                    process.terminate()
+                                    process.wait(timeout=5)
+                                    print(f"警告: 进程已终止，可能已超时")
+                                    break
+                            continue
+
+                        line = process.stdout.readline()
+                        if not line:
+                            no_output_count += 1
+                            if no_output_count > max_no_output:
+                                if state.verbose >= 2:
+                                    print(f"警告: {max_no_output} 秒无输出，检查进程状态...")
+                                if process.poll() is not None:
+                                    break
+                                else:
+                                    process.terminate()
+                                    process.wait(timeout=5)
+                                    print(f"警告: 进程已终止，可能已超时")
+                                    break
+                            continue
+
+                        else:
+                            no_output_count = 0
+                            line = line.strip()
+
+                            if "%" in line:
+                                try:
+                                    progress = int(re.search(r'(\d+)%', line).group(1))
+                                    if progress > last_progress:
+                                        pbar.update(progress - last_progress)
+                                        last_progress = progress
+                                except:
+                                    pbar.update(0.5)
+                            elif "Download" in line or "Fetch" in line or "Applying" in line:
+                                pbar.update(0.5)
+                    except subprocess.TimeoutExpired:
+                        if process.poll() is not None:
+                            break
+                        else:
+                            process.terminate()
+                            process.wait(timeout=5)
+                            print(f"警告: 读取输出超时，进程已终止")
+                            break
+                    except Exception as e:
+                        if process.poll() is not None:
+                            break
+                        else:
+                            if state.verbose >= 2:
+                                print(f"警告: 读取输出时发生错误: {e}")
+                            break
+
                 pbar.n = 100
                 pbar.refresh()
         else:
-            # 静默执行，只捕获返回码
-            output = process.communicate()[0]
+            try:
+                output = process.communicate(timeout=300)[0]
+            except subprocess.TimeoutExpired:
+                process.terminate()
+                process.wait(timeout=5)
+                raise Exception(f"下载补丁超时（300秒），进程已终止")
 
         returncode = process.wait()
         if returncode != 0:
             print(f"命令执行失败，返回码: {returncode}")
-            if state.verbose >= 3:
+            if state.verbose >= 3 and 'output' in locals():
                 print(output)
             raise Exception(f"下载补丁失败，返回码: {returncode}")
 
