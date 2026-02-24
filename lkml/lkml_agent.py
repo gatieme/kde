@@ -66,9 +66,6 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
             text=True
         )
 
-        if state.verbose < 1:
-            print("下载补丁中...")
-
         if state.verbose >= 3:
             for line in process.stdout:
                 print(line, end='')
@@ -355,6 +352,7 @@ def output_results(state: LKMLAgentState) -> LKMLAgentState:
         print("=== 输出结果 ===\n")
 
     # 打印基本信息
+    print()
     print("| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |")
     print("|:---:|:----:|:---:|:----:|:---------:|:----:|")
 
@@ -391,6 +389,15 @@ def build_lkml_agent():
     return workflow.compile()
 
 def run_lkml_agent(lkml_id: str, level: str = "simple", work_dir: str = None, verbose: int = 0):
+    # Print initial log messages
+    if verbose >= 1:
+        print()
+        print("---------------------")
+        print("运行 LKML agent (级别: " + level + ")")
+        print("分析 message-id: " + lkml_id)
+        print("---------------------")
+        print()
+
     agent = build_lkml_agent()
 
     initial_state = LKMLAgentState(

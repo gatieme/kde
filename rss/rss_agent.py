@@ -526,7 +526,7 @@ def fetch_article_content(state: AgentState) -> AgentState:
                     elif method == "playwright":
                         if VERBOSE >= 1:
                             print(f"  使用 playwright 打开: {article['title'][:60]}...")
-                        
+
                         with sync_playwright() as p:
                             # 使用更真实的浏览器配置
                             browser = p.chromium.launch(
@@ -808,3 +808,35 @@ if __name__ == "__main__":
     result = agent.invoke(initial_state)
 
     print("\n=== 智能体运行完成 ===")
+
+def run_rss_agent(source=None, max_articles=None, verbose=0):
+    # Print initial log messages
+    if verbose >= 1:
+        print()
+        print("---------------------")
+        print("运行 RSS agent（级别：simple）")
+        if source:
+            print("源: " + source)
+        if max_articles:
+            print("最大文章数: " + str(max_articles))
+        print("---------------------")
+        print()
+
+    # Set global variables
+    global RSS_SOURCES, MAX_ARTICLES, VERBOSE
+    VERBOSE = verbose
+
+    if source:
+        RSS_SOURCES = [s for s in ALL_RSS_SOURCES if s["name"] == source]
+
+    if max_articles:
+        MAX_ARTICLES = max_articles
+
+    agent = build_graph()
+
+    initial_state = AgentState(messages=[
+        {"role": "system", "content": "你是一个 RSS 分析智能体，负责读取、分析和总结 LWN 和 Phoronix 的技术文章。"}
+    ])
+
+    result = agent.invoke(initial_state)
+    return result

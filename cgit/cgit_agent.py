@@ -165,7 +165,7 @@ def parse_commit(state: CGitAgentState) -> CGitAgentState:
         state.content = content
 
         if state.verbose >= 2:
-            print(f"作者: {state.author} <{state.email}>")
+            print(f"作者: {stateauthor} <{state.email}>")
             print(f"日期: {state.date}")
             print(f"主题: {state.subject}")
             print(f"链接: {state.web_url}")
@@ -343,7 +343,7 @@ def output_results(state: CGitAgentState) -> CGitAgentState:
         print()
 
     # 打印 Markdown 表格（与原始脚本格式一致）
-    print("---")
+    print()
     print("| 时间  | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |")
     print("|:-----:|:----:|:----:|:----:|:------------:|:----:|")
 
@@ -401,6 +401,15 @@ def build_cgit_agent():
     return workflow.compile()
 
 def run_cgit_agent(commit_id: str, level: str = "simple", work_dir: str = None, verbose: int = 0):
+    # Print initial log messages
+    if verbose >= 1:
+        print()
+        print("---------------------")
+        print("运行 CGit agent (级别: " + level + ")")
+        print("分析 commit ID: " + commit_id)
+        print("---------------------")
+        print()
+
     agent = build_cgit_agent()
 
     initial_state = CGitAgentState(
@@ -422,8 +431,8 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python cgit_agent.py --commit_id=1234567890abcdef --level=simple  # 简要分析
-  python cgit_agent.py --commit_id=1234567890abcdef --level=detail  # 详细分析
+  python cgit_agent.py --commit_id=1234564567890abcdef --level=simple  # 简要分析
+  python cgit_agent.py --commit_id=1234564567890abcdef --level=detail  # 详细分析
 """
     )
     parser.add_argument(

@@ -25,10 +25,6 @@ class ModelInference:
         self.verbose = verbose
 
     def inference(self, messages):
-        # 根据 verbose 级别决定是否显示模型思考中
-        if self.verbose < 1:
-            print("模型思考中...")
-
         self.response = self.client.chat.completions.create(
             #model = 'Qwen/Qwen3-32B',  # ModelScope Model-Id
             model = 'Qwen/Qwen3-235B-A22B',  # ModelScope Model-Id
@@ -43,7 +39,7 @@ class ModelInference:
         )
         answer = ""
         done_thinking = False
-        
+
         # 使用 tqdm 显示进度条
         if self.verbose >= 1 and self.verbose < 2:
             with tqdm(total=100, desc="模型推理进度", unit="%") as pbar:
@@ -82,7 +78,7 @@ class ModelInference:
                     if self.verbose >= 2:
                         print(answer_chunk, end='', flush=True)
                     answer += answer_chunk
-        
+
         if self.verbose >= 2:
             print("\n")
         self.answer = answer

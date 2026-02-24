@@ -8,16 +8,15 @@ from cgit.cgit_agent import run_cgit_agent
 
 def chinese_to_english_punctuation(text):
     # 定义中文标点和对应的英文标点
-    chinese_punctuation = '，。！？；：“”‘’（）【】《》'
+    chinese_punctuation = '，。！？；："''（）【】《》'
     english_punctuation = ',.!?;:""\'\'()[]<>'
     # 创建转换表
     translation_table = str.maketrans(chinese_punctuation, english_punctuation)
     # 进行替换
     return text.translate(translation_table)
 
-
 def add_space_after_punctuation(text):
-    punctuations = '.,!?;:"\'()[]<>，。！？；：“”‘’（）【】《》'
+    punctuations = '.,!?;:"\'()[]<>，。！？；："''（）【】《》'
     result = ""
     for char in text:
         if char in punctuations:
@@ -30,7 +29,6 @@ def replace_newline_with_br(text):
     # 替换换行符为 <br>
     return text.replace('\n', '<br>')
 
-
 def lkml_run(lkml_message_id, level, verbose=0):
     """运行 LKML agent 分析补丁"""
     try:
@@ -38,7 +36,6 @@ def lkml_run(lkml_message_id, level, verbose=0):
     except Exception as e:
         print(f"运行 LKML agent 失败: {e}")
         sys.exit(1)
-
 
 def rss_run(source=None, max_articles=None, verbose=0):
     """运行 RSS agent 分析文章"""
@@ -51,32 +48,12 @@ def rss_run(source=None, max_articles=None, verbose=0):
         # 导入整个模块
         import rss.rss_agent as rss_agent
 
-        # 设置 verbose 级别
-        rss_agent.VERBOSE = verbose
-
-        # 设置 RSS 源
-        if source:
-            rss_agent.RSS_SOURCES = [s for s in rss_agent.ALL_RSS_SOURCES if s["name"] == source]
-
-        # 设置最大文章数
-        if max_articles:
-            rss_agent.MAX_ARTICLES = max_articles
-
-        # 构建 RSS agent
-        agent = rss_agent.build_graph()
-
-        # 初始化状态
-        initial_state = rss_agent.AgentState(messages=[
-            {"role": "system", "content": "你是一个 RSS 分析智能体，负责读取、分析和总结 LWN 和 Phoronix 的技术文章。"}
-        ])
-
-        # 运行 agent
-        result = agent.invoke(initial_state)
+        # 调用 run_rss_agent
+        rss_agent.run_rss_agent(source=source, max_articles=max_articles, verbose=verbose)
 
     except Exception as e:
         print(f"运行 RSS agent 失败: {e}")
         sys.exit(1)
-
 
 def cgit_run(commit_id, level, verbose=0):
     """运行 CGit agent 分析 commit"""
@@ -85,7 +62,6 @@ def cgit_run(commit_id, level, verbose=0):
     except Exception as e:
         print(f"运行 CGit agent 失败: {e}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     import os
@@ -100,7 +76,7 @@ if __name__ == "__main__":
     # 添加级别参数
     parser.add_argument('--level', '-level', type=str, default='simple',
                        help='对于 lkml: simple/detail; 对于 rss: 文章数量')
-    
+
     # 添加 verbose 参数
     parser.add_argument('--verbose', '-v', action='count', default=0,
                        help='详细程度: -v (操作), -vv (日志), -vvv (全量结果)')
@@ -113,10 +89,9 @@ if __name__ == "__main__":
         if level not in ['simple', 'detail']:
             level = 'simple'
 
-        if args.verbose >= 1:
-            print(f"运行 LKML agent (级别: {level})")
-            print(f"分析 message-id: {args.lkml}")
-            print()
+        print(f"运行 LKML agent (级别: {level})")
+        print(f"分析 message-id: {args.lkml}")
+        print()
         lkml_run(lkml_message_id=args.lkml, level=level, verbose=args.verbose)
     elif args.rss:
         # 运行 RSS agent
@@ -129,13 +104,12 @@ if __name__ == "__main__":
         except ValueError:
             pass
 
-        if args.verbose >= 1:
-            print(f"运行 RSS agent")
-            if source:
-                print(f"源: {source}")
-            if max_articles:
-                print(f"最大文章数: {max_articles}")
-            print()
+        print(f"运行 RSS agent（级别：simple）")
+        if source:
+            print(f"源: {source}")
+        if max_articles:
+            print(f"最大文章数: {max_articles}")
+        print()
         rss_run(source=source, max_articles=max_articles, verbose=args.verbose)
     elif args.cgit:
         # 运行 CGit agent
@@ -143,9 +117,7 @@ if __name__ == "__main__":
         if level not in ['simple', 'detail']:
             level = 'simple'
 
-        if args.verbose >= 1:
-            print(f"运行 CGit agent (级别: {level})")
-            print(f"分析 commit ID: {args.cgit}")
-            print()
+        print(f"运行 CGit agent (级别: {level})")
+        print(f"分析 commit ID: {args.cgit}")
+        print()
         cgit_run(commit_id=args.cgit, level=level, verbose=args.verbose)
-
