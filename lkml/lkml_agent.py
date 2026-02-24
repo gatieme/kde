@@ -125,7 +125,7 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
                         if "%" in line:
                             try:
                                 progress = int(re.search(r'(\d+)%', line).group(1))
-                                if progress > last_progress:
+                                if 0 <= progress <= 100 and progress > last_progress:
                                     pbar.update(progress - last_progress)
                                     last_progress = progress
                             except:
