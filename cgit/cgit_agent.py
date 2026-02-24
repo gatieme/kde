@@ -165,7 +165,7 @@ def parse_commit(state: CGitAgentState) -> CGitAgentState:
         state.content = content
 
         if state.verbose >= 2:
-            print(f"作者: {stateauthor} <{state.email}>")
+            print(f"作者: {state.author} <{state.email}>")
             print(f"日期: {state.date}")
             print(f"主题: {state.subject}")
             print(f"链接: {state.web_url}")
