@@ -74,6 +74,10 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
         elif state.verbose >= 1:
             with tqdm(total=100, desc="LKML 补丁下载进度", unit="%") as pbar:
                 last_progress = 0
+                task_completed = False
+                no_output_count = 0
+                max_no_output_count = 6
+                select_timeout = 5
                 no_output_count = 0
                 max_no_output_count = 6
                 select_timeout = 5
@@ -89,6 +93,7 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
                                 print(f"警告: {(no_output_count * select_timeout):2d} 秒无输出，检查进程状态。[尝试次数 {no_output_count}/{max_no_output_count}]...")
                             if no_output_count >= max_no_output_count:
                                 if process.poll() is not None:
+                                    task_completed = True
                                     # print(f"警告: 进程已结束，退出监控")
                                     break
                                 else:
@@ -109,6 +114,7 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
                                 print(f"警告: {(no_output_count * select_timeout):2d} 秒无输出，检查进程状态。[尝试次数 {no_output_count}/{max_no_output_count}]...")
                             if no_output_count >= max_no_output_count:
                                 if process.poll() is not None:
+                                    task_completed = True
                                     # print(f"警告: 进程已结束，退出监控")
                                     break
                                 else:
@@ -134,6 +140,7 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
                             pbar.update(0.5)
                     except subprocess.TimeoutExpired:
                         if process.poll() is not None:
+                            task_completed = True
                             break
                         else:
                             process.terminate()
@@ -142,13 +149,16 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
                             break
                     except Exception as e:
                         if process.poll() is not None:
+                            task_completed = True
                             break
                         else:
                             if state.verbose >= 2:
                                 print(f"警告: 读取输出时发生错误: {e}")
                             break
 
-                pbar.n = 100
+                if task_completed:
+                    pbar.n = 100
+                    pbar.refresh()
                 pbar.refresh()
         else:
             try:
