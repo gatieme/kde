@@ -1,29 +1,86 @@
-# 1 描述
--------
+# Patchwork Integration
 
+## 项目介绍
+
+Patchwork 模块提供与 kernel.org Patchwork 系统的集成，用于获取和管理 Linux 内核补丁集合。
+
+## 项目架构
+
+### 整体架构图
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                   Patchwork Integration                       │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │         get_patchwork_project.sh                      │  │
+│  │  - 获取所有项目列表                                   │  │
+│  │  - 输出到 project/projects_list.md                    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                         │                                  │
+│                         ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │         get_patchwork_series.sh                       │  │
+│  │  - 获取指定项目的补丁系列                             │  │
+│  │  - 按日期过滤                                         │  │
+│  │  - 输出到日期目录                                     │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              batch.sh                                  │  │
+│  │  - 批量处理脚本                                       │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 核心组件
+
+```
+patchwork/
+├── get_patchwork_project.sh    # 获取所有项目列表
+├── get_patchwork_series.sh     # 获取指定项目的补丁系列
+├── batch.sh                    # 批量处理脚本
+├── project/                    # 项目数据目录
+│   └── projects_list.md       # 项目列表
+└── README.md                   # 本文件
+```
+
+## 功能说明
+
+### 脚本描述
 
 | 脚本 | 描述 |
 |:----:|:----:|
-| get_patchwork_project.sh | 获取 patchwork 上所有的 project 列表(id 和 name 信息), 输出到 project/projects_list.md 中 |
-| get_patchwork_series.sh | 获取 patchwork 上指定 project ID(-p 指定) 上指定日期(-d 指定) 的所有提交的补丁以及补丁集合 series. 输出到对应日期的目录中. |
+| `get_patchwork_project.sh` | 获取 patchwork 上所有的 project 列表（id 和 name 信息），输出到 `project/projects_list.md` 中 |
+| `get_patchwork_series.sh` | 获取 patchwork 上指定 project ID（-p 指定）上指定日期（-d 指定）的所有提交的补丁以及补丁集合 series。输出到对应日期的目录中 |
+| `batch.sh` | 批量处理脚本 |
 
+## 使用方法
 
-# 2 脚本使用
--------
+### 获取项目列表
 
-## 2.1 get_patchwork_project.sh
--------
-
-
-```cpp
+```bash
 bash ./get_patchwork_project.sh
 cat project/projects_list.md
 ```
 
+### 获取补丁系列
+
+```bash
+bash get_patchwork_series.sh -p 365 -d 2022-01-24
+cat 2022-01-24/2022-01-24.md
+```
+
+## 支持的项目
+
+以下是 Patchwork 上支持的主要项目：
+
 | ID | PROJECT |
 |:--:|:-------:|
 |  2  |  Linux ACPI  |
-|  3  |  Linux SuperH Architecture mailing list  |
+|  3  |  Linux SuperH Architecture Architecture mailing list  |
 |  4  |  Linux V4L/DVB mailing list  |
 |  5  |  Linux Kernel Build mailing list  |
 |  6  |  Device Mapper Development  |
@@ -47,7 +104,7 @@ cat project/projects_list.md
 |  41  |  Linux NFS mailing list  |
 |  51  |  Linux framebuffer layer  |
 |  61  |  Linux power management  |
-|  62  |  Linux ARM Kernel Architecture  |
+|  62  |.  Linux ARM Kernel Architecture  |
 |  71  |  LTSI Project development  |
 |  81  |  Linux Samsung SOC mailing list  |
 |  91  |  OCFS2 Development  |
@@ -112,32 +169,60 @@ cat project/projects_list.md
 |  403  |  CXL  |
 |  405  |  MPTCP  |
 
-## 2.2 get_patchwork_series.sh
--------
+## 输出示例
 
-```cpp
-bash get_patchwork_series.sh -p 365 -d 2022-01-24
-cat 2022-01-24/2022-01-24.md
-```
+### 补丁系列输出格式
 
 | 时间  | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |
 |:-----:|:----:|:----:|:----:|:------------:|:----:|
-| 2022/01/24} | liupeng (DM) <liupeng256@huawei.com> | [Add a module parameter to adjust kfence objects](https://patchwork.kernel.org/project/linux-mm/cover/20220124025205.329752-1-liupeng256@huawei.com/) | 607689 | v1 ☐☑ | [PatchWork v1,0/3](https://lore.kernel.org/r/20220124025205.329752-1-liupeng256@huawei.com) |
-| 2022/01/24} | NeilBrown <neilb@suse.de> | [Repair SWAP-over_NFS](https://patchwork.kernel.org/project/linux-mm/cover/164299573337.26253.7538614611220034049.stgit@noble.brown/) | 607709 | v3 ☐☑ | [PatchWork v3,0/23](https://lore.kernel.org/r/164299573337.26253.7538614611220034049.stgit@noble.brown) |
-| 2022/01/24} | Muchun Song <songmuchun@bytedance.com> | [[v2,1/2] mm: thp: fix wrong cache flush in remove_migration_pmd()](https://patchwork.kernel.org/project/linux-mm/patch/20220124051752.83281-1-songmuchun@bytedance.com/) | 607714 | v2 ☐☑ | [PatchWork v2,0/2](https://lore.kernel.org/r/20220124051752.83281-1-songmuchun@bytedance.com) |
-| 2022/01/24} | Christophe Leroy <christophe.leroy@csgroup.eu> | [Allocate module text and data separately](https://patchwork.kernel.org/project/linux-mm/cover/cover.1643015752.git.christophe.leroy@csgroup.eu/) | 607770 | v1 ☐☑ | [PatchWork v1,0/7](https://lore.kernel.org/r/cover.1643015752.git.christophe.leroy@csgroup.eu) |
-| 2022/01/24} | Anshuman Khandual <anshuman.khandual@arm.com> | [mm/mmap: Drop protection_map[] and platform's __SXXX/__PXXX requirements](https://patchwork.kernel.org/project/linux-mm/cover/1643029028-12710-1-git-send-email-anshuman.khandual@arm.com/) | 607842 | v1 ☐☑ | [PatchWork v1,0/31](https://lore.kernel.org/r/1643029028-12710-1-git-send-email-anshuman.khandual@arm.com) |
-| 2022/01/24} | Miaohe Lin <linmiaohe@huawei.com> | [mm/vmalloc: remove unneeded function forward declaration](https://patchwork.kernel.org/project/linux-mm/patch/20220124133752.60663-1-linmiaohe@huawei.com/) | 607865 | v1 ☐☑ | [PatchWork v1,0/1](https://lore.kernel.org/r/20220124133752.60663-1-linmiaohe@huawei.com) |
-| 2022/01/24} | Marco Elver <elver@google.com> | [kasan: test: fix compatibility with FORTIFY_SOURCE](https://patchwork.kernel.org/project/linux-mm/patch/20220124160744.1244685-1-elver@google.com/) | 607913 | v1 ☐☑ | [PatchWork v1,0/1](https://lore.kernel.org/r/20220124160744.1244685-1-elver@google.com) |
-| 2022/01/24} | Ard Biesheuvel <ardb@kernel.org> | [mm: make 'highmem' symbol ro_after_init](https://patchwork.kernel.org/project/linux-mm/patch/20220124170555.1054480-1-ardb@kernel.org/) | 607949 | v1 ☐☑ | [PatchWork v1,0/1](https://lore.kernel.org/r/20220124170555.1054480-1-ardb@kernel.org) |
-| 2022/01/24} | Zi Yan <zi.yan@sent.com> | [mm: page_alloc: avoid merging non-fallbackable pageblocks with others.](https://patchwork.kernel.org/project/linux-mm/patch/20220124175957.1261961-1-zi.yan@sent.com/) | 608000 | v1 ☐☑ | [PatchWork v1,0/1](https://lore.kernel.org/r/20220124175957.1261961-1-zi.yan@sent.com) |
-| 2022/01/24} | andrey.konovalov@linux.dev <andrey.konovalov@linux.dev> | [kasan, vmalloc, arm64: add vmalloc tagging support for SW/HW_TAGS](https://patchwork.kernel.org/project/linux-mm/cover/cover.1643047180.git.andreyknvl@google.com/) | 608001 | v6 ☐☑ | [PatchWork v6,0/39](https://lore.kernel.org/r/cover.1643047180.git.andreyknvl@google.com) |
+| 2022/01/24 | liupeng (DM) <liupeng256@huawei.com> | [Add a module parameter to adjust kfence objects](https://patchwork.kernel.org/project/linux-mm/cover/20220124025205.329752-1-liupeng256@huawei.com/) | 607689 | v1 ☐☑ | [PatchWork v1,0/3](https://lore.kernel.org/r/20220124025205.329752-1-liupeng256@huawei.com) |
+| 2022/01/24 | NeilBrown <neilb@suse.de> | [Repair SWAP-over_NFS](https://patchwork.kernel.org/project/linux-mm/cover/164299573337.26253.7538614611220034049.stgit@noble.brown/) | 607709 | v3 ☐☑ | [PatchWork v3,0/23](https://lore.kernel.org/r/164299573337.26253.7538614611220034049.stgit@noble.brown) |
 
+## Patchwork API 概述
 
+相关 API 接口，请查阅 [Patchwork API url](https://patchwork.kernel.org/api)
 
-# 3 附录 PatchWork API 概述
--------
+### 示例 API 调用
 
-相关 API 接口, 请查阅 [PatchWork API url](https://patchwork.kernel.org/api)
-
+```bash
+# 获取指定项目的补丁系列
 https://patchwork.kernel.org/api/series/?project=365&archive=both&format=json&submitter=201165
+```
+
+## 依赖关系
+
+### 系统依赖
+
+- **curl** 或 **wget** - 用于 HTTP 请求
+- **jq** - 用于 JSON 解析（可选）
+
+## 扩展计划
+
+### 功能扩展
+
+- 添加更多 API 接口支持
+- 支持按作者、状态等条件过滤
+- 添加补丁状态跟踪
+- 支持批量下载补丁
+
+### 性能优化
+
+- 添加请求缓存
+- 支持并发请求
+- 优化大数据量处理
+
+### 用户体验
+
+- 添加进度条显示
+- 支持更多输出格式（JSON、CSV）
+- 添加交互式查询
+
+## 注意事项
+
+1. **网络连接** - 需要网络连接访问 patchwork.kernel.org
+2. **API 限制** - 注意 API 请求频率限制
+3. **数据量** - 大量数据获取可能需要较长时间
+
+## 许可证
+
+MIT License

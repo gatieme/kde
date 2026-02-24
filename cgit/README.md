@@ -2,14 +2,51 @@
 
 ## 项目介绍
 
-CGit Agent 是一个专门用于分析 Linux 内核 git commit 的智能工具，使用 langgraph 实现状态管理和工作流，能够自动下载、解析和分析指定的 commit，并从 commit 中提取 patchset 链接进行关联分析。
+CGit Agent 是一个专门用于分析 Linux 内核 git commit 的智能工具，使用 LangGraph 实现状态管理和工作流，能够自动下载、解析和分析指定的 commit，并从 commit 中提取 patchset 链接进行关联分析。
 
 ## 项目架构
 
+### 整体架构图
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    CGit Agent 工作流                         │
+│                   (LangGraph StateGraph)                     │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ fetch_commit │───▶│ parse_commit │───▶│analyze_      │ │
+│  │              │    │              │    │commit        │ │
+│  │ - wget       │    │ - 提取作者   │    │ - AI 摘要    │ │
+│  │ - git.kernel │.   │ - 提取日期   │    │ - AI 分析    │ │
+│  │ - 进度条     │    │ - 提取主题   │    │              │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│                                                  │           │
+│                                                  ▼           │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ output_      │◀───│ run_lkml_    │◀───│check_        │ │
+│  │ results      │    │ analysis     │    │patchset      │ │
+│  │ - Markdown   │    │ - 提取       │    │ - 提取 Link  │ │
+│  │   表格输出   │    │   message-id │    │ - 正则匹配   │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│         │                     │                           │
+│         │                     ▼                           │
+│         │          ┌──────────────────┐                    │
+│         │          │  LKML Agent      │                    │
+│         │          │  (递归调用)      │                    │
+│         │          └──────────────────┘                    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
 ### 核心组件
 
-1. **cgit_agent.py** - 使用 langgraph 实现的 CGit commit 分析 agent
-2. **get_cgit_patch.sh** - 辅助脚本，用于获取 cgit patch
+```
+cgit/
+├── cgit_agent.py       # LangGraph 工作流实现
+├── get_cgit_patch.sh    # CGit patch 获取辅助脚本
+└── README.md           # 本文件
+```
 
 ### 工作流程
 
@@ -37,7 +74,7 @@ CGit Agent 的工作流程由以下几个主要步骤组成：
 
 ### 技术实现
 
-- **状态管理** - 使用 langgraph 实现状态管理和工作流
+- **状态管理** - 使用 LangGraph 实现状态管理和工作流
 - **commit 下载** - 使用 wget 从 cgit 下载 commit 内容
 - **信息解析** - 使用正则表达式解析 commit 信息
 - **patchset 检测** - 使用正则表达式从 commit 中提取 patchset 链接
@@ -45,6 +82,29 @@ CGit Agent 的工作流程由以下几个主要步骤组成：
 - **结果展示** - 以 Markdown 表格形式展示分析结果
 - **进度条实现** - 使用 tqdm 库实现进度条显示
 - **日志控制** - 通过 verbose 级别参数控制日志输出
+
+### 状态类定义
+
+```python
+@dataclass
+class CGitAgentState:
+    messages: Annotated[List[Dict[str, Any]], add_messages]
+    commit_id: str = ""          # Commit ID
+    level: str = "simple"        # 分析级别
+    work_dir: str = ""            # 工作目录
+    commit_file: str = ""        # Commit 文件路径
+    date: str = ""                # 日期
+    author: str = ""              # 作者
+    email: str = ""               # 邮箱
+    subject: str = ""             # 主题
+    web_url: str = ""             # Web URL
+    content: str = ""             # Commit 内容
+    summary: str = "TODO"         # 摘要
+    analysis: str = ""            # 详细分析
+    patchset_link: str = ""       # Patchset 链接
+    has_patchset: bool = False    # 是否有 patchset
+    verbose: int = 0              # 详细级别
+```
 
 ## 使用说明
 
@@ -87,9 +147,11 @@ python3 cgit_agent.py --commit_id=<commit-id> --level=detail
 
 ### 参数说明
 
-- `<commit-id>` - Git commit 的 ID，例如：`53439363c0a111f11625982b69c88ee2ce8608ec`
-- `simple|detail` - 分析级别，simple 仅生成摘要，detail 进行深入分析
-- `-v, --verbose` - 详细模式，显示进度条和详细日志
+| 参数 | 说明 | 可选值 | 默认值 |
+|------|------|--------|--------|
+| `<commit-id>` | Git commit 的 ID | - | 必填 |
+| `simple\|detail` | 分析级别 | simple, detail | simple |
+| `-v, --verbose` | 详细模式，显示进度条和详细日志 | 多次使用增加详细程度 | 0 |
 
 ## 依赖关系
 
@@ -103,7 +165,6 @@ python3 cgit_agent.py --commit_id=<commit-id> --level=detail
 
 - **wget** - 用于下载 cgit commit
 - **langgraph** - 用于构建状态管理和工作流
-- **openai** - 用于模型推理
 - **tqdm** - 用于显示进度条
 
 ## 示例
@@ -139,6 +200,16 @@ python3 ../kde.py cgit 53439363c0a111f11625982b69c88ee2ce8608ec detail -v
 
 当使用 `-v` 参数时，会显示 commit 下载和分析的进度条，以及更详细的日志信息。
 
+## 缓存机制
+
+Commit 下载后会自动缓存到 `output/cgit/<commit-id>/` 目录：
+
+```
+output/cgit/
+└── <commit-id>/
+    └── <commit-id>  # Commit 文件
+```
+
 ## 扩展计划
 
 ### 功能扩展
@@ -151,7 +222,7 @@ python3 ../kde.py cgit 53439363c0a111f11625982b69c88ee2ce8608ec detail -v
 
 - 优化 commit 下载和解析速度
 - 改进模型推理效率
-- 增加缓存机制减少重复操作
+- 增加缓存机制
 
 ### 用户体验
 
@@ -160,6 +231,18 @@ python3 ../kde.py cgit 53439363c0a111f11625982b69c88ee2ce8608ec detail -v
 - 支持结果导出为不同格式
 - 增强进度条和日志的用户体验
 
+## 代码规范
+
+### 命名约定
+
+- **函数**: `snake_case` (例如：`fetch_commit`, `parse_commit`)
+- **类**: `CamelCase` (例如：`CGitAgentState`)
+- **常量**: `UPPER_SNAKE_CASE`
+
+### 注释风格
+
+- **双语注释**: 英文用于代码结构，中文用于领域逻辑
+
 ## 许可证
 
-本项目仅供学习和研究使用。
+MIT License

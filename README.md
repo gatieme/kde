@@ -1,225 +1,465 @@
 # Kernel Development Explorer (KDE)
 
-Kernel Development Explorer (KDE) 是一个用于分析 Linux 内核开发相关内容的工具集合，包括 LKML (Linux Kernel Mailing List) 补丁分析、CGit commit 分析和技术 RSS 源文章分析。
+KDE 是一个基于 AI 的 Linux 内核开发分析工具集，使用 LangGraph 构建状态机工作流，集成 ModelScope Qwen3-235B-A22B 模型进行智能分析。
 
-## 项目结构
+## 项目概述
+
+KDE 提供三个核心分析能力：
+- **LKML 补丁分析** - 分析 Linux 内核邮件列表中的（Linux Kernel Mailing List）补丁
+- **CGit Commit 分析** - 分析 Linux 内核 Git 提交，并自动关联 patchset
+- **RSS 文章分析** - 分析 Phoronix 和 LWN 等技术网站的文章
+
+## 项目架构
+
+### 整体架构图
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         kde.py (CLI 入口)                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │   --lkml     │  │    --rss     │  │    --cgit    │          │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
+└─────────┼──────────────────┼──────────────────┼──────────────────┘
+          │                  │                  │
+          ▼                  ▼                  ▼
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│  LKML Agent      │  │   RSS Agent      │  │  CGit Agent      │
+│  (lkml_agent.py) │  │  (rss_agent.py)  │  │ (cgit_agent.py)  │
+└────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘
+         │                     │                     │
+         │  LangGraph         │  LangGraph          │  LangGraph
+         │  状态机工作流       │  状态机工作流       .  状态机工作流
+         │                     │                     │
+         ▼                     ▼                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Model Inference Module                       │
+│                    (model/model_infer.py)                       │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  ModelScope Qwen3-235B-A22B                            │   │
+│  │  - OpenAI-compatible API                              │   │
+│  │  - Streaming inference with tqdm progress              │   │
+│  │  - Temperature=0 (greedy decoding)                    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 目录结构
 
 ```
 kde/
-├── kde.py              # 项目主入口点
-├── lkml/               # LKML 补丁分析模块
-│   ├── README.md
+├── kde.py                  # CLI 入口，统一命令行接口
+├── .env                    # 环境配置（OPENAI_API_KEY 等）
+├── README.md               # 本文件
+│
+├── lkml/                   # LKML 补丁分析模块
+│   ├── lkml_agent.py       # LangGraph 工作流
+│   ├── lkml.py             # 核心补丁分析器
 │   ├── __init__.py
-│   ├── cvt_lkml_to_lore.sh
-│   ├── get_b4_series.sh
-│   ├── lkml.py
-│   └── lkml_agent.py    # 基于 langgraph 的 LKML 分析代理
-├── rss/                # RSS 文章分析模块
-│   ├── README.md
-│   ├── detect_anti_crawler.py
-│   ├── dual_rss_agent.py
-│   └── rss_agent.py     # 基于 langgraph 的 RSS 分析代理
-├── cgit/               # CGit commit 分析模块
-│   ├── cgit_agent.py    # 基于 langgraph 的 CGit 分析代理
-│   └── get_cgit_patch.sh
-├── model/              # AI 模型集成模块
+│   ├── get_b4_series.sh    # B4 系列获取辅助脚本
+│   └── README.md
+│
+├── rss/                    # RSS 文章分析模块
+│   ├── rss_agent.py        # LangGraph 工作流
+│   ├── dual_rss_agent.py    # 双源分析（旧版）
+│   ├── detect_anti_crawler.py  # 反爬虫检测
+│   └── README.md
+│
+├── cgit/                   # CGit commit 分析模块
+│   ├── cgit_agent.py       # LangGraph 工作流
+│   ├── get_cgit_patch.sh    # CGit patch 获取辅助脚本
+│   └── README.md
+│
+├── model/                  # AI 模型集成模块
+│   ├── model_infer.py      # ModelScope 推理封装
+│   ├── model_request.py    # 请求构建器
+│   ├── model_api.py        # API 工具函数
 │   ├── __init__.py
-│   ├── model_api.py
-│   ├── model_infer.py
-│   └── model_request.py
-├── test/               # 测试脚本
-│   ├── README.md
-│   ├── test.sh
-│   ├── test_all.sh     # 运行所有测试
-│   ├── test_all_commands.py
-│   ├── test_cgit.sh    # CGit 代理测试
-│   ├── test_lkml.sh    # LKML 代理测试
-│   ├── test_rss.sh     # RSS 代理测试
-│   └── test_verbose.sh # 详细模式测试
-├── patchwork/          # Patchwork 相关脚本
-│   ├── README.md
-│   ├── project/
-│   ├── batch.sh
+│   └── README.md
+│
+├── test/                   # 测试套件
+│   ├── test_all.sh         # 主测试脚本
+│   ├── test_all_commands.py # Python 测试框架
+│   ├── test_lkml.sh        # LKML 测试
+│   ├── test_rss.sh         # RSS 测试
+│   ├── test_cgit.sh        # CGit 测试
+│   ├── test_verbose.sh      # 详细模式测试
+│   └── README.md
+│
+├── patchwork/              # PatchWork 集成脚本
 │   ├── get_patchwork_project.sh
 │   ├── get_patchwork_series.sh
-│   └── projects_list.md
-├── .env                # 环境配置文件
-├── .gitignore
-└── README.md
+│   ├── batch.sh
+│   ├── project/
+│   └── README.md
+│
+└── output/                 # 统一缓存目录
+    ├── lkml/               # LKML 补丁缓存
+    ├── rss/                # RSS 文章缓存
+    └── cgit/               # CGit commit 缓存
 ```
 
 ## 核心功能
 
 ### 1. LKML 补丁分析
-- 基于 langgraph 构建的工作流，支持补丁下载、解析和分析
-- 支持简单和详细两种分析级别
-- 提供补丁内容摘要、关键修改点和技术影响分析
-- 支持进度条显示和详细日志输出
+
+**架构图：**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    LKML Agent 工作流                         │
+│                   (LangGraph StateGraph)                     │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ fetch_patch  │───▶│ parse_patch  │───▶│generate_     │ │
+│  │              │    │              │    │summary       │ │
+│  │ - b4 am      │    │ - 提取作者   │    │ - AI 摘要    │ │
+│  │ - 进度条     │    │ - 提取日期   │    │ - 300 字限制 │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│                                                  │           │
+│                                                  ▼           │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ output_      │◀───│ analyze_     │◀───│              │ │
+│  │ results      │    │ patch        │    │              │ │
+│  │ - Markdown   │    │ - AI 分析    │    │              │ │
+│  │   表格输出   │    │ - 技术影响   │    │              │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**功能特性：**
+- 使用 `b4` 工具从 LKML 下载补丁
+- 解析补丁元数据（作者、日期、主题、版本、message-id）
+- AI 生成摘要（300 字限制）
+- 详细模式下的深度技术分析
+- Markdown 表格格式输出
+- 支持进度条和详细日志
 
 ### 2. CGit Commit 分析
-- 基于 langgraph 构建的工作流，支持 commit 下载、解析和分析
-- 支持从 commit 中提取 patchset 链接并进行关联分析
-- 提供 commit 内容摘要、修改点分析和技术影响评估
-- 支持进度条显示和详细日志输出
+
+**架构图：**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    CGit Agent 工作流                         │
+│                   (LangGraph StateGraph)                     │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ fetch_commit │───▶│ parse_commit │───▶│analyze_      │ │
+│  │              │    │              │    │commit        │ │
+│  │ - wget       │    │ - 提取作者   │    │ - AI 摘要    │ │
+│  │ - git.kernel │    │ - 提取日期   │    │ - AI 分析    │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│                                                  │           │
+│                                                  ▼           │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ output_      │◀───│ run_lkml_    │◀───│check_        │ │
+│  │ results      │    │ analysis     │    │patchset      │ │
+│  │ - Markdown   │    │ - 提取       │    │ - 提取 Link  │ │
+│  │   表格输出   │    │   message-id │    │ - 正则匹配   │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│         │                     │                           │
+│         │                     ▼                           │
+│         │          ┌──────────────────┐                    │
+│         │          │  LKML Agent      │                    │
+│         │          │  (递归调用)      │                    │
+│         │          └──────────────────┘                    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**功能特性：**
+- 使用 `wget` 从 git.kernel.org 下载 commit
+- 解析 commit 元数据
+- AI 生成摘要和分析
+- 自动提取 patchset 链接（Link 字段）
+- 递归调用 LKML Agent 分析关联的 patchset
+- Markdown 表格格式输出
 
 ### 3. RSS 文章分析
-- 支持分析 Phoronix 和 LWN 等技术网站的 RSS 源
-- 使用 Playwright 模拟真实浏览器行为，绕过反爬虫机制
-- 提供文章摘要、技术亮点提取和分类
-- 支持进度条显示和详细日志输出
 
-### 4. 统一命令行入口
-- 通过 `kde.py` 提供统一的命令行界面
-- 支持详细的参数化配置，包括 verbose 级别控制
-- 方便集成到其他脚本或工作流中
+**架构图：**
 
-### 5. 进度条和日志控制
-- 当不使用 `-v` 参数时，只显示简洁的状态消息
-- 当使用 `-v` 或更高级别时，显示详细的进度条和日志
-- 支持多个 verbose 级别，满足不同的调试和使用需求
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    RSS Agent 工作流                          │
+│                   (LangGraph StateGraph)                     │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ detect_      │───▶│ fetch_rss_   │───▶│fetch_article │ │
+│  │ protection   │    │ feeds        │    │_content      │ │
+│  │ - Cloudflare │    │ - feedparser │    │ - requests   │ │
+│  │ - Turnstile  │    │ - 多源支持   │    │ - httpx      │ │
+│  │ - 验证码     │    │              │    │ - Playwright │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│                                                  │           │
+│                                                  ▼           │
+│  ─────────────────────────────────────────────────────────   │
+│         反爬虫绕过：                                    │
+│         - 真实浏览器指纹                                │
+│         - 鼠标移动和滚动模拟                           │
+│         - Cookie 和 localStorage                        │
+│         - 多步骤导航（Google → 目标）                  │
+│  ─────────────────────────────────────────────────────────   │
+│                                                  │           │
+│                                                  ▼           │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ output_      │◀───│ generate_    │◀───│analyze_      │ │
+│  │ results      │    │ summaries    │    │articles      │ │
+│  │ - Markdown   │    │ - AI 摘要    │    │ - 内核关键词 │ │
+│  │   格式输出   │    │ - 分类       │    │ - 补丁链接   │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**功能特性：**
+- 支持多源（Phoronix、LWN）
+- 反爬虫检测和绕过（Cloudflare、Turnstile）
+- 三种 HTTP 后端：requests、httpx、Playwright
+- Playwright 真实浏览器模拟
+- 自动识别内核相关文章
+- 提取补丁链接
+- AI 生成摘要（内核文章详细摘要，其他简洁摘要）
+- Markdown 格式输出
+
+### 4. Model Inference 模块
+
+**架构图：**
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                 Model Inference Module                        │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              ModelRequest                             │  │
+│  │  - set_request(type, content)                        │  │
+│  │  - get_messages() → List[Dict]                       │  │
+│  │                                                       │  │
+│  │  类型:                                                │  │
+│  │  - summary: 300 字限制摘要                            │  │
+│  │  - analysis: 详细技术分析                            │  │
+│  └──────────────────────┬───────────────────────────────┘  │
+│                         │                                  │
+│                         ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              ModelInference                           │  │
+│  │  - OpenAI Client (ModelScope API)                    │  │
+│  │  - inference(messages) → str                         │  │
+│  │  - Streaming with tqdm progress                      │  │
+│  │                                                       │  │
+│  │  配置:                                                │  │
+│  │  - model: Qwen3-235B-A22B                            │  │
+│  │  - temperature: 0 (greedy)                           │  │
+│  │  - stream: True)                                     │  │
+│  │  - extra_body: {enable_thinking: False}              │  │
+│  └──────────────────────┬───────────────────────────────┘  │
+│                         │                                  │
+│                         ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │          ModelScope API (Qwen3-235B-A22B)             │  │
+│  │  https://api-inference.modelscope.cn/v1/              │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**功能特性：**
+- OpenAI 兼容客户端
+- 流式推理
+- tqdm 进度条
+- 温度控制（默认 0，贪心解码）
+- 思考过程控制（可启用/禁用）
 
 ## 安装依赖
 
 ### 系统依赖
-- Python 3.8+
-- Git
-- B4 工具 (用于 LKML 补丁下载)
-- Playwright (用于 RSS 分析)
+
+```bash
+# Git
+sudo apt-get install git
+
+# B4 工具（用于 LKML 补丁下载）
+pip install b4
+
+# Wget（用于 CGit commit 下载）
+sudo apt-get install wget
+```
 
 ### Python 依赖
+
 ```bash
-pip install langgraph requests beautifulsoup4 playwright tqdm
+# 核心依赖
+pip install langgraph requests beautifulsoup4 playwright tqdm feedparser httpx python-dotenv openai
+
+# 安装 Playwright 浏览器
 playwright install
+```
+
+### 环境配置
+
+创建 `.env` 文件：
+
+```bash
+# ModelScope API Key
+OPENAI_API_KEY=your-modelscope-api-key
 ```
 
 ## 使用方法
 
 ### LKML 补丁分析
+
 ```bash
-# 简单分析模式
+# 简单模式（仅摘要）
 python kde.py lkml <message-id> simple
 
-# 详细分析模式
+# 详细模式（摘要 +）深度分析）
 python kde.py lkml <message-id> detail
 
-# 详细分析模式，显示进度条
+# 详细模式 + 进度条
 python kde.py lkml <message-id> detail -v
 
-# 详细分析模式，显示最详细的日志
+# 详细模式 + 最详细日志
 python kde.py lkml <message-id> detail -vvv
 ```
 
-### CGit Commit 分析
-```bash
-# 简单分析模式
-python kde.py cgit <commit-id> simple
+**示例：**
 
-# 详细分析模式
+```bash
+python kde.py lkml 20260122161647.142704-2-realwujing@gmail.com detail -v
+```
+
+### CGit Commit 分析
+
+```bash
+# 简单模式
+python kde.py cgitkt <commit-id> simple
+
+# 详细模式
 python kde.py cgit <commit-id> detail
 
-# 详细分析模式，显示进度条
+# 详细模式 + 进度条
 python kde.py cgit <commit-id> detail -v
 ```
 
-### RSS 文章分析
+**示例：**
+
 ```bash
-# 分析 Phoronix 文章 (默认 3 篇)
-python kde.py rss phoronix
-
-# 分析 LWN 文章，限制 5 篇
-python kde.py rss lwn 5
-
-# 分析 Phoronix 文章，显示进度条
-python kde.py rss phoronix 5 -v
+python kde.py cgit 53439363c0a111f11625982b69c88ee2ce8608ec detail -v
 ```
 
-## 技术实现
+### RSS 文章分析
 
-### 1. 基于 Langgraph 的代理工作流
-所有代理都使用 Langgraph 构建状态机工作流：
+```bash
+# 分析 Phoronix（默认 3 篇）
+python kde.py rss phoronix
 
-#### LKML 代理工作流
-- `fetch_patch`: 下载补丁内容
-- `parse_patch`: 解析补丁结构和修改内容
-- `generate_summary`: 生成补丁摘要
-- `analyze_patch`: 分析补丁技术影响
-- `output_results`: 输出分析结果
+# 分析 LWN（限制 5 篇）
+python kde.py rss lwn 5
 
-#### CGit 代理工作流
-- `fetch_commit`: 下载 commit 内容
-- `parse_commit`: 解析 commit 结构和修改内容
-- `analyze_commit`: 分析 commit 技术影响
-- `check_patchset`: 检查 patchset 链接
-- `run_lkml_analysis`: 运行 LKML 代理分析 patchset
-- `output_results`: 输出分析结果
+# 分析 Phoronix + 进度条
+python kde.py rss phoronix 5 -v
 
-#### RSS 代理工作流
-- `detect_protection`: 检测网站反爬虫机制
-- `fetch_rss_feeds`: 获取 RSS 订阅内容
-- `fetch_article_content`: 获取文章完整内容
-- `analyze_articles`: 分析文章内容
-- `generate_summaries`: 生成文章摘要
-- `output_results`: 输出分析结果
+# 分析所有源
+python kde.py rss
+```
 
-### 2. 增强的 RSS 代理
-RSS 代理使用 Playwright 模拟真实浏览器行为，包括：
-- 模拟真实浏览器指纹
-- 实现鼠标移动、滚动等交互
-- 多步骤导航 (先访问 Google，再跳转目标网站)
-- Cookie 和 localStorage 模拟
+### Verbose 级别说明
 
-### 3. AI 模型集成
-项目集成了 AI 模型用于文本分析和摘要生成，支持：
-- 补丁内容理解和分析
-- 技术文章摘要和分类
-- 自然语言处理和格式化
-- 进度条显示模型推理过程
-
-### 4. 进度条和日志控制
-项目使用 tqdm 库实现进度条功能，并通过 verbose 级别控制日志输出：
-- `verbose=0`: 只显示简洁的状态消息
-- `verbose=1`: 显示进度条和基本日志
-- `verbose=2`: 显示更详细的日志和模型推理过程
-- `verbose=3`: 显示最详细的日志，包括所有命令输出
+| 级别 | 参数 | 行为 |
+|------|------|------|
+| 0 | 无 | 只显示简洁状态消息 |
+| 1 | `-v` | 显示进度条和基本日志 |
+| 2 | `-vv` | 显示详细日志和处理信息 |
+| 3 | `-vvv` | 显示最详细的调试信息，包括所有命令输出 |
 
 ## 测试
 
-项目包含完整的测试脚本：
+### 运行所有测试
+
 ```bash
-# 运行所有测试
-./test/test_all.sh
+cd test
+./test_all.sh
+```
 
-# 单独运行 LKML 测试
-./test/test_lkml.sh
+### 运行专项测试
 
-# 单独运行 CGit 测试
-./test/test_cgit.sh
+```bash
+# LKML 测试
+./test_lkml.sh
 
-# 单独运行 RSS 测试
-./test/test_rss.sh
+# CGit 测试
+./test_cgit.sh
 
-# 测试详细模式
-./test/test_verbose.sh
+# RSS 测试
+./test_rss.sh
+
+# 详细模式测试
+./test_verbose.sh
 ```
 
 ## 技术亮点
 
-1. **模块化设计**: 清晰的目录结构和职责分离
-2. **状态机工作流**: 使用 Langgraph 构建可扩展的分析工作流
-3. **反爬虫绕过**: 高级 Playwright 技术模拟真实浏览器行为
-4. **统一入口点**: 简化用户交互和集成
-5. **进度条和日志控制**: 提供直观的用户反馈和详细的调试信息
-6. **全面的测试覆盖**: 确保功能稳定性和可靠性
-7. **多代理集成**: 支持 LKML、CGit 和 RSS 多种数据源的分析
+1. **模块化设计** - 清晰的目录结构和职责分离
+2. **LangGraph 状态机** - 可扩展的工作流架构
+3. **反爬虫绕过** - 高级 Playwright 技术模拟真实浏览器
+4. **统一 CLI 入口** - 简化用户交互
+5. **进度条和日志控制** - 直观的用户反馈
+6. **ModelScope 集成** - Qwen3-235B-A22B 智能分析
+7. **缓存机制** - 统一的缓存目录（`output/`）
+8. **多代理集成** - LKML、CGit、RSS 无缝协作
 
-## 未来发展建议
+## 代码规范
 
-1. **扩展支持的 RSS 源**: 添加更多技术网站和博客
-2. **增强补丁分析能力**: 支持更复杂的补丁系列分析
-3. **添加可视化界面**: 提供 Web 界面或 GUI 工具
-4. **集成更多 AI 模型**: 探索不同模型在代码分析中的应用
-5. **添加贡献指南**: 方便社区参与和扩展
-6. **增强 CI/CD 集成**: 提供更完善的持续集成和部署支持
+### 命名约定
+
+- **函数**: ``snake_case` (例如：`fetch_patch`, `parse_commit`)
+- **类**: `CamelCase` (例如：`ModelInference`, `LKMLAgentState`)
+- **状态类**: `CamelCase` + `State` 后缀 (例如：`LKMLAgentState`)
+- **常量**: `UPPER_SNAKE_CASE` (例如：`ALL_RSS_SOURCES`)
+
+### 导入模式
+
+```python
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from model import ModelInference, ModelRequest
+```
+
+### 注释风格
+
+- **双语注释**: 英文用于代码结构，中文用于领域逻辑
+- **文档字符串**: 使用中文描述功能和使用方法
+
+## 未来发展
+
+### 功能扩展
+
+- [ ] 扩展支持的 RSS 源（更多技术网站）
+- [ ] 增强补丁分析能力（补丁系列分析）
+- [ ] 添加可视化界面（Web/GUI）
+- [ ] 集成更多 AI 模型
+- [ ] 添加贡献指南
+
+### 性能优化
+
+- [ ] 优化下载和解析速度
+- [ ] 改进模型推理效率
+- [ ] 增强缓存机制
+- [ ] 支持并发处理
+
+### 工程改进
+
+- [ ] 添加 CI/CD 集成
+- [ ] 迁移到 pytest 测试框架
+- [ ] 添加测试覆盖率统计
+- [ ] 改进错误处理和重试机制
 
 ## 许可证
 

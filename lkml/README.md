@@ -2,16 +2,47 @@
 
 ## 项目介绍
 
-LKML Agent 是一个专门用于分析 Linux 内核邮件列表（LKML）补丁的智能工具，使用 langgraph 实现状态管理和工作流，能够自动下载、解析和分析指定的 LKML 补丁。
+LKML Agent 是一个专门用于分析 Linux 内核邮件列表（LKML）补丁的智能工具，使用 LangGraph 实现状态管理和工作流，能够自动下载、解析和分析指定的 LKML 补丁。
 
 ## 项目架构
 
+### 整体架构图
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    LKML Agent 工作流                         │
+│                   (LangGraph StateGraph)                     │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ fetch_patch  │───▶│ parse_patch  │───▶│generate_     │ │
+│  │              │    │              │    │summary       │ │
+│  │ - b4 am      │    │ - 提取作者   │    │ - AI 摘要    │ │
+│  │ - 进度条     │    │ - 提取日期   │    │ - 300 字限制 │ │
+│  │ - 超时处理   │    │ - 提取主题   │    │              │ │
+│  └──────────────┘    └──────────────┘    └──────────────┘ │
+│                                                  │           │
+│                                                  ▼           │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐ │
+│  │ output_      │◀───│ analyze_     │◀───│              │ │
+│  │ results      │    │ patch        │    │              │ │
+│  │ - Markdown   │    │ - AI 分析    │    │              │ │
+│  │   表格输出   │    │ - 技术影响   │    │              │ │
+│  └──────────────┘    └只有 detail 级别   └──────────────┘ │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
 ### 核心组件
 
-1. **lkml_agent.py** - 使用 langgraph 实现的 LKML 补丁分析 agent
-2. **lkml.py** - 原始的 LKML 补丁分析实现
-3. **get_b4_series.sh** - 辅助脚本，用于获取补丁系列
-4. **cvt_lkml_to_lore.sh** - 辅助脚本，用于转换 LKML 到 LORE 格式
+```
+lkml/
+├── lkml_agent.py       # LangGraph 工作流实现
+├── lkml.py             # 核心补丁分析器（遗留）
+├── __init__.py         # 模块初始化
+├── get_b4_series.sh    # B4 系列获取辅助脚本
+└── README.md           # 本文件
+```
 
 ### 工作流程
 
@@ -34,16 +65,43 @@ LKML Agent 的工作流程由以下几个主要步骤组成：
 - **结果输出** - 以表格形式展示分析结果，包括补丁的基本信息和分析内容
 - **进度条显示** - 在 verbose 模式下显示补丁下载和分析的进度
 - **详细日志控制** - 通过 verbose 级别控制日志输出的详细程度
+- **超时处理** - 检测并处理 b4 下载超时情况
 
 ### 技术实现
 
-- **状态管理** - 使用 langgraph 实现状态管理和工作流
-- **补丁下载** - 调用 b4 工具下载补丁
+- **状态管理** - 使用 LangGraph 实现状态管理和工作流
+- **补丁下载** - 调用 b4 工具下载补丁，支持进度监控和超时检测
 - **信息解析** - 使用正则表达式解析补丁信息
 - **模型推理** - 集成模型推理模块，对补丁内容进行分析
 - **结果展示** - 以 Markdown 表格形式展示分析结果
 - **进度条实现** - 使用 tqdm 库实现进度条显示
 - **日志控制** - 通过 verbose 级别参数控制日志输出
+
+### 状态类定义
+
+```python
+@dataclass
+class LKMLAgentState:
+    messages: Annotated[List[Dict[str, Any]], add_messages]
+    lkml_id: str = ""           # LKML message-id
+    level: str = "simple"       # 分析级别
+    work_dir: str = ""           # 工作目录
+    cover_file: str = ""         # Cover 文件路径
+    mbx_file: str = ""           # MailBox 文件路径
+    date: str = ""               # 补丁日期
+    author: str = ""             # 作者
+    email: str = ""              # 邮箱
+    version: str = ""            # 版本号
+    subject: str = ""            # 主题
+    web_url: str = ""            # Web URL
+    archive_url: str = ""        # 归档 URL
+    current: str = ""            # 当前补丁编号
+    total: str = ""              # 总补丁数
+    summary: str = "TODO"        # 摘要
+    content: str = ""            # 补丁内容
+    analysis: str = ""           # 详细分析
+    verbose: int = 0             # 详细级别
+```
 
 ## 使用说明
 
@@ -86,9 +144,11 @@ python3 lkml_agent.py --message_id=<message-id> --level=detail
 
 ### 参数说明
 
-- `<message-id>` - LKML 补丁的 message-id，例如：`20260122161647.142704-2-realwujing@gmail.com`
-- `simple|detail` - 分析级别，simple 仅生成摘要，detail 进行深入分析
-- `-v, --verbose` - 详细模式，显示进度条和详细日志
+| 参数 | 说明 | 可选值 | 默认值 |
+|------|------|--------|--------|
+| `<message-id>` | LKML 补丁的 message-id | - | 必填 |
+| `simple\|detail` | 分析级别 | simple, detail | simple |
+| `-v, --verbose` | 详细模式，显示进度条和详细日志 | 多次使用增加详细程度 | 0 |
 
 ## 依赖关系
 
@@ -101,7 +161,6 @@ python3 lkml_agent.py --message_id=<message-id> --level=detail
 
 - **b4** - 用于下载 LKML 补丁
 - **langgraph** - 用于构建状态管理和工作流
-- **openai** - 用于模型推理
 - **tqdm** - 用于显示进度条
 
 ## 示例
@@ -136,6 +195,19 @@ python3 ../kde.py lkml 20260122161647.142704-2-realwujing@gmail.com detail -v
 
 当使用 `-v` 参数时，会显示补丁下载和分析的进度条，以及更详细的日志信息。
 
+## 缓存机制
+
+补丁下载后会自动缓存到 `output/lkml/<message-id>/` 目录：
+
+```
+output/lkml/
+└── <message-id>/
+    ├── <message-id>.cover   # Cover 文件
+    └── <message-id>.mbx     # MailBox 文件
+```
+
+使用 `git clean -fdX` 可以清理所有缓存。
+
 ## 扩展计划
 
 ### 功能扩展
@@ -148,7 +220,7 @@ python3 ../kde.py lkml 20260122161647.142704-2-realwujing@gmail.com detail -v
 
 - 优化补丁下载和解析速度
 - 改进模型推理效率
-- 增加缓存机制减少重复操作
+- 增加缓存机制
 
 ### 用户体验
 
@@ -156,3 +228,19 @@ python3 ../kde.py lkml 20260122161647.142704-2-realwujing@gmail.com detail -v
 - 提供更详细的输出格式
 - 支持结果导出为不同格式
 - 增强进度条和日志的用户体验
+
+## 代码规范
+
+### 命名约定
+
+- **函数**: `snake_case` (例如：`fetch_patch`, `parse_patch`)
+- **类**: `CamelCase` (例如：`LKMLAgentState`)
+- **常量**: `UPPER_SNAKE_CASE`
+
+### 注释风格
+
+- **双语注释**: 英文用于代码结构，中文用于领域逻辑
+
+## 许可证
+
+MIT License
