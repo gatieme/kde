@@ -12,6 +12,8 @@
 #
 #
 
+# env
+.env
 
 # patchwork
 *.json
