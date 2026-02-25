@@ -1,0 +1,48 @@
+# KDE Project Architecture
+
+```mermaid
+flowchart TD
+    subgraph CLI["kde.py CLI Entry"]
+        CMD_LKML["--lkml"]
+        CMD_RSS["--rss"]
+        CMD_CGIT["--cgit"]
+    end
+
+    subgraph Agents["LangGraph Agents"]
+        LKML["LKML Agent<br/>lkml_agent.py"]
+        RSS["RSS Agent<br/>rss_agent.py"]
+        CGIT["CGit Agent<br/>cgit_agent.py"]
+    end
+
+    subgraph Model["Model Inference Module"]
+        MODEL_INF["ModelInference<br/>model/model_infer.py"]
+        MODEL_REQ["ModelRequest<br/>model/model_request.py"]
+        MODEL_API["ModelScope API<br/>Qwen3-235B-A22B"]
+    end
+
+    subgraph Cache["Disk Cache System"]
+        CACHE_LKML["output/lkml/<br/>.cover, .mbx"]
+        CACHE_RSS["output/rss/<br/>.txt (hash-based)"]
+        CACHE_CGIT["output/cgit/<br/>commit files"]
+    end
+
+    CMD_LKML --> LKML
+    CMD_RSS --> RSS
+    CMD_CGIT --> CGIT
+
+    LKML --> MODEL_INF
+    RSS --> MODEL_INF
+    CGIT --> MODEL_INF
+
+    MODEL_INF --> MODEL_REQ
+    MODEL_REQ --> MODEL_API
+
+    LKML --> CACHE_LKML
+    RSS --> CACHE_RSS
+    CGIT --> CACHE_CGIT
+
+    style CLI fill:#e1f5fe
+    style Agents fill:#fff3e0
+    style Model fill:#f3e5f5
+    style Cache fill:#e8f5e9
+```

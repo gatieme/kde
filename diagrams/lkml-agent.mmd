@@ -1,0 +1,29 @@
+# LKML Agent Workflow
+
+```mermaid
+flowchart LR
+    subgraph LKML_Agent["LKML Agent Workflow (LangGraph StateGraph)"]
+        direction TB
+
+        FETCH["fetch_patch<br/>- b4 am<br/>- Progress bar<br/>- Timeout handling"]
+        PARSE["parse_patch<br/>- Extract author<br/>- Extract date<br/>- Extract subject"]
+        GEN_SUM["generate_summary<br/>- AI summary<br/>- 300 char limit"]
+        ANALYZE["analyze_patch<br/>- AI analysis<br/>- Technical impact<br/>(detail level only)"]
+        OUTPUT["output_results<br/>- Markdown table output"]
+    end
+
+    subgraph Cache["Disk Cache System"]
+        CACHE_DIR["output/lkml/<message-id>/"]
+        COVER["<message-id>.cover"]
+        MBX["<message-id>.mbx"]
+    end
+
+    FETCH --> PARSE --> GEN_SUM --> ANALYZE --> OUTPUT
+
+ OUTPUT --> CACHE_DIR
+    CACHE_DIR --> COVER
+    CACHE_DIR --> MBX
+
+    style LKML_Agent fill:#fff3e0
+    style Cache fill:#e8f5e9
+```

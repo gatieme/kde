@@ -1,0 +1,57 @@
+# Test Suite Architecture
+
+```mermaid
+flowchart TD
+    subgraph TestSuite["Test Suite Architecture"]
+        direction TB
+
+        subgraph ShellTests["Shell Script Test Framework"]
+            TEST_ALL["test_all.sh<br/>(Master test runner)"]
+            TEST_LKML["test_lkml.sh<br/>(Lkml agent tests)"]
+            TEST_RSS["test_rss.sh<br/>(RSS agent tests)"]
+            TEST_CGIT["test_cgit.sh<br/>(CGit agent tests)"]
+            TEST_VERBOSE["test_verbose.sh<br/>(Verbose mode tests)"]
+            TEST_GENERAL["test.sh<br/>(General test script)"]
+        end
+
+        subgraph PythonTests["Python Test Framework"]
+            TEST_ALL_CMD["test_all_commands.py<br/>(Python test harness)"]
+            TEST_CGIT_WORKFLOW["test_cgit_workflow_order.py<br/>(Workflow order tests)"]
+            TEST_CACHE["test_cache_directories.py<br/>(Cache directory tests)"]
+            TEST_B4_ROBUST["test_b4_robustness.py<br/>(B4 robustness tests)"]
+            TEST_B4_TIMEOUT["test_b4_timeout.py<br/>(B4 timeout tests)"]
+            TEST_PROGRESS["test_progress_descriptions.py<br/>(Progress description tests)"]
+        end
+    end
+
+    subgraph Features["Test Framework Features"]
+        BASH_ARRAY["Bash arrays + eval for execution"]
+        BILINGUAL["Bilingual comments (Chinese primary)"]
+        TIME_CALC["Auto execution time calculation"]
+        RESULT_STAT["Test result statistics"]
+        SUBPROCESS["Subprocess-based execution"]
+        ERROR_OUTPUT["Detailed error output"]
+        TIMEOUT["Timeout control support"]
+    end
+
+    TEST_ALL --> TEST_LKML
+    TEST_ALL --> TEST_RSS
+    TEST_ALL --> TEST_CGIT
+    TEST_ALL --> TEST_VERBOSE
+
+    ShellTests --> Features
+    PythonTests --> Features
+
+    Features --> BASH_ARRAY
+    Features --> BILINGUAL
+    Features --> TIME_CALC
+    Features --> RESULT_STAT
+    Features --> SUBPROCESS
+    Features --> ERROR_OUTPUT
+    Features --> TIMEOUT
+
+    style TestSuite fill:#e1f5fe
+    style ShellTests fill:#fff3e0
+    style PythonTests fill:#f3e5f5
+    style Features fill:#fff9c4
+```

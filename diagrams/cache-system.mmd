@@ -1,0 +1,33 @@
+# Disk Cache System
+
+```mermaid
+flowchart TD
+    subgraph CacheSystem["Disk Cache System"]
+        direction TB
+
+        LKML_CACHE["LKML Cache (output/lkml/)<br/>- Grouped by message ID<br/>- Auto-created directories<br/>- Supports .cover and .mbx files"]
+
+        RSS_CACHE["RSS Cache (output/rss/)<br/>- MD5 hash naming based on article URL<br/>- Unified .txt format<br/>- Contains metadata (title, link, source, time)"]
+
+        CGIT_CACHE["CGit Cache (output/cgit/)<br/>- Grouped by commit ID<br/>- Auto-created directories<br/>- Supports commit files"]
+    end
+
+    subgraph Features["Cache Features"]
+        UNIFIED["Unified cache directory (output/)"]
+        AUTO_CREATE["Auto-created directories and files"]
+        PERSISTENT["Persistent storage, reusable"]
+        CLEANUP["Easy cleanup with git clean -fdX"]
+    end
+
+    LKML_CACHE --> Features
+    RSS_CACHE --> Features
+    CGIT_CACHE --> Features
+
+    Features --> UNIFIED
+    Features --> AUTO_CREATE
+    Features --> PERSISTENT
+    Features --> CLEANUP
+
+    style CacheSystem fill:#e8f5e9
+    style Features fill:#fff9c4
+```
