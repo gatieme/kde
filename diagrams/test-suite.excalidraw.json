@@ -1,0 +1,93 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "type": "text",
+      "text": "Test Suite Architecture",
+      "x": 600,
+      "y": 50,
+      "width": 350,
+      "height": 50,
+      "fontSize": 24,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "38ca903e-e272-4221-a303-eb82e4027942"
+    },
+    {
+      "type": "rectangle",
+      "x": 100,
+      "y": 150,
+      "width": 400,
+      "height": 150,
+      "stroke": "#e1f5fe",
+      "backgroundColor": "#e8f4fd",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "5733938b-6b1b-4f72-9cb0-e5ada696208c"
+    },
+    {
+      "type": "text",
+      "text": "Shell Script Tests",
+      "x": 300,
+      "y": 175,
+      "width": 380,
+      "height": 30,
+      "fontSize": 18,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "9f7e4c3f-de99-4682-9d92-3e57e30e5d1c"
+    },
+    {
+      "type": "rectangle",
+      "x": 700,
+      "y": 150,
+      "width": 400,
+      "height": 150,
+      "stroke": "#f5a623",
+      "backgroundColor": "#fef9e7",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "9ec5ac1e-626c-49be-8267-3ceca0ab9df1"
+    },
+    {
+      "type": "text",
+      "text": "Python Test Framework",
+      "x": 900,
+      "y": 175,
+      "width": 380,
+      "height": 30,
+      "fontSize": 18,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "98994cf3-6762-4ead-b51e-9730f90676cc"
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "gridSize": 20,
+    "gridModeEnabled": false,
+    "zoom": {
+      "value": 1
+    }
+  }
+}

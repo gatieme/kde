@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 6297.299999999999 572" width="6297.299999999999" height="572" style="--bg:#1a1b26;--fg:#a9b1d6;--line:#3d59a1;--accent:#7aa2f7;--muted:#565f89;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 30%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="4.8" refX="8" refY="2.4" orient="auto">
+    <polygon points="0 0, 8 2.4, 0 4.8" fill="var(--_arrow)" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="4.8" refX="0" refY="2.4" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.4, 8 4.8" fill="var(--_arrow)" />
+  </marker>
+</defs>
+<rect x="302.14999999999964" y="40" width="4290.150000000001" height="316" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="302.14999999999964" y="40" width="4290.150000000001" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="314.14999999999964" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Test Suite Architecture&quot;</text>
+<rect x="318.14999999999964" y="76" width="1629.9000000000005" height="268" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="318.14999999999964" y="76" width="1629.9000000000005" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="330.14999999999964" y="90" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Shell Script Test Framework&quot;</text>
+<rect x="1968.0500000000002" y="76" width="2608.25" height="112" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="1968.0500000000002" y="76" width="2608.25" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="1980.0500000000002" y="90" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Python Test Framework&quot;</text>
+<rect x="4614.299999999999" y="44" width="1643" height="488" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="4614.299999999999" y="44" width="1643" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="4626.299999999999" y="58" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Test Framework Features&quot;</text>
+<polyline points="91.75,246 91.75,376 4694.075000000001,376 4694.075000000001,494 4636.3,494" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="222.8249999999999,246 222.8249999999999,376 4755.275,376 4755.275,494 4636.3,494" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="5526.9625,246 5526.9625,376 4920.549999999999,376 4920.549999999999,494 4911.400000000001,494" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="5526.9625,246 5526.9625,376 5087.25,376 5087.25,476" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="5526.9625,246 5526.9625,376 5397.074999999999,376 5397.074999999999,476" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="5526.9625,246 5526.9625,376 5656.85,376 5656.85,476" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="5526.9625,246 5526.9625,376 5898.75,376 5898.75,476" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="5526.9625,246 5526.9625,376 6137.074999999999,376 6137.074999999999,476" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="5526.9625,210 5526.9625,210 6132.30625,210 6132.30625,228 6232.299999999999,228 6232.299999999999,246 6032.3125,246 6032.3125,228 5632.3375,228" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="958.5249999999996,168 958.5249999999996,188 488.4249999999997,188 488.4249999999997,288" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="958.5249999999996,168 958.5249999999996,188 801.8249999999998,188 801.8249999999998,288" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="958.5249999999996,168 958.5249999999996,188 1115.225,188 1115.225,288" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="958.5249999999996,168 958.5249999999996,188 1453.65,188 1453.65,288" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<rect x="4636.3" y="476" width="275.1" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="4935.4" y="476" width="303.70000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="5263.0999999999985" y="476" width="267.95000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="5555.05" y="476" width="203.60000000000002" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="5782.65" y="476" width="232.20000000000002" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="6038.8499999999985" y="476" width="196.45000000000002" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="5421.5875" y="210" width="210.75000000000003" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="806.6749999999996" y="132" width="303.70000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="340.14999999999975" y="288" width="296.55" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="660.6999999999998" y="288" width="282.25" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="966.9499999999999" y="288" width="296.55" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="1287.5" y="288" width="332.3" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="1643.8000000000002" y="288" width="282.25" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="1990.0500000000002" y="132" width="375.20000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="2389.25" y="132" width="432.40000000000003" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="2845.65" y="132" width="425.25000000000006" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="3294.8999999999996" y="132" width="382.35" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="3701.2500000000005" y="132" width="339.45000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="4064.7" y="132" width="489.6" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<text x="4773.85" y="494" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Bash arrays + eval for execution&quot;</text>
+<text x="5087.25" y="494" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Bilingual comments (Chinese primary)&quot;</text>
+<text x="5397.074999999999" y="494" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Auto execution time calculation&quot;</text>
+<text x="5656.85" y="494" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Test result statistics&quot;</text>
+<text x="5898.75" y="494" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Subprocess-based execution&quot;</text>
+<text x="6137.074999999999" y="494" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Detailed error output&quot;</text>
+<text x="5526.9625" y="228" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Timeout control support&quot;</text>
+<text x="958.5249999999996" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_all.sh&lt;br/&gt;(Master test runner)&quot;</text>
+<text x="488.4249999999997" y="306" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_lkml.sh&lt;br/&gt;(Lkml agent tests)&quot;</text>
+<text x="801.8249999999998" y="306" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_rss.sh&lt;br/&gt;(RSS agent tests)&quot;</text>
+<text x="1115.225" y="306" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_cgit.sh&lt;br/&gt;(CGit agent tests)&quot;</text>
+<text x="1453.65" y="306" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_verbose.sh&lt;br/&gt;(Verbose mode tests)&quot;</text>
+<text x="1784.9250000000002" y="306" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test.sh&lt;br/&gt;(General test script)&quot;</text>
+<text x="2177.65" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_all_commands.py&lt;br/&gt;(Python test harness)&quot;</text>
+<text x="2605.45" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_cgit_workflow_order.py&lt;br/&gt;(Workflow order tests)&quot;</text>
+<text x="3058.275" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_cache_directories.py&lt;br/&gt;(Cache directory tests)&quot;</text>
+<text x="3486.075" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_b4_robustness.py&lt;br/&gt;(B4 robustness tests)&quot;</text>
+<text x="3870.9750000000004" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_b4_timeout.py&lt;br/&gt;(B4 timeout tests)&quot;</text>
+<text x="4309.5" y="150" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;test_progress_descriptions.py&lt;br/&gt;(Progress description tests)&quot;</text>
+</svg>

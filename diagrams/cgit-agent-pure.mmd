@@ -1,0 +1,32 @@
+flowchart LR
+    subgraph CGit_Agent["CGit Agent Workflow (LangGraph StateGraph)"]
+        direction TB
+
+        FETCH["fetch_commit<br/>- wget<br/>- git.kernel.org<br/>- Progress bar"]
+        PARSE["parse_commit<br/>- Extract author<br/>- Extract date<br/>- Extract subject"]
+        ANALYZE["analyze_commit<br/>- AI summary<br/>- AI analysis"]
+        CHECK["check_patchset<br/>- Extract Link field<br/>- Regex matching"]
+        RUN_LKML["run_lkml_analysis<br/>- Extract message-id<br/>- Recursive call"]
+        OUTPUT["output_results<br/>- Markdown table output"]
+    end
+
+    subgraph LKML_Call["LKML Agent Integration"]
+        LKML_AGENT["LKML Agent<br/>(Recursive invocation)"]
+    end
+
+    subgraph Cache["Disk Cache System"]
+        CACHE_DIR["output/cgit/<commit-id>/"]
+        COMMIT_FILE["<commit-id>"]
+    end
+
+    FETCH --> PARSE --> ANALYZE --> CHECK --> RUN_LKML --> OUTPUT
+
+    RUN_LKML --> LKML_Call
+    LKML_Call --> LKML_AGENT
+
+    FETCH --> CACHE_DIR
+    CACHE_DIR --> COMMIT_FILE
+
+    style CGit_Agent fill:#fff3e0
+    style LKML_Call fill:#e8f5e9
+    style Cache fill:#e8f5e9

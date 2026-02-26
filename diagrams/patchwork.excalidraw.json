@@ -1,0 +1,172 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "type": "text",
+      "text": "Patchwork Integration",
+      "x": 600,
+      "y": 50,
+      "width": 350,
+      "height": 50,
+      "fontSize": 24,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "528a0b70-2b51-411b-af07-dc6bf742dcdf"
+    },
+    {
+      "type": "rectangle",
+      "x": 200,
+      "y": 150,
+      "width": 250,
+      "height": 100,
+      "stroke": "#e74c3c",
+      "backgroundColor": "#fff9c4",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "7ecd5d81-bf87-42d3-9d94-e4e0cc36ec59"
+    },
+    {
+      "type": "text",
+      "text": "get_patchwork_project.sh",
+      "x": 325,
+      "y": 185,
+      "width": 230,
+      "height": 30,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "a9bb391c-7e87-4c54-b212-4caee94f6228"
+    },
+    {
+      "type": "rectangle",
+      "x": 600,
+      "y": 150,
+      "width": 250,
+      "height": 100,
+      "stroke": "#e74c3c",
+      "backgroundColor": "#fff9c4",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "16be16a7-a779-4936-b231-36b8676cd6fc"
+    },
+    {
+      "type": "text",
+      "text": "get_patchwork_series.sh",
+      "x": 725,
+      "y": 185,
+      "width": 230,
+      "height": 30,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "e4a10efd-1293-477a-9156-39e584c04863"
+    },
+    {
+      "type": "rectangle",
+      "x": 1000,
+      "y": 150,
+      "width": 250,
+      "height": 100,
+      "stroke": "#e74c3c",
+      "backgroundColor": "#fff9c4",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "41e3f954-72b6-4814-bcfb-08830ec47b5e"
+    },
+    {
+      "type": "text",
+      "text": "batch.sh",
+      "x": 1125,
+      "y": 185,
+      "width": 230,
+      "height": 30,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "aa4c0a84-923e-4913-b47a-9ff57bd7a273"
+    },
+    {
+      "type": "arrow",
+      "x": 450,
+      "y": 200,
+      "width": 150,
+      "height": 50,
+      "stroke": "#e74c3c",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          150,
+          -50
+        ]
+      ],
+      "opacity": 100,
+      "id": "86686aa3-ad92-4f08-a9d0-c451de65358d"
+    },
+    {
+      "type": "arrow",
+      "x": 850,
+      "y": 200,
+      "width": 150,
+      "height": 50,
+      "stroke": "#e74c3c",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          150,
+          -50
+        ]
+      ],
+      "opacity": 100,
+      "id": "ad225a30-abf1-4059-ba81-b82075fc7d1c"
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "gridSize": 20,
+    "gridModeEnabled": false,
+    "zoom": {
+      "value": 1
+    }
+  }
+}

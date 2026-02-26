@@ -1,0 +1,44 @@
+# KDE 项目整体架构图
+
+```mermaid
+flowchart TD
+    CLI["kde.py<br/>CLI 入口"]
+
+    subgraph Agents ["三大分析 Agent"]
+        LKML["LKML Agent<br/>lkml_agent.py"]
+        RSS["RSS Agent<br/>rss_agent.py"]
+        CGit["CGit Agent<br/>cgit_agent.py"]
+    end
+
+    subgraph Model ["Model Inference Module"]
+        ModelScope["ModelScope Qwen3-235B-A22B<br/>OpenAI-compatible API<br/>Streaming inference<br/>Temperature=0"]
+    end
+
+    subgraph Cache ["Disk Cache DiskCache"]
+        LKMLCache["output/lkml/<br/>- .cover<br/>- .mbx"]
+        RSSCache["output/rss/<br/>- .txt<br/>(hash-based)"]
+        CGitCache["output/cgit/<br/>- commit files"]
+    end
+
+    CLI -->|"--lkml"| LKML
+    CLI -->|"--rss"| RSS
+    CLI -->|"--cgit"| CGit
+
+    LKML -.->|"LangGraph<br/>状态机工作流"| ModelScope
+    RSS -.->|"LangGraph<br/>状态机工作流"| ModelScope
+    CGit -.->|"LangGraph<br/>状态机工作流"| ModelScope
+
+    ModelScope -->|"缓存"| Cache
+
+    LKML -->|"缓存"| LKMLCache
+    RSS -->|"缓存"| RSSCache
+    CGit -->|"缓存"| CGitCache
+
+    style CLI fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style LKML fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style RSS fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style CGit fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style ModelScope fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    style Cache fill:#f5f5f5,stroke:#424242,stroke-width:2px
+    style Agents fill:#fafafa,stroke:#616161,stroke-width:2px
+```

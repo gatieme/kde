@@ -1,0 +1,282 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "type": "text",
+      "text": "LKML Agent Workflow",
+      "x": 600,
+      "y": 50,
+      "width": 300,
+      "height": 50,
+      "fontSize": 24,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "558babaa-01fb-4a0c-a243-c49b17e181a5"
+    },
+    {
+      "type": "rectangle",
+      "x": 100,
+      "y": 150,
+      "width": 200,
+      "height": 80,
+      "stroke": "#4a90e2",
+      "backgroundColor": "#e8f4fd",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "8b9c75cd-e27b-44af-a650-ab3e15c955e7"
+    },
+    {
+      "type": "text",
+      "text": "fetch_patch",
+      "x": 200,
+      "y": 175,
+      "width": 180,
+      "height": 30,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "b2e1db63-93da-45ed-acf9-bb40606ac15f"
+    },
+    {
+      "type": "rectangle",
+      "x": 400,
+      "y": 150,
+      "width": 200,
+      "height": 80,
+      "stroke": "#4a90e2",
+      "backgroundColor": "#e8f4fd",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "c9961682-c891-4705-b856-ea689b67f14e"
+    },
+    {
+      "type": "text",
+      "text": "parse_patch",
+      "x": 500,
+      "y": 175,
+      "width": 180,
+      "height": 30,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "cf0db6ab-10bf-4c47-b255-71826cf3ada2"
+    },
+    {
+      "type": "rectangle",
+      "x": 700,
+      "y": 150,
+      "width": 200,
+      "height": 80,
+      "stroke": "#4a90e2",
+      "backgroundColor": "#e8f4fd",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "48aab878-064f-479e-b6b8-a938b7092254"
+    },
+    {
+      "type": "text",
+      "text": "generate_summary",
+      "x": 800,
+      "y": 175,
+      "width": 180,
+      "height": 30,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "9f962786-a5ac-46c4-91a8-c5ee3cbb4ad2"
+    },
+    {
+      "type": "rectangle",
+      "x": 100,
+      "y": 300,
+      "width": 200,
+      "height": 80,
+      "stroke": "#4a90e2",
+      "backgroundColor": "#e8f4fd",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "f5117e19-c14c-435d-84be-4b401819ee7e"
+    },
+    {
+      "type": "text",
+      "text": "analyze_patch",
+      "x": 200,
+      "y": 325,
+      "width": 180,
+      "height": 30,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "d5ae2adf-3f7a-46b3-be10-50e1036b24d4"
+    },
+    {
+      "type": "rectangle",
+      "x": 400,
+      "y": 300,
+      "width": 200,
+      "height": 80,
+      "stroke": "#4a90e2",
+      "backgroundColor": "#e8f4fd",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "opacity": 100,
+      "id": "68425835-8d8d-4992-a15e-6acc39520660"
+    },
+    {
+      "type": "text",
+      "text": "output_results",
+      "x": 500,
+      "y": 325,
+      "width": 180,
+      "height": 30,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "stroke": "#1e1e1e",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "id": "32282ff0-8fe6-4eda-a215-025bf1709536"
+    },
+    {
+      "type": "arrow",
+      "x": 200,
+      "y": 190,
+      "width": 200,
+      "height": 40,
+      "stroke": "#4a90e2",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          200,
+          -40
+        ]
+      ],
+      "opacity": 100,
+      "id": "da290e57-7612-45d4-82b9-eccd89c3a578"
+    },
+    {
+      "type": "arrow",
+      "x": 600,
+      "y": 190,
+      "width": 100,
+      "height": 40,
+      "stroke": "#4a90e2",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          -40
+        ]
+      ],
+      "opacity": 100,
+      "id": "f5ed2acd-4808-4a4f-85c9-d42ddb3b9257"
+    },
+    {
+      "type": "arrow",
+      "x": 700,
+      "y": 230,
+      "width": 600,
+      "height": 70,
+      "stroke": "#4a90e2",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -600,
+          70
+        ]
+      ],
+      "opacity": 100,
+      "id": "c4138897-656c-4f21-92d8-e3d436c1639c"
+    },
+    {
+      "type": "arrow",
+      "x": 200,
+      "y": 340,
+      "width": 200,
+      "height": 40,
+      "stroke": "#4a90e2",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "strokeSharpness": 1,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          200,
+          -40
+        ]
+      ],
+      "opacity": 100,
+      "id": "19e7c7a5-41e6-4763-b380-ad1b3411e219"
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "gridSize": 20,
+    "gridModeEnabled": false,
+    "zoom": {
+      "value": 1
+    }
+  }
+}

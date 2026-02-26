@@ -1,0 +1,14 @@
+flowchart TD
+    subgraph ModelModule["Model Inference Module"]
+        direction TB
+
+        REQ["ModelRequest<br/>- set_request(type, content)<br/>- get_messages() → List[Dict]<br/><br/>Types:<br/>- summary: 300 char limit<br/>- analysis: Detailed technical analysis"]
+
+        INF["ModelInference<br/>- OpenAI Client (ModelScope API)<br/>- inference(messages) → str<br/>- Streaming with tqdm progress<br/><br/>Configuration:<br/>- model: Qwen3-235B-A22B<br/>- temperature: 0 (greedy)<br/>- stream: True<br/>- extra_body: {enable_thinking: False}"]
+
+        API["ModelScope API<br/>(Qwen3-235B-A22B)<br/>https://api-inference.modelscope.cn/v1/"]
+    end
+
+    REQ --> INF --> API
+
+    style ModelModule fill:#f3e5f5
