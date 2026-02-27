@@ -1,36 +1,26 @@
-# CGit Agent Workflow
-
-```mermaid
 flowchart LR
-    subgraph CGit_Agent["CGit Agent Workflow (LangGraph StateGraph)"]
+    subgraph Workflow["CGit Agent Workflow"]
         direction TB
-
-        FETCH["fetch_commit<br/>- wget<br/>- git.kernel.org<br/>- Progress bar"]
-        PARSE["parse_commit<br/>- Extract author<br/>- Extract date<br/>- Extract subject"]
-        ANALYZE["analyze_commit<br/>- AI summary<br/>- AI analysis"]
-        CHECK["check_patchset<br/>- Extract Link field<br/>- Regex matching"]
-        RUN_LKML["run_lkml_analysis<br/>- Extract message-id<br/>- Recursive call"]
-        OUTPUT["output_results<br/>- Markdown table output"]
+        FETCH["fetch_commit<br/>wget, git.kernel.org"]
+        PARSE["parse_commit<br/>extract author, date, subject"]
+        ANALYZE["analyze_commit<br/>AI summary, AI analysis"]
+        CHECK["check_patchset<br/>extract Link, regex"]
+        RUN_LKML["run_lkml_analysis<br/>extract message-id, recursive"]
+        OUTPUT["output_results<br/>Markdown table output"]
     end
 
-    subgraph LKML_Call["LKML Agent Integration"]
-        LKML_AGENT["LKML Agent<br/>(Recursive invocation)"]
+    subgraph LKML_Call["LKML Agent Call"]
+        LKML["LKML Agent<br/>recursive call"]
     end
 
-    subgraph Cache["Disk Cache System"]
-        CACHE_DIR["output/cgit/<commit-id>/"]
-        COMMIT_FILE["<commit-id>"]
+    subgraph Cache["Disk Cache"]
+        CACHE["output/cgit/<commit-id>/<br/>commit file"]
     end
 
     FETCH --> PARSE --> ANALYZE --> CHECK --> RUN_LKML --> OUTPUT
+    RUN_LKML -.-> LKML_Call
+    OUTPUT -.-> Cache
 
-    RUN_LKML --> LKML_Call
-    LKML_Call --> LKML_AGENT
-
-    FETCH --> CACHE_DIR
-    CACHE_DIR --> COMMIT_FILE
-
-    style CGit_Agent fill:#fff3e0
-    style LKML_Call fill:#e8f5e9
-    style Cache fill:#e8f5e9
-```
+    style Workflow fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style LKML_Call fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Cache fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px

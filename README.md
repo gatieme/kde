@@ -13,16 +13,22 @@ KDE 提供三个核心分析能力：
 
 ### 整体架构图
 
-![Overall Architecture](diagrams/overall-architecture-new.svg)
+![Overall Architecture](diagrams/overall-architecture.svg)
 
-**手绘风格架构图**：
+**Hand-drawn Architecture Diagram**:
 
-如需查看手绘风格的架构图，请打开 `diagrams/overall-architecture.excalidraw.json` 文件：
+To view the hand-drawn style architecture diagram, open `diagrams/overall-architecture.excalidraw.json` file:
 
-1. 访问 https://excalidraw.com
-2. 点击 "Open" 或拖放文件
-3. 或使用 Excalidraw VS Code 扩展
+1. Visit https://excalidraw.com
+2. Click "Open" or drag-and-drop the file
+3. Or use Excalidraw VS Code extension
 
+**Architecture Overview**:
+
+- **CLI Entry Layer**: kde.py with three command options --lkml, --rss, --cgit
+- **Agent Layer**: Three LangGraph state machine workflows (LKML, RSS, CGit)
+- **Model Layer**: ModelScope Qwen3-235B-A22B model inference module
+- **Cache Layer**: Unified disk cache system (output/ directory)
 **架构图说明**：
 
 - **CLI 入口层**：kde.py 提供三个命令选项 --lkml、--rss、--cgit

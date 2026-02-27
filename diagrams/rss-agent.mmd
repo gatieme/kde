@@ -1,42 +1,26 @@
-# RSS Agent Workflow
-
-```mermaid
 flowchart LR
-    subgraph RSS_Agent["RSS Agent Workflow (LangGraph StateGraph)"]
+    subgraph Workflow["RSS Agent Workflow"]
         direction TB
-
-        DETECT["detect_protection<br/>- Cloudflare detection<br/>- Turnstile detection<br/>- CAPTCHA handling"]
-        FETCH_RSS["fetch_rss_feeds<br/>- feedparser<br/>- Multi-source support"]
-        FETCH_ART["fetch_article_content<br/>- requests<br/>- httpx<br/>- Playwright"]
-        ANALYZE["analyze_articles<br/>- Kernel keywords<br/>- Patch links"]
-        GEN_SUM["generate_summaries<br/>- AI summary<br/>- Classification"]
-        OUTPUT["output_results<br/>- Markdown format"]
+        DETECT["detect_protection<br/>Cloudflare, Turnstile, CAPTCHA"]
+        FETCH["fetch_rss_feeds<br/>feedparser, multi-source"]
+        FETCH_ART["fetch_article_content<br/>requests, httpx, Playwright"]
+        ANALYZE["analyze_articles<br/>kernel keywords, patch links"]
+        GEN_SUM["generate_summaries<br/>AI summary, classification"]
+        OUTPUT["output_results<br/>Markdown format output"]
     end
 
     subgraph AntiCrawler["Anti-Crawler Bypass"]
-        FINGERPRINT["Real browser fingerprint"]
-        MOUSE["Mouse movement & scroll simulation"]
-        COOKIE["Cookie & localStorage"]
-        NAVIGATE["Multi-step navigation<br/>(Google → Target)"]
+        BYPASS["Real browser fingerprint<br/>Mouse scroll simulation<br/>Cookie localStorage<br/>Multi-step navigation"]
     end
 
-    subgraph Cache["Disk Cache System"]
-        CACHE_DIR["output/rss/"]
-        CACHE_FILE["{hash-id}.txt<br/>(MD5 hash of URL)"]
+    subgraph Cache["Disk Cache"]
+        CACHE["output/rss/<hash-id>.txt<br/>MD5 hash of article link"]
     end
 
-    DETECT --> FETCH_RSS --> FETCH_ART --> ANALYZE --> GEN_SUM --> OUTPUT
+    DETECT --> FETCH --> FETCH_ART --> ANALYZE --> GEN_SUM --> OUTPUT
+    FETCH_ART -.-> AntiCrawler
+    OUTPUT -.-> Cache
 
-    FETCH_ART --> AntiCrawler
-    AntiCrawler --> FINGERPRINT
-    AntiCrawler --> MOUSE
-    AntiCrawler --> COOKIE
-    AntiCrawler --> NAVIGATE
-
-    FETCH_ART --> CACHE_DIR
-    CACHE_DIR --> CACHE_FILE
-
-    style RSS_Agent fill:#fff3e0
-    style AntiCrawler fill:#ffebee
-    style Cache fill:#e8f5e9
-```
+    style Workflow fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style AntiCrawler fill:#ffebee,stroke:#c62828,stroke-width:2px
+    style Cache fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
