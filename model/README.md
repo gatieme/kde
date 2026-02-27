@@ -8,43 +8,15 @@ Model Inference Module 是 KDE 项目的 AI 模型集成层，负责与 ModelSco
 
 ### 整体架构图
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                 Model Inference Module                        │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              ModelRequest                             │  │
-│  │  - set_request(type, content)                        │  │
-│  │  - get_messages() → List[Dict]                       │  │
-│  │                                                       │  │
-│  │  类型:                                                │  │
-│  │  - summary: 300 字限制摘要                            │  │
-│  │  - analysis: 详细技术分析                            │  │
-│  └──────────────────────┬───────────────────────────────┘  │
-│                         │                                  │
-│                         ▼                                  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              ModelInference                           │  │
-│  │  - OpenAI Client (ModelScope API)                    │  │
-│  │  - inference(messages) → str                         │  │
-│  │  - Streaming with tqdm progress                      │  │
-│  │                                                       │  │
-│  │  配置:                                                │  │
-│  │  - model: Qwen3-235B-A22B                            │  │
-│  │  - temperature: 0 (greedy)                           │  │
-│  │  - stream: True                                      │  │
-│  │  - extra_body: {enable_thinking: False}              │  │
-│  └──────────────────────┬───────────────────────────────┘  │
-│                         │                                  │
-│                         ▼                                  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │          ModelScope API (Qwen3-235B-A22B)             │  │
-│  │  https://api-inference.modelscope.cn/v1/              │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
+![Model Inference Architecture](../diagrams/model-inference-new.svg)
+
+**手绘风格架构图**：
+
+如需查看手绘风格的架构图，请打开 `../diagrams/model-inference-new.excalidraw.json` 文件：
+
+1. 访问 https://excalidraw.com
+2. 点击 "Open" 或拖放文件
+3. 或使用 Excalidraw VS Code 扩展
 
 ### 核心组件
 

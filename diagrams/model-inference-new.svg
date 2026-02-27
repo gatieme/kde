@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1960.1000000000001 328" width="1960.1000000000001" height="328" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 30%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="4.8" refX="8" refY="2.4" orient="auto">
+    <polygon points="0 0, 8 2.4, 0 4.8" fill="var(--_arrow)" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="4.8" refX="0" refY="2.4" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.4, 8 4.8" fill="var(--_arrow)" />
+  </marker>
+</defs>
+<rect x="40" y="40" width="1880.1000000000001" height="248" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="40" y="40" width="1880.1000000000001" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="52" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Model Inference Module&quot;</text>
+<polyline points="980.0500000000001,124 980.0500000000001,164" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="980.0500000000001,200 980.0500000000001,240" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<rect x="681.625" y="88" width="596.85" height="36" rx="0" ry="0" fill="#e3f2fd" stroke="#1565c0" stroke-width="0.75" />
+<rect x="56" y="164" width="1848.1000000000001" height="36" rx="0" ry="0" fill="#fff3e0" stroke="#e65100" stroke-width="0.75" />
+<rect x="685.2" y="240" width="589.7" height="36" rx="0" ry="0" fill="#e8f5e9" stroke="#1b5e20" stroke-width="0.75" />
+<text x="980.05" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelRequest&lt;br/&gt;- set_request(type, content)&lt;br/&gt;- get_messages() → List[Dict</text>
+<text x="980.0500000000001" y="182" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelInference&lt;br/&gt;- OpenAI Client (ModelScope API)&lt;br/&gt;- inference(messages) → str&lt;br/&gt;- Streaming with tqdm progress&lt;br/&gt;&lt;br/&gt;配置:&lt;br/&gt;- model: Qwen3-235B-A22B&lt;br/&gt;- temperature: 0 (greedy)&lt;br/&gt;- stream: True&lt;br/&gt;- extra_body: {enable_thinking: False}&quot;</text>
+<text x="980.0500000000001" y="258" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelScope API (Qwen3-235B-A22B)&lt;br/&gt;https://api-inference.modelscope.cn/v1/&quot;</text>
+</svg>

@@ -8,33 +8,15 @@ Test Suite 是 KDE 项目的测试框架，包含完整的测试脚本用于验�
 
 ### 测试框架架构
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                      Test Suite 架构                           │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              Shell Script 测试框架                     │  │
-│  │  - test_all.sh (主测试脚本）                          │  │
-│  │  - test_lkml.sh (LKML 测试）                           │  │
-│  │  - test_rss.sh (RSS 测试）                             │  │
-│  │  - test_cgit.sh (CGit 测试）                           │  │
-│  │  - test_verbose.sh (详细模式测试）                     │  │
-│  └──────────────────────┬───────────────────────────────┘  │
-│                         │                                  │
-│                         ▼                                  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              Python 测试框架                          │  │
-│  │  - test_all_commands.py (Python 测试框架）            │  │
-│  │  - test_cgit_workflow_order.py (工作流顺序测试）      │  │
-│  │  - test_cache_directories.py (缓存目录测试）          │  │
-│  │  - test_b4_robustness.py (B4 鲁棒性测试）             │  │
-│  │  - test_b4_timeout.py (B4 超时测试）                  │  │
-│  │  - test_progress_descriptions.py (进度描述测试）        │  │
-│  └──────────────────────────────────────────────────────┘  │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
+![Test Suite Architecture](../diagrams/test-suite-new-mmd.svg)
+
+**手绘风格架构图**：
+
+如需查看手绘风格的架构图，请打开 `../diagrams/test-suite-new.excalidraw.json` 文件：
+
+1. 访问 https://excalidraw.com
+2. 点击 "Open" 或拖放文件
+3. 或使用 Excalidraw VS Code 扩展
 
 ### 核心组件
 

@@ -1,0 +1,15 @@
+flowchart LR
+    subgraph Integration["Patchwork Integration"]
+        direction TB
+        GET_PROJECT["get_patchwork_project.sh<br/>- 获取所有项目列表<br/>- 输出到 project/projects_list.md"]
+        GET_SERIES["get_patchwork_series.sh<br/>- 获取指定项目的补丁系列<br/>- 按日期过滤<br/>- 输出到日期目录"]
+        BATCH["batch.sh<br/>- 批量处理脚本"]
+    end
+
+    GET_PROJECT --> GET_SERIES
+    GET_SERIES -.-> BATCH
+
+    style Integration fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style GET_PROJECT fill:#e3f2fd,stroke:#1565c0
+    style GET_SERIES fill:#f3e5f5,stroke:#4a148c
+    style BATCH fill:#e8f5e9,stroke:#1b5e20

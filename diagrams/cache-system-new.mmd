@@ -1,0 +1,12 @@
+flowchart LR
+    subgraph System["Disk Cache System"]
+        direction TB
+        LKML_CACHE["LKML Cache (output/lkml/)<br/>- 按消息 ID 分组存储<br/>- 自动创建目录<br/>- 支持 .cover 和 .mbx 文件"]
+        RSS_CACHE["RSS Cache (output/rss/)<br/>- 基于文章链接的 MD5 哈希命名<br/>- 统一 .txt 格式<br/>- 包含元数据（标题、链接、来源、时间）"]
+        CGIT_CACHE["CGit Cache (output/cgit/)<br/>- 按 commit ID 分组存储<br/>- 自动创建目录<br/>- 支持 commit 文件"]
+    end
+
+    style System fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style LKML_CACHE fill:#e1f5fe,stroke:#0277bd
+    style RSS_CACHE fill:#f3e5f5,stroke:#4a148c
+    style CGIT_CACHE fill:#fff3e0,stroke:#e65100

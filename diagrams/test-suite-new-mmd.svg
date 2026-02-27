@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1988.7 252" width="1988.7" height="252" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 30%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="4.8" refX="8" refY="2.4" orient="auto">
+    <polygon points="0 0, 8 2.4, 0 4.8" fill="var(--_arrow)" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="4.8" refX="0" refY="2.4" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.4, 8 4.8" fill="var(--_arrow)" />
+  </marker>
+</defs>
+<rect x="40" y="40" width="1908.7" height="172" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="40" y="40" width="1908.7" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="52" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Test Suite 架构&quot;</text>
+<polyline points="994.35,124 994.35,164" fill="none" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<rect x="402.775" y="88" width="1183.15" height="36" rx="0" ry="0" fill="#fff3e0" stroke="#e65100" stroke-width="0.75" />
+<rect x="56" y="164" width="1876.7" height="36" rx="0" ry="0" fill="#f3e5f5" stroke="#4a148c" stroke-width="0.75" />
+<text x="994.35" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Shell Script 测试框架&lt;br/&gt;- test_all.sh (主测试脚本)&lt;br/&gt;- test_lkml.sh (LKML 测试)&lt;br/&gt;- test_rss.sh (RSS 测试)&lt;br/&gt;- test_cgit.sh (CGit 测试)&lt;br/&gt;- test_verbose.sh (详细模式测试)&quot;</text>
+<text x="994.35" y="182" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;Python 测试框架&lt;br/&gt;- test_all_commands.py (Python 测试框架)&lt;br/&gt;- test_cgit_workflow_order.py (工作流顺序测试)&lt;br/&gt;- test_cache_directories.py (缓存目录测试)&lt;br/&gt;- test_b4_robustness.py (B4 鲁棒性测试)&lt;br/&gt;- test_b4_timeout.py (B4 超时测试)&lt;br/&gt;- test_progress_descriptions.py (进度描述测试)&quot;</text>
+</svg>

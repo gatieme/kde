@@ -1,0 +1,14 @@
+flowchart LR
+    subgraph Module["Model Inference Module"]
+        direction TB
+        REQUEST["ModelRequest<br/>- set_request(type, content)<br/>- get_messages() → List[Dict]<br/><br/>类型:<br/>- summary: 300 字限制摘要<br/>- analysis: 详细技术分析"]
+        INFERENCE["ModelInference<br/>- OpenAI Client (ModelScope API)<br/>- inference(messages) → str<br/>- Streaming with tqdm progress<br/><br/>配置:<br/>- model: Qwen3-235B-A22B<br/>- temperature: 0 (greedy)<br/>- stream: True<br/>- extra_body: {enable_thinking: False}"]
+        API["ModelScope API (Qwen3-235B-A22B)<br/>https://api-inference.modelscope.cn/v1/"]
+    end
+
+    REQUEST --> INFERENCE --> API
+
+    style Module fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style REQUEST fill:#e3f2fd,stroke:#1565c0
+    style INFERENCE fill:#fff3e0,stroke:#e65100
+    style API fill:#e8f5e9,stroke:#1b5e20

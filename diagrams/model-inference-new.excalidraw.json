@@ -1,0 +1,361 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "type": "text",
+      "id": "title",
+      "x": 400,
+      "y": 50,
+      "width": 400,
+      "height": 50,
+      "fontSize": 32,
+      "fontFamily": 5,
+      "text": "Model Inference Module",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 0
+      }
+    },
+    {
+      "type": "rectangle",
+      "id": "modelrequest-box",
+      "x": 100,
+      "y": 150,
+      "width": 320,
+      "height": 280,
+      "strokeColor": "#1971c2",
+      "backgroundColor": "#d0ebff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 1
+      }
+    },
+    {
+      "type": "text",
+      "id": "modelrequest-title",
+      "x": 110,
+      "y": 160,
+      "width": 300,
+      "height": 40,
+      "fontSize": 24,
+      "fontFamily": 5,
+      "text": "ModelRequest",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "strokeColorColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 1
+      }
+    },
+    {
+      "type": "text",
+      "id": "modelrequest-methods",
+      "x": 110,
+      "y": 210,
+      "width": 300,
+      "height": 200,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "text": "Methods:\n• set_request(type, content)\n• get_messages() → List[Dict]\n\nTypes:\n• summary: 300 char limit\n• analysis: detailed analysis",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 1
+      }
+    },
+    {
+      "type": "rectangle",
+      "id": "modelinference-box",
+      "x": 480,
+      "y": 150,
+      "width": 320,
+      "height": 280,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "#b2f2bb",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 2
+      }
+    },
+    {
+      "type": "text",
+      "id": "modelinference-title",
+      "x": 490,
+      "y": 160,
+      "width": 300,
+      "height": 40,
+      "fontSize": 24,
+      "fontFamily": 5,
+      "text": "ModelInference",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 2
+      }
+    },
+    {
+      "type": "text",
+      "id": "modelinference-methods",
+      "x": 490,
+      "y": 210,
+      "width": 300,
+      "height": 200,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "text": "Methods:\n• inference(messages) → str\n\nFeatures:\n• OpenAI Client\n• Streaming with tqdm\n• Greedy decoding\n\nConfig:\n• model: Qwen3-235B-A22B\n• temperature: 0\n• stream: True",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 2
+      }
+    },
+    {
+      "type": "rectangle",
+      "id": "modelscope-box",
+      "x": 860,
+      "y": 150,
+      "width": 280,
+      "height": 280,
+      "strokeColor": "#f08c00",
+      "backgroundColor": "#ffec99",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 3
+      }
+    },
+    {
+      "type": "text",
+      "id": "modelscope-title",
+      "x": 870,
+      "y": 160,
+      "width": 260,
+      "height": 40,
+      "fontSize": 24,
+      "fontFamily": 5,
+      "text": "ModelScope API",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 3
+      }
+    },
+    {
+      "type": "text",
+      "id": "modelscope-details",
+      "x": 870,
+      "y": 210,
+      "width": 260,
+      "height": 200,
+      "fontSize": 16,
+      "fontFamily": 5,
+      "text": "Model:\n• Qwen3-235B-A22B\n\nAPI Endpoint:\n• https://api-inference\n  .modelscope.cn/v1/\n\nFeatures:\n• OpenAI-compatible\n• Streaming support\n• Large model inference",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 3
+      }
+    },
+    {
+      "type": "arrow",
+      "id": "arrow1",
+      "x": 420,
+      "y": 290,
+      "width": 60,
+      "height": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "opacity": 100,
+      "points": [
+        [0, 0],
+        [60, 0]
+      ],
+      "startBinding": {
+        "elementId": "modelrequest-box",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "modelinference-box",
+        "focus": 0,
+        "gap": 1
+      },
+      "customData": {
+        "animationOrder": 2
+      }
+    },
+    {
+      "type": "text",
+      "id": "arrow1-label",
+      "x": 430,
+      "y": 270,
+      "width": 40,
+      "height": 20,
+      "fontSize": 14,
+      "fontFamily": 5,
+      "text": "get_messages()",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 2
+      }
+    },
+    {
+      "type": "arrow",
+      "id": "arrow2",
+      "x": 800,
+      "y": 290,
+      "width": 60,
+      "height": 0,
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "opacity": 100,
+      "points": [
+        [0, 0],
+        [60, 0]
+      ],
+      "startBinding": {
+        "elementId": "modelinference-box",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "modelscope-box",
+        "focus": 0,
+        "gap": 1
+      },
+      "customData": {
+        "animationOrder": 3
+      }
+    },
+    {
+      "type": "text",
+      "id": "arrow2-label",
+      "x": 810,
+      "y": 270,
+      "width": 40,
+      "height": 20,
+      "fontSize": 14,
+      "fontFamily": 5,
+      "text": "inference()",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "strokeColor": "#495057",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 3
+      }
+    },
+    {
+      "type": "text",
+      "id": "note1",
+      "x": 100,
+      "y": 460,
+      "width": 1040,
+      "height": 60,
+      "fontSize": 14,
+      "fontFamily": 5,
+      "text": "Flow: 1) Create request with ModelRequest.set_request() → 2) Get messages → 3) Call ModelInference.inference() → 4) ModelScope API processes and returns streaming response",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "strokeColor": "#868e96",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 3
+      }
+    },
+    {
+      "type": "text",
+      "id": "note2",
+      "x": 100,
+      "y": 540,
+      "width": 1040,
+      "height": 40,
+      "fontSize": 14,
+      "fontFamily": 5,
+      "text": "All components use hand-drawn style with Excalifont font. Animation order: Title → ModelRequest → ModelInference → ModelScope API (500ms per step)",
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "strokeColor": "#868e96",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "customData": {
+        "animationOrder": 3
+      }
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "gridSize": 20,
+    "zoom": {
+      "value": 1
+    },
+    "scrollX": 0,
+    "scrollY": 0
+  },
+  "files": {}
+}
