@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="350 -20 500 900" width="500" height="900">
+  <style>
+    .handwritten { font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive; }
+    .rectangle { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .ellipse { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .diamond { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .arrow { stroke: #000000; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .text { fill: #000000; font-size: 16px; }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#000000"/>
+    </marker>
+  </defs>
+  <text x="420" y="58" class="handwritten" fill="#1971c2" font-size="28px">RSS Agent Workflow</text>
+  <rect x="400" y="100" width="400" height="70" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="420" y="135" class="handwritten" fill="#2f9e44" font-size="20px">detect_protection</text>
+  <path d="M 0 0 L 0 40" stroke="#1971c2" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <rect x="400" y="210" width="400" height="70" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="420" y="245" class="handwritten" fill="#2f9e44" font-size="20px">fetch_rss_feeds</text>
+  <path d="M 0 0 L 0 40" stroke="#1971c2" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <rect x="400" y="320" width="400" height="70" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="420" y="355" class="handwritten" fill="#2f9e44" font-size="20px">fetch_article_content</text>
+  <path d="M 0 0 L 0 40" stroke="#1971c2" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <rect x="400" y="430" width="400" height="70" fill="#ffd43b" stroke="#f08c00" stroke-width="2"/>
+  <text x="420" y="465" class="handwritten" fill="#f08c00" font-size="20px">analyze_articles</text>
+  <path d="M 0 0 L 0 40" stroke="#1971c2" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <rect x="400" y="540" width="400" height="70" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="420" y="575" class="handwritten" fill="#2f9e44" font-size="20px">generate_summaries</text>
+  <path d="M 0 0 L 0 40" stroke="#1971c2" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <rect x="400" y="650" width="400" height="70" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="420" y="685" class="handwritten" fill="#2f9e44" font-size="20px">output_results</text>
+  <path d="M 0 0 L 0 40" stroke="#1971c2" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <rect x="400" y="760" width="400" height="70" fill="#ffc9c9" stroke="#e03131" stroke-width="2"/>
+  <text x="420" y="795" class="handwritten" fill="#e03131" font-size="20px">cache (output/rss/)</text>
+</svg>

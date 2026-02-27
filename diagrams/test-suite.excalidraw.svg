@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 -20 1000 750" width="1000" height="750">
+  <style>
+    .handwritten { font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive; }
+    .rectangle { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .ellipse { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .diamond { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .arrow { stroke: #000000; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .text { fill: #000000; font-size: 16px; }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#000000"/>
+    </marker>
+  </defs>
+  <text x="420" y="58" class="handwritten" fill="#1971c2" font-size="28px">Test Suite Architecture</text>
+  <rect x="150" y="150" width="400" height="400" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="170" y="197" class="handwritten" fill="#2f9e44" font-size="22px">Shell Script Framework</text>
+  <text x="170" y="256" class="handwritten" fill="#2f9e44" font-size="16px">• test_all.sh
+  - Master test runner
+
+• test_lkml.sh
+  - LKML agent tests
+
+• test_cgit.sh
+  - CGit agent tests
+
+• test_rss.sh
+  - RSS agent tests
+
+• test_all_commands.py
+  - Python test harness</text>
+  <rect x="650" y="150" width="400" height="400" fill="#ffd43b" stroke="#f08c00" stroke-width="2"/>
+  <text x="670" y="197" class="handwritten" fill="#f08c00" font-size="22px">Python Test Framework</text>
+  <text x="670" y="256" class="handwritten" fill="#f08c00" font-size="16px">• test_all_commands.py
+  - Command-line tests
+
+• Agent integration tests
+  - LKML, RSS, CGit
+
+• Model inference tests
+  - Mock ModelScope API
+
+• Cache management tests
+  - Verify cache operations</text>
+  <ellipse cx="600.0" cy="630.0" rx="350.0" ry="50.0" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="270" y="621" class="handwritten" fill="#1971c2" font-size="16px">Dual testing approach: Shell scripts for integration tests + Python for unit tests
+Run: ./test/test_all.sh for full test suite</text>
+</svg>

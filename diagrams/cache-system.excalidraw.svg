@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 -20 1000 780" width="1000" height="780">
+  <style>
+    .handwritten { font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive; }
+    .rectangle { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .ellipse { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .diamond { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .arrow { stroke: #000000; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .text { fill: #000000; font-size: 16px; }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#000000"/>
+    </marker>
+  </defs>
+  <text x="420" y="58" class="handwritten" fill="#1971c2" font-size="28px">Disk Cache System</text>
+  <rect x="150" y="100" width="900" height="500" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="450" y="142" class="handwritten" fill="#1971c2" font-size="22px">output/</text>
+  <rect x="200" y="200" width="250" height="350" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="220" y="240" class="handwritten" fill="#2f9e44" font-size="20px">lkml/</text>
+  <text x="220" y="294" class="handwritten" fill="#2f9e44" font-size="14px">• patch_analysis/
+• summaries/
+• metadata/</text>
+  <rect x="475" y="200" width="250" height="350" fill="#ffd43b" stroke="#f08c00" stroke-width="2"/>
+  <text x="495" y="240" class="handwritten" fill="#f08c00" font-size="20px">rss/</text>
+  <text x="495" y="294" class="handwritten" fill="#f08c00" font-size="14px">• articles/
+• summaries/
+• feeds/</text>
+  <rect x="750" y="200" width="250" height="350" fill="#ffc9c9" stroke="#e03131" stroke-width="2"/>
+  <text x="770" y="240" class="handwritten" fill="#e03131" font-size="20px">cgit/</text>
+  <text x="770" y="294" class="handwritten" fill="#e03131" font-size="14px">• commits/
+• patchsets/
+• analysis/</text>
+  <ellipse cx="600.0" cy="670.0" rx="350.0" ry="40.0" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="270" y="661" class="handwritten" fill="#1971c2" font-size="16px">Each agent maintains its own cache directory to avoid recomputation and enable offline analysis</text>
+</svg>

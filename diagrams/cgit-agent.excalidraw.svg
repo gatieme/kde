@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 0 980 430" width="980" height="430">
+  <style>
+    .handwritten { font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive; }
+    .rectangle { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .ellipse { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .diamond { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+    .arrow { stroke: #000000; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .text { fill: #000000; font-size: 16px; }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#000000"/>
+    </marker>
+  </defs>
+  <text x="600" y="74" class="handwritten" fill="#000000" font-size="24px">CGit Agent Workflow</text>
+  <rect x="100" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
+  <text x="200" y="191" class="handwritten" fill="#000000" font-size="16px">fetch_commit</text>
+  <rect x="400" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
+  <text x="500" y="191" class="handwritten" fill="#000000" font-size="16px">parse_commit</text>
+  <rect x="700" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
+  <text x="800" y="191" class="handwritten" fill="#000000" font-size="16px">analyze_commit</text>
+  <rect x="100" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
+  <text x="200" y="341" class="handwritten" fill="#000000" font-size="16px">check_patchset</text>
+  <rect x="400" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
+  <text x="500" y="341" class="handwritten" fill="#000000" font-size="16px">run_lkml_analysis</text>
+  <rect x="700" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
+  <text x="800" y="341" class="handwritten" fill="#000000" font-size="16px">output_results</text>
+  <path d="M 0 0 L 200 -40" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 0 0 L 100 -40" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 0 0 L -600 70" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 0 0 L 200 -40" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 0 0 L 100 -40" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+</svg>
