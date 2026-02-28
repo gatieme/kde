@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 from openai import OpenAI
 from tqdm import tqdm
 
@@ -7,8 +8,8 @@ from tqdm import tqdm
 class ModelInference:
     def __init__(self, content = None, verbose=0):
         self.client = OpenAI(
-            base_url='https://api-inference.modelscope.cn/v1/',
-            api_key='ms-f18d4fbb-6900-430c-b8a4-09a68e59c1cd', # ModelScope Token
+            base_url = 'https://api-inference.modelscope.cn/v1/',
+            api_key = os.getenv("OPENAI_API_KEY"), # ModelScope API KEY
         )
 
         # set extra_body for thinking control
