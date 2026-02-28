@@ -56,9 +56,26 @@
       "strokeColor": "#1971c2",
       "roughness": 1,
       "strokeWidth": 2,
-      "points": [ [0, 0], [0, 60] ],
-      "startBinding": { "elementId": "get-project", "focus": 0.5, "gap": 0 },
-      "endBinding": { "elementId": "get-series", "focus": 0.5, "gap": 0 }
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          60
+        ]
+      ],
+      "startBinding": {
+        "elementId": "get-project",
+        "focus": 0.5,
+        "gap": 0
+      },
+      "endBinding": {
+        "elementId": "get-series",
+        "focus": 0.5,
+        "gap": 0
+      }
     },
     {
       "type": "rectangle",
@@ -98,9 +115,26 @@
       "strokeColor": "#1971c2",
       "roughness": 1,
       "strokeWidth": 2,
-      "points": [ [0, 0], [0, 60] ],
-            "startBinding": { "elementId": "get-series", "focus": 0.5, "gap": 0 },
-      "endBinding": { "elementId": "batch", "focus": 0.5, "gap": 0 }
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          60
+        ]
+      ],
+      "startBinding": {
+        "elementId": "get-series",
+        "focus": 0.5,
+        "gap": 0
+      },
+      "endBinding": {
+        "elementId": "batch",
+        "focus": 0.5,
+        "gap": 0
+      }
     },
     {
       "type": "rectangle",

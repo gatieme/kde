@@ -13,22 +13,22 @@
       <polygon points="0 0, 10 3, 0 6" fill="#000000"/>
     </marker>
   </defs>
-  <text x="600" y="74" class="handwritten" fill="#000000" font-size="24px">CGit Agent Workflow</text>
+  <text x="600" y="83.0" class="handwritten" fill="#000000" font-size="24px">CGit Agent Workflow</text>
   <rect x="100" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="200" y="191" class="handwritten" fill="#000000" font-size="16px">fetch_commit</text>
+  <text x="200" y="195.33333333333334" class="handwritten" fill="#000000" font-size="16px">fetch_commit</text>
   <rect x="400" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="500" y="191" class="handwritten" fill="#000000" font-size="16px">parse_commit</text>
+  <text x="500" y="195.33333333333334" class="handwritten" fill="#000000" font-size="16px">parse_commit</text>
   <rect x="700" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="800" y="191" class="handwritten" fill="#000000" font-size="16px">analyze_commit</text>
+  <text x="800" y="195.33333333333334" class="handwritten" fill="#000000" font-size="16px">analyze_commit</text>
   <rect x="100" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="200" y="341" class="handwritten" fill="#000000" font-size="16px">check_patchset</text>
+  <text x="200" y="345.3333333333333" class="handwritten" fill="#000000" font-size="16px">check_patchset</text>
   <rect x="400" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="500" y="341" class="handwritten" fill="#000000" font-size="16px">run_lkml_analysis</text>
+  <text x="500" y="345.3333333333333" class="handwritten" fill="#000000" font-size="16px">run_lkml_analysis</text>
   <rect x="700" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="800" y="341" class="handwritten" fill="#000000" font-size="16px">output_results</text>
-  <path d="M 0 0 L 200 -40" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-  <path d="M 0 0 L 100 -40" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-  <path d="M 0 0 L -600 70" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-  <path d="M 0 0 L 200 -40" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-  <path d="M 0 0 L 100 -40" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="800" y="345.3333333333333" class="handwritten" fill="#000000" font-size="16px">output_results</text>
+  <path d="M 200 190 L 400 150" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 600 190 L 700 150" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 700 230 L 100 300" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 200 340 L 400 300" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 600 340 L 700 300" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
 </svg>
