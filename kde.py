@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import sys
 import argparse
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 from lkml.lkml_agent import run_lkml_agent
 from cgit.cgit_agent import run_cgit_agent
-
 
 def chinese_to_english_punctuation(text):
     # 定义中文标点和对应的英文标点
