@@ -18,10 +18,11 @@ from playwright.sync_api import sync_playwright
 from urllib.parse import urljoin, urlparse
 from tqdm import tqdm
 
-# 导入模型推理模块
+# Import model inference and text formatting utilities
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from utils import format_text_for_markdown
 from model import ModelInference, ModelRequest
 
 load_dotenv()
@@ -719,10 +720,13 @@ def output_results(state: AgentState) -> AgentState:
     print("---\n")
 
     for i, summary in enumerate(state.summaries, 1):
+        # Format summary for markdown table display
+        formatted_summary = format_text_for_markdown(summary['summary'])
+
         print(f"{i}. [{summary['source']}] [{summary['title']}]({summary['link']})  \n")
         print(f"   **发布时间:** {summary['published']}  \n")
         print(f"   **内核相关:** {'✅ 是' if summary['involves_kernel'] else '否'}  \n")
-        print(f"   **摘要:** {summary['summary']}  \n")
+        print(f"   **摘要:** {formatted_summary}  \n")
 
         if summary['patch_links']:
             print(f"   **详情:**  \n")

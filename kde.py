@@ -8,17 +8,18 @@ load_dotenv()
 
 from lkml.lkml_agent import run_lkml_agent
 from cgit.cgit_agent import run_cgit_agent
+from utils import format_text_for_markdown
 
+# Legacy functions for backward compatibility
 def chinese_to_english_punctuation(text):
-    # 定义中文标点和对应的英文标点
+    """Convert Chinese punctuation to English punctuation"""
     chinese_punctuation = '，。！？；："''（）【】《》'
-    english_punctuation = ',.!?;:""\'\'()[]<>'
-    # 创建转换表
+    english_punctuation = ',.!?;:""\'\'()[]<>"
     translation_table = str.maketrans(chinese_punctuation, english_punctuation)
-    # 进行替换
     return text.translate(translation_table)
 
-def add_space_after_punctuation(text):
+def add_space_after_after_punctuation(text):
+    """Add space after punctuation marks"""
     punctuations = '.,!?;:"\'()[]<>，。！？；："''（）【】《》'
     result = ""
     for char in text:
@@ -29,9 +30,8 @@ def add_space_after_punctuation(text):
     return result
 
 def replace_newline_with_br(text):
-    # 替换换行符为 <br>
+    """Replace newline characters with <br> tag"""
     return text.replace('\n', '<br>')
-
 def lkml_run(lkml_message_id, level, verbose=0):
     """运行 LKML agent 分析补丁"""
     try:

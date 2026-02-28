@@ -13,8 +13,9 @@ from typing import Annotated, List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from tqdm import tqdm
 
-# 添加项目根目录到 Python 路径
+# Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import format_text_for_markdown
 from model import ModelInference, ModelRequest
 
 @dataclass
@@ -366,10 +367,13 @@ def output_results(state: LKMLAgentState) -> LKMLAgentState:
     print("| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |")
     print("|:---:|:----:|:---:|:----:|:---------:|:----:|")
 
+    # Format summary for markdown table display
+    formatted_summary = format_text_for_markdown(state.summary)
+
     if not state.total:
-        print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {state.summary} | v{state.version} ☐☑✓ | [LORE]({state.archive_url}) |")
+        print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{state.version} ☐☑✓ | [LORE]({state.archive_url}) |")
     else:
-        print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {state.summary} | v{state.version} ☐☑✓ | [{state.date}, LORE v{state.version}, {state.current}/{state.total}]({state.archive_url}) |")
+        print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{state.version} ☐☑✓ | [{state.date}, LORE v{state.version}, {state.current}/{state.total}]({state.archive_url}) |")
 
     # 如果是 detail 级别，打印详细分析
     if state.level == "detail" and state.analysis:

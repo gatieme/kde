@@ -11,8 +11,9 @@ from typing import Annotated, List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from tqdm import tqdm
 
-# 添加项目根目录到 Python 路径
+# Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils import format_text_for_markdown
 from model import ModelInference, ModelRequest
 from lkml.lkml_agent import run_lkml_agent
 
@@ -355,8 +356,11 @@ def output_results(state: CGitAgentState) -> CGitAgentState:
         if len(version) > 10:
             version = "1"
 
-    # 打印表格行
-    print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {state.summary} | v{version} ☐☑✓ | [CGIT]({state.web_url}) |")
+    # Format summary for markdown table display
+    formatted_summary = format_text_for_markdown(state.summary)
+
+    # Print table row
+    print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{version} ☐☑✓ | [CGIT]({state.web_url}) |")
 
     # 如果是 detail 级别，打印详细分析
     if state.level == "detail" and state.analysis:
