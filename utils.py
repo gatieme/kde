@@ -4,8 +4,8 @@
 
 def chinese_to_english_punctuation(text):
     """Convert Chinese punctuation to English punctuation"""
-    chinese_punctuation = '，。！？；："''（）【】《》'
-    english_punctuation = ',.!?;:""\'\'()[]<>'
+    chinese_punctuation = "，。！？；：''（）【】《》"
+    english_punctuation = ",.!?;:\"\'()[]<>"
     translation_table = str.maketrans(chinese_punctuation, english_punctuation)
     return text.translate(translation_table)
 
