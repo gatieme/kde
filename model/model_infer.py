@@ -27,59 +27,56 @@ class ModelInference:
 
     def inference(self, messages):
         self.response = self.client.chat.completions.create(
-            #model = 'Qwen/Qwen3-32B',  # ModelScope Model-Id
-            model = 'Qwen/Qwen3-235B-A22B',  # ModelScope Model-Id
-            messages = messages,
-            stream = True,
-            temperature = 0,    # 设置 temperature 为 0 以实现贪心解码
-            top_p = 1,          # 可设置为 1，通常结合 temperature=0 可不特别关注
-            #top_k = 1,          # 设置 top_k 为 1，只选择概率最高的词
-            presence_penalty = 0,
-            frequency_penalty = 0,
-            extra_body = self.extra_body
+            model='Qwen/Qwen3-235B-A22B',
+            messages=messages,
+            stream=True,
+            temperature=0,
+            top_p=1,
+            presence_penalty=0,
+            frequency_penalty=0,
+            extra_body=self.extra_body
         )
+        
         answer = ""
         done_thinking = False
-
-        # 使用 tqdm 显示进度条
+        
         if self.verbose >= 1 and self.verbose < 2:
             with tqdm(total=100, desc="模型推理进度", unit="%") as pbar:
-                for chunk in self.response:
-                    thinking_chunk = chunk.choices[0].delta.reasoning_content
-                    answer_chunk = chunk.choices[0].delta.content
-                    if thinking_chunk != '':
-                        if self.verbose >= 2:
-                            print(thinking_chunk, end='', flush=True)
-                        answer += thinking_chunk
-                        pbar.update(1)
-                    elif answer_chunk != '':
-                        if not done_thinking:
-                            #print('\n\n === Final Answer ===\n')
-                            done_thinking = True
-                        if self.verbose >= 2:
-                            print(answer_chunk, end='', flush=True)
-                        answer += answer_chunk
-                        pbar.update(1)
-                # 确保进度条显示到 100%
-                pbar.n = 100
-                pbar.refresh()
+                answer, done_thinking = self._process_stream(self.response, answer, done_thinking, pbar)
         else:
-            # 不使用进度条
-            for chunk in self.response:
-                thinking_chunk = chunk.choices[0].delta.reasoning_content
-                answer_chunk = chunk.choices[0].delta.content
-                if thinking_chunk != '':
-                    if self.verbose >= 2:
-                        print(thinking_chunk, end='', flush=True)
-                    answer += thinking_chunk
-                elif answer_chunk != '':
-                    if not done_thinking:
-                        #print('\n\n === Final Answer ===\n')
-                        done_thinking = True
-                    if self.verbose >= 2:
-                        print(answer_chunk, end='', flush=True)
-                    answer += answer_chunk
+            answer, done_thinking = self._process_stream(self.response, answer, done_thinking, None)
+        
+        if self.verbose >= 2:
+            print("\n")
+        self.answer = answer
+        return self.answer
 
+    def _process_stream(self, response, answer, done_thinking, pbar):
+        """处理流式响应"""
+        for chunk in response:
+            thinking_chunk = chunk.choices[0].delta.reasoning_content
+            answer_chunk = chunk.choices[0].delta.content
+            
+            if thinking_chunk != '':
+                if self.verbose >= 2:
+                    print(thinking_chunk, end='', flush=True)
+                answer += thinking_chunk
+                if pbar:
+                    pbar.update(1)
+            elif answer_chunk != '':
+                if not done_thinking:
+                    done_thinking = True
+                if self.verbose >= 2:
+                    print(answer_chunk, end='', flush=True)
+                answer += answer_chunk
+                if pbar:
+                    pbar.update(1)
+        
+        if pbar:
+            pbar.n = 100
+            pbar.refresh()
+        
+        return answer, done_thinking
         if self.verbose >= 2:
             print("\n")
         self.answer = answer

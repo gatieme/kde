@@ -22,7 +22,7 @@ from tqdm import tqdm
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from utils import format_text_for_markdown
+from utils import format_text_for_markdown, fetch_article_with_method
 from model import ModelInference, ModelRequest
 
 load_dotenv()
@@ -386,88 +386,9 @@ def fetch_article_content(state: AgentState) -> AgentState:
 
                 full_content = None
                 for method in available_methods:
-                    try:
-                        if method == "requests":
-                            # 添加进度条到 requests 请求
-                            def progress_hook(t):
-                                last_b = [0]
-                                def inner(b, bsize, tsize=None):
-                                    if tsize is not None:
-                                        t.total = tsize
-                                    t.update((b - last_b[0]) * bsize)
-                                    last_b[0] = b
-                                return inner
-
-                            with tqdm(unit='B', unit_scale=True, miniters=1, desc=f"  下载文章内容: {article['title'][:30]}...") as t:
-                                response = requests.get(article["link"], headers={
-                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                                }, timeout=15, stream=True, hooks=[dict(response=progress_hook(t))])
-                                response.raise_for_status()
-                                content = response.content
-                                t.n = t.total
-                                t.refresh()
-                            soup = BeautifulSoup(content, "html.parser")
-                        elif method == "httpx":
-                            with httpx.Client(timeout=15, follow_redirects=True) as client:
-                                with tqdm(desc=f"  下载文章内容: {article['title'][:30]}...", unit="B", unit_scale=True) as t:
-                                    response = client.get(article["link"])
-                                    response.raise_for_status()
-                                    content = response.content
-                                    t.total = len(content)
-                                    t.update(len(content))
-                                    t.n = t.total
-                                    t.refresh()
-                            soup = BeautifulSoup(content, "html.parser")
-                        elif method == "playwright":
-                            print(f"  使用 playwright 打开: {article['title'][:60]}...")
-
-                            with sync_playwright() as p:
-                                # 使用更真实的浏览器配置
-                                browser = p.chromium.launch(
-                                    headless=True,
-                                    slow_mo=200,  # 增加延迟，更接近人类操作
-                                    args=[
-                                        "--disable-blink-features=AutomationControlled",  # 禁用自动化控制标记
-                                        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                                    ]
-                                )
-
-                                context = browser.new_context(
-                                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                                    viewport={"width": 1920, "height": 1080},
-                                    permissions=["geolocation"],
-                                    geolocation={"latitude": 37.7749, "longitude": -122.4194},
-                                    locale="en-US",
-                                    timezone_id="America/New_York"
-                                )
-
-                                page = context.new_page()
-                                page.goto(article["link"], timeout=30000)
-                                page.wait_for_load_state("networkidle", timeout=30000)
-
-                                # 检查是否有验证码
-                                if "captcha" in page.content().lower() or "verify" in page.content().lower():
-                                    print("检测到验证码，尝试等待用户交互...")
-                                    page.wait_for_timeout(5000)
-
-                                soup = BeautifulSoup(page.content(), "html.parser")
-                                context.close()
-                                browser.close()
-
-                        article_body = soup.find("div", class_="content")
-                        if not article_body:
-                            article_body = soup.find("div", id="content")
-                        if not article_body:
-                            article_body = soup.find("article")
-                        if not article_body:
-                            article_body = soup.find("main")
-
-                        if article_body:
-                            full_content = article_body.get_text(strip=True)
-                            break
-
-                    except Exception as e:
-                        continue
+                    full_content = fetch_article_with_method(article, method, VERBOSE)
+                    if full_content:
+                        break
 
                 if full_content:
                     article["content"] = full_content

@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 # Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import format_text_for_markdown
+from utils import format_text_for_markdown, monitor_process_with_progress, handle_process_timeout
 from model import ModelInference, ModelRequest
 
 @dataclass
@@ -74,93 +74,7 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
                 print(line, end='', file=sys.stderr)
         elif state.verbose >= 1:
             with tqdm(total=100, desc="LKML 补丁下载进度", unit="%") as pbar:
-                last_progress = 0
-                task_completed = False
-                no_output_count = 0
-                max_no_output_count = 6
-                select_timeout = 5
-                no_output_count = 0
-                max_no_output_count = 6
-                select_timeout = 5
-
-                import select
-
-                while True:
-                    try:
-                        readable, _, _ = select.select([process.stdout], [], [], select_timeout)
-                        if not readable:
-                            no_output_count += 1
-                            if state.verbose >= 2:
-                                print(f"警告: {(no_output_count * select_timeout):2d} 秒无输出，检查进程状态。[尝试次数 {no_output_count}/{max_no_output_count}]...")
-                            if no_output_count >= max_no_output_count:
-                                if process.poll() is not None:
-                                    task_completed = True
-                                    # print(f"警告: 进程已结束，退出监控")
-                                    break
-                                else:
-                                    print(f"警告: 连续 {(no_output_count * select_timeout):2d} 秒无输出，任务即将终止...")
-                                    process.terminate()
-                                    process.wait(timeout=5)
-                                    print(f"警告: 进程已终止，可能已超时")
-                                    break
-                            continue
-
-                        line = process.stdout.readline()
-                        if not line:
-                            if process.poll() is not None:
-                                # print(f"信息: 进程已结束")
-                                break
-                            no_output_count += 1
-                            if state.verbose >= 2:
-                                print(f"警告: {(no_output_count * select_timeout):2d} 秒无输出，检查进程状态。[尝试次数 {no_output_count}/{max_no_output_count}]...")
-                            if no_output_count >= max_no_output_count:
-                                if process.poll() is not None:
-                                    task_completed = True
-                                    # print(f"警告: 进程已结束，退出监控")
-                                    break
-                                else:
-                                    print(f"警告: 连续 {(no_output_count * select_timeout):2d} 秒无输出，任务即将终止...")
-                                    process.terminate()
-                                    process.wait(timeout=5)
-                                    print(f"警告: 进程已终止，可能已超时")
-                                    break
-                            break
-
-                        no_output_count = 0
-                        line = line.strip()
-
-                        if "%" in line:
-                            try:
-                                progress = int(re.search(r'(\d+)%', line).group(1))
-                                if 0 <= progress <= 100 and progress > last_progress:
-                                    pbar.update(progress - last_progress)
-                                    last_progress = progress
-                            except:
-                                pbar.update(0.5)
-                        elif "Download" in line or "Fetch" in line or "Applying" in line:
-                            pbar.update(0.5)
-                    except subprocess.TimeoutExpired:
-                        if process.poll() is not None:
-                            task_completed = True
-                            break
-                        else:
-                            process.terminate()
-                            process.wait(timeout=5)
-                            print(f"警告: 读取输出超时，进程已终止")
-                            break
-                    except Exception as e:
-                        if process.poll() is not None:
-                            task_completed = True
-                            break
-                        else:
-                            if state.verbose >= 2:
-                                print(f"警告: 读取输出时发生错误: {e}")
-                            break
-
-                if task_completed:
-                    pbar.n = 100
-                    pbar.refresh()
-                pbar.refresh()
+                monitor_process_with_progress(process, pbar, state.verbose)
         else:
             try:
                 output = process.communicate(timeout=300)[0]

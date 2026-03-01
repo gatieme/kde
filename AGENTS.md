@@ -102,3 +102,7 @@ from model import ModelInference, ModelRequest
 - Use `git clean -fdX` to remove caches
 - No requirements.txt - dependencies in README only
 - Verbose levels: 0 (minimal), 1 (progress), 2 (detailed), 3 (full)
+- Memory files stored in `.memory/` following conventions:
+  - Planning: `.memory/optimization/`
+  - Implementation: `.memory/implementation/`
+  - Testing: `.memory/testing/`

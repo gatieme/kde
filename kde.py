@@ -10,25 +10,8 @@ from lkml.lkml_agent import run_lkml_agent
 from cgit.cgit_agent import run_cgit_agent
 from utils import format_text_for_markdown
 
-# Legacy functions for backward compatibility
-def chinese_to_english_punctuation(text):
-    """Convert Chinese punctuation to English punctuation"""
-    chinese_punctuation = "，。！？；：''（）【】《》"
-    english_punctuation = ",.!?;:\"\'()[]<>"
-    translation_table = str.maketrans(chinese_punctuation, english_punctuation)
-    return text.translate(translation_table)
-
-def add_space_after_punctuation(text):
-    """Add space after punctuation marks"""
-    punctuations = ".,!?;:\"\'()[]<>，。！？；：''（）【】《》"
-    result = ""
-    for char in text:
-        if char in punctuations:
-            result += char + " "
-        else:
-            result += char
-    return result
-
+# Legacy functions for backward compatibility (moved to utils.py)
+from utils import chinese_to_english_punctuation, add_space_after_punctuation, replace_newline_with_br
 def replace_newline_with_br(text):
     """Replace newline characters with <br> tag"""
     return text.replace('\n', '<br>')

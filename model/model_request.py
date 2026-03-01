@@ -51,17 +51,15 @@ class ModelRequest:
             return
         #self.request = request
         self.content = content
-        self.messages = []
-        self.messages += messages_mapping[self.request]
-        self.messages += [{
-            'role' : 'user',
-            'content' : self.content
-        }]
-
+        self.messages = messages_mapping[self.request].copy()
+        self.messages.append({
+            'role': 'user',
+            'content': self.content
+        })
     def set_request(self, request, content):
         if self.request != request:
             self.request = request
-            self.messages = messages_mapping[self.request]
+            self.messages = messages_mapping[self.request].copy()
         if content != None:
             self.set_content(content)
 
