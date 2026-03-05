@@ -1,30 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 -20 1000 780" width="1000" height="780">
-  <style>
-    .handwritten { font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive; }
-    .rectangle { fill: #ffffff; stroke: #000000; stroke-width: 2; }
-    .ellipse { fill: #ffffff; stroke: #000000; stroke-width: 2; }
-    .diamond { fill: #ffffff; stroke: #000000; stroke-width: 2; }
-    .arrow { stroke: #000000; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
-    .text { fill: #000000; font-size: 16px; }
-  </style>
-  <defs>
-    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 10 3, 0 6" fill="#000000"/>
-    </marker>
-  </defs>
-  <text x="420" y="59.333333333333336" class="handwritten" fill="#1971c2" font-size="28px">Disk Cache System</text>
-  <rect x="150" y="100" width="900" height="500" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
-  <text x="450" y="147.33333333333334" class="handwritten" fill="#1971c2" font-size="22px">output/</text>
-  <rect x="200" y="200" width="250" height="350" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
-  <text x="220" y="246.66666666666666" class="handwritten" fill="#2f9e44" font-size="20px">lkml/</text>
-  <text x="220" y="409.6666666666667" class="handwritten" fill="#2f9e44" font-size="14px">• patch_analysis/<br/>• summaries/<br/>• metadata/</text>
-  <rect x="475" y="200" width="250" height="350" fill="#ffd43b" stroke="#f08c00" stroke-width="2"/>
-  <text x="495" y="246.66666666666666" class="handwritten" fill="#f08c00" font-size="20px">rss/</text>
-  <text x="495" y="409.6666666666667" class="handwritten" fill="#f08c00" font-size="14px">• articles/<br/>• summaries/<br/>• feeds/</text>
-  <rect x="750" y="200" width="250" height="350" fill="#ffc9c9" stroke="#e03131" stroke-width="2"/>
-  <text x="770" y="246.66666666666666" class="handwritten" fill="#e03131" font-size="20px">cgit/</text>
-  <text x="770" y="409.6666666666667" class="handwritten" fill="#e03131" font-size="14px">• commits/<br/>• patchsets/<br/>• analysis/</text>
-  <ellipse cx="600.0" cy="670.0" rx="350.0" ry="40.0" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
-  <text x="270" y="675.3333333333334" class="handwritten" fill="#1971c2" font-size="16px">Each agent maintains its own cache directory to avoid recomputation and enable offline analysis</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="600.0" y="50.0" font-size="32" fill="#1e1e1e" text-anchor="middle" dy="0.9em" style="opacity: 1.0;">Disk Cache System</text>
+  <rect x="400" y="150" width="400" height="150" rx="30" ry="30" fill="#a5d8ff" stroke="#1971c2" stroke-width="2" style="opacity: 1.0;"/>
+  <text x="410" y="160.0" font-size="24" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">LKML Cache</text>
+  <text x="410" y="200.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Location: output/lkml/</text>
+  <text x="410" y="225.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Organization: Group by message ID</text>
+  <text x="410" y="250.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Files: .cover, .mbx files</text>
+  <text x="410" y="275.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Features: Auto-create directories</text>
+  <rect x="400" y="350" width="400" height="150" rx="30" ry="30" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2" style="opacity: 1.0;"/>
+  <text x="410" y="360.0" font-size="24" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">RSS Cache</text>
+  <text x="410" y="400.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Location: output/rss/</text>
+  <text x="410" y="425.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Naming: MD5 hash naming</text>
+  <text x="410" y="450.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Format: .txt format</text>
+  <text x="410" y="475.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Features: Metadata included</text>
+  <rect x="400" y="550" width="400" height="150" rx="30" ry="30" fill="#ffd43b" stroke="#f08c00" stroke-width="2" style="opacity: 1.0;"/>
+  <text x="410" y="560.0" font-size="24" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">CGit Cache</text>
+  <text x="410" y="600.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Location: output/cgit/</text>
+  <text x="410" y="625.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Organization: Group by commit ID</text>
+  <text x="410" y="650.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Files: commit files</text>
+  <text x="410" y="675.0" font-size="16" fill="#1e1e1e" text-anchor="start" dy="0.9em" style="opacity: 1.0;">Features: Auto-create directories</text>
 </svg>

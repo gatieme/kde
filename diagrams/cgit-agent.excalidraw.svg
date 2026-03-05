@@ -1,34 +1,41 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 0 980 430" width="980" height="430">
-  <style>
-    .handwritten { font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive; }
-    .rectangle { fill: #ffffff; stroke: #000000; stroke-width: 2; }
-    .ellipse { fill: #ffffff; stroke: #000000; stroke-width: 2; }
-    .diamond { fill: #ffffff; stroke: #000000; stroke-width: 2; }
-    .arrow { stroke: #000000; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
-    .text { fill: #000000; font-size: 16px; }
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg" width="910" height="440" viewBox="30 10 910 440">
+  <rect width="100%" height="100%" fill="#ffffff"/>
   <defs>
-    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-      <polygon points="0 0, 10 3, 0 6" fill="#000000"/>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1971c2"/>
+    </marker>
+    <marker id="arrowhead-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f08c00"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2f9e44"/>
     </marker>
   </defs>
-  <text x="600" y="83.0" class="handwritten" fill="#000000" font-size="24px">CGit Agent Workflow</text>
-  <rect x="100" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="200" y="195.33333333333334" class="handwritten" fill="#000000" font-size="16px">fetch_commit</text>
-  <rect x="400" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="500" y="195.33333333333334" class="handwritten" fill="#000000" font-size="16px">parse_commit</text>
-  <rect x="700" y="150" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="800" y="195.33333333333334" class="handwritten" fill="#000000" font-size="16px">analyze_commit</text>
-  <rect x="100" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="200" y="345.3333333333333" class="handwritten" fill="#000000" font-size="16px">check_patchset</text>
-  <rect x="400" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="500" y="345.3333333333333" class="handwritten" fill="#000000" font-size="16px">run_lkml_analysis</text>
-  <rect x="700" y="300" width="200" height="80" fill="#f4ecf7" stroke="#000000" stroke-width="2"/>
-  <text x="800" y="345.3333333333333" class="handwritten" fill="#000000" font-size="16px">output_results</text>
-  <path d="M 200 190 L 400 150" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-  <path d="M 600 190 L 700 150" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-  <path d="M 700 230 L 100 300" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-  <path d="M 200 340 L 400 300" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
-  <path d="M 600 340 L 700 300" stroke="#000000" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="650.0" y="63.64" font-size="24" font-family="sans-serif" fill="#1971c2" text-anchor="middle">CGit Agent Workflow</text>
+  <rect x="50" y="120" width="120" height="80" rx="10" ry="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="110.0" y="165.04" font-size="14" font-family="sans-serif" fill="#1971c2" text-anchor="middle">fetch_commit</text>
+  <rect x="200" y="120" width="120" height="80" rx="10" ry="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="260.0" y="165.04" font-size="14" font-family="sans-serif" fill="#1971c2" text-anchor="middle">parse_commit</text>
+  <rect x="350" y="120" width="120" height="80" rx="10" ry="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="410.0" y="165.04" font-size="14" font-family="sans-serif" fill="#1971c2" text-anchor="middle">analyze_commit</text>
+  <rect x="500" y="120" width="120" height="80" rx="10" ry="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="560.0" y="165.04" font-size="14" font-family="sans-serif" fill="#1971c2" text-anchor="middle">check_patchset</text>
+  <rect x="650" y="120" width="120" height="80" rx="10" ry="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="710.0" y="156.64" font-size="14" font-family="sans-serif" fill="#1971c2" text-anchor="middle">run_lkml</text>
+  <text x="710.0" y="173.44" font-size="14" font-family="sans-serif" fill="#1971c2" text-anchor="middle">analysis</text>
+  <rect x="800" y="120" width="120" height="80" rx="10" ry="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="860.0" y="165.04" font-size="14" font-family="sans-serif" fill="#1971c2" text-anchor="middle">output_results</text>
+  <rect x="350" y="350" width="120" height="80" rx="10" ry="10" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="410.0" y="395.04" font-size="14" font-family="sans-serif" fill="#2f9e44" text-anchor="middle">Cache</text>
+  <rect x="650" y="350" width="140" height="80" rx="10" ry="10" fill="#ffd43b" stroke="#f08c00" stroke-width="2"/>
+  <text x="720.0" y="386.64" font-size="14" font-family="sans-serif" fill="#f08c00" text-anchor="middle">LKML Agent</text>
+  <text x="720.0" y="403.44" font-size="14" font-family="sans-serif" fill="#f08c00" text-anchor="middle">Call</text>
+  <path d="M170,160 L200,160" fill="none" stroke="#1971c2" stroke-width="2"  marker-end="url(#arrowhead)"/>
+  <path d="M320,160 L350,160" fill="none" stroke="#1971c2" stroke-width="2"  marker-end="url(#arrowhead)"/>
+  <path d="M470,160 L500,160" fill="none" stroke="#1971c2" stroke-width="2"  marker-end="url(#arrowhead)"/>
+  <path d="M620,160 L650,160" fill="none" stroke="#1971c2" stroke-width="2"  marker-end="url(#arrowhead)"/>
+  <path d="M770,160 L800,160" fill="none" stroke="#1971c2" stroke-width="2"  marker-end="url(#arrowhead)"/>
+  <path d="M710,200 L710,350" fill="none" stroke="#f08c00" stroke-width="2"  marker-end="url(#arrowhead-orange)"/>
+  <path d="M110,200 L110,350" fill="none" stroke="#2f9e44" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-green)"/>
+  <path d="M860,200 L450,350" fill="none" stroke="#2f9e44" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead-green)"/>
 </svg>
