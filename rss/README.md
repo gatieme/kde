@@ -12,7 +12,11 @@ RSS Agent 是一个基于 LangGraph 开发的智能 RSS 分析工具，用于自
 
 **手绘风格架构图**：
 
-如需查看手绘风格的架构图，请打开 `../diagrams/rss-agent.excalidraw.json` 文件：
+手绘风格架构图：
+
+![Hand-drawn RSS Agent](diagrams/rss-agent.excalidraw.svg)
+
+要查看可编辑的 Excalidraw 原始文件，请打开：
 
 1. 访问 https://excalidraw.com
 2. 点击 "Open" 或拖放文件

@@ -18,6 +18,14 @@ KDE 提供三个核心分析能力：
 
 **手绘风格架构图**：
 
+![Hand-drawn Architecture](diagrams/architecture.excalidraw.svg)
+
+要查看可编辑的 Excalidraw 原始文件：
+
+1. 访问 https://excalidraw.com
+2. 点击 "Open" 或拖放 `diagrams/architecture.excalidraw` 文件
+3. 或使用 Excalidraw VS Code 扩展
+
 To view the hand-drawn style architecture diagram, open `diagrams/architecture.excalidraw.json` file:
 
 1. Visit https://excalidraw.com

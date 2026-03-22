@@ -12,7 +12,11 @@ Model Inference Module 是 KDE 项目的 AI 模型集成层，负责与 ModelSco
 
 **手绘风格架构图**：
 
-如需查看手绘风格的架构图，请打开 `../diagrams/model-inference.excalidraw.json` 文件：
+手绘风格架构图：
+
+![Hand-drawn Model Inference](diagrams/model-inference.excalidraw.svg)
+
+要查看可编辑的 Excalidraw 原始文件，请打开：
 
 1. 访问 https://excalidraw.com
 2. 点击 "Open" 或拖放文件
