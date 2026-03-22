@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2207.95 176" width="2207.95" height="176" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2086.4000000000005 176" width="2086.4000000000005" height="176" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
   text { font-family: 'Inter', system-ui, sans-serif; }
@@ -26,13 +26,13 @@
     <polygon points="8 0, 0 2.4, 8 4.8" fill="var(--_arrow)" />
   </marker>
 </defs>
-<rect x="40" y="40" width="2127.95" height="96" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-<rect x="40" y="40" width="2127.95" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-<text x="52" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Disk Cache System&quot;</text>
-<rect x="56" y="88" width="739.85" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="819.8499999999999" y="88" width="611.1500000000001" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="1455" y="88" width="696.95" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<text x="425.925" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;LKML Cache output/lkml/&lt;br/&gt;Group by message ID&lt;br/&gt;Auto-create directories&lt;br/&gt;.cover .mbx files&quot;</text>
-<text x="1125.425" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;RSS Cache output/rss/&lt;br/&gt;MD5 hash naming&lt;br/&gt;.txt format&lt;br/&gt;Metadata included&quot;</text>
-<text x="1803.475" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;CGit Cache output/cgit/&lt;br/&gt;Group by commit ID&lt;br/&gt;Auto-create directories&lt;br/&gt;commit files&quot;</text>
+<rect x="40.000000000000114" y="40" width="2006.4000000000003" height="96" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="40.000000000000114" y="40" width="2006.4000000000003" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="52.000000000000114" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Disk Cache System&quot;</text>
+<rect x="56.000000000000114" y="88" width="682.6500000000001" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="762.6500000000003" y="88" width="553.95" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="1340.6000000000004" y="88" width="689.8000000000001" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<text x="397.32500000000016" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;LKML Cache\noutput/lkml/\nGroup by message ID\nAuto-create directories\n.cover .mbx files&quot;</text>
+<text x="1039.6250000000005" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;RSS Cache\noutput/rss/\nMD5 hash naming\n.txt format\nMetadata included&quot;</text>
+<text x="1685.5000000000005" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;CGit Cache\noutput/cgit/\nGroup by commit by ID\nAutoAuto-create directories\ncommit files&quot;</text>
 </svg>

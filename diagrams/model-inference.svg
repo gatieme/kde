@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1187.9 328" width="1187.9" height="328" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1102.1 328" width="1102.1" height="328" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
   text { font-family: 'Inter', system-ui, sans-serif; }
@@ -26,15 +26,15 @@
     <polygon points="8 0, 0 2.4, 8 4.8" fill="var(--_arrow)" />
   </marker>
 </defs>
-<rect x="40" y="40" width="1107.9" height="248" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-<rect x="40" y="40" width="1107.9" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-<text x="52" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Model Inference Module&quot;</text>
-<polyline points="593.95,124 593.95,164" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="593.95,200 593.95,240" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<rect x="316.975" y="88" width="553.95" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="56" y="164" width="1075.9" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="320.55" y="240" width="546.8000000000001" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<text x="593.95" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelRequest&lt;br/&gt;set_request(type, content)&lt;br/&gt;get_messages() List[Dict</text>
-<text x="593.95" y="182" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelInference&lt;br/&gt;OpenAI Client ModelScope API&lt;br/&gt;inference(messages) str&lt;br/&gt;Streaming with tqdm progress&lt;br/&gt;Config: Qwen3-235B-A22B, temp=0&quot;</text>
-<text x="593.95" y="258" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelScope API&lt;br/&gt;Qwen3-235B-A22B&lt;br/&gt;api-inference.modelscope.cn/v1/&quot;</text>
+<rect x="39.99999999999994" y="40" width="1022.1" height="248" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="39.99999999999994" y="40" width="1022.1" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<text x="51.99999999999994" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Model Inference Module&quot;</text>
+<polyline points="551.05,124 551.05,164" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="551.05,200 551.05,240" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<rect x="295.525" y="88" width="511.05" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="55.99999999999994" y="164" width="990.1" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="299.09999999999997" y="240" width="503.90000000000003" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<text x="551.05" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelRequest\nset_request(type, content)\nget_messages() List[Dict</text>
+<text x="551.05" y="182" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelInference\nOpenAI Client ModelScope API\ninference(messages) str\nStreaming with tqdm progress\nConfig: Qwen3-235B-A22B, temp=0&quot;</text>
+<text x="551.05" y="258" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelScope API\nQwen3-235B-A22B\napi-inference.modelscope.cn/v1/&quot;</text>
 </svg>

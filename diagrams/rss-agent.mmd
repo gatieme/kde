@@ -1,20 +1,20 @@
 flowchart LR
     subgraph Workflow["RSS Agent Workflow"]
         direction TB
-        DETECT["detect_protection<br/>Cloudflare, Turnstile, CAPTCHA"]
-        FETCH["fetch_rss_feeds<br/>feedparser, multi-source"]
-        FETCH_ART["fetch_article_content<br/>requests, httpx, Playwright"]
-        ANALYZE["analyze_articles<br/>kernel keywords, patch links"]
-        GEN_SUM["generate_summaries<br/>AI summary, classification"]
-        OUTPUT["output_results<br/>Markdown format output"]
+        DETECT["detect_protection\nCloudflare, Turnstile, CAPTCHA"]
+        FETCH["fetch_rss_feeds\nfeedparser, multi-source"]
+        FETCH_ART["fetch_article_content\nrequests, httpx, Playwright"]
+        ANALYZE["analyze_articles\nkernel keywords, patch links"]
+        GEN_SUM["generate_summaries\nAI summary, classification"]
+        OUTPUT["output_results\nMarkdown format output"]
     end
 
     subgraph AntiCrawler["Anti-Crawler Bypass"]
-        BYPASS["Real browser fingerprint<br/>Mouse scroll simulation<br/>Cookie localStorage<br/>Multi-step navigation"]
+        BYPASS["AntiCrawler\nReal browser fingerprint\nMouse scroll simulation\nCookie localStorage\nMulti-step navigation"]
     end
 
     subgraph Cache["Disk Cache"]
-        CACHE["output/rss/<hash-id>.txt<br/>MD5 hash of article link"]
+        RSS_CACHE["output/rss/<hash-id>.txt\nMD5 hash of article link"]
     end
 
     DETECT --> FETCH --> FETCH_ART --> ANALYZE --> GEN_SUM --> OUTPUT

@@ -1,15 +1,15 @@
 flowchart LR
     subgraph Workflow["LKML Agent Workflow"]
         direction TB
-        FETCH["fetch_patch<br/>b4 am, progress bar, timeout"]
-        PARSE["parse_patch<br/>extract author, date, subject"]
-        GEN_SUM["generate_summary<br/>AI summary, 300 char limit"]
-        ANALYZE["analyze_patch<br/>AI analysis, detail level only"]
-        OUTPUT["output_results<br/>Markdown table output"]
+        FETCH["fetch_patch\nb4 am, progress bar, timeout"]
+        PARSE["parse_patch\nextract author, date, subject"]
+        GEN_SUM["generate_summary\nAI summary, 300 char limit"]
+        ANALYZE["analyze_patch\nAI analysis, detail level only"]
+        OUTPUT["output_results\nMarkdown table output"]
     end
 
     subgraph Cache["Disk Cache"]
-        CACHE["output/lkml/<message-id>/<br/>.cover .mbx"]
+        LKML_CACHE["output/lkml/<message-id>/\n/.cover .mbx"]
     end
 
     FETCH --> PARSE --> GEN_SUM --> ANALYZE --> OUTPUT

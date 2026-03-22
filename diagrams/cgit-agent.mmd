@@ -1,20 +1,20 @@
 flowchart LR
     subgraph Workflow["CGit Agent Workflow"]
         direction TB
-        FETCH["fetch_commit<br/>wget, git.kernel.org"]
-        PARSE["parse_commit<br/>extract author, date, subject"]
-        ANALYZE["analyze_commit<br/>AI summary, AI analysis"]
-        CHECK["check_patchset<br/>extract Link, regex"]
-        RUN_LKML["run_lkml_analysis<br/>extract message-id, recursive"]
-        OUTPUT["output_results<br/>Markdown table output"]
+        FETCH["fetch_commit\nwget, git.kernel.org"]
+        PARSE["parse_commit\nextract author, date, subject"]
+        ANALYZE["analyze_commit\nAI summary, AI analysis"]
+        CHECK["check_patchset\nextract Link, regex"]
+        RUN_LKML["run_lkml_analysis\nextract message-id, recursive"]
+        OUTPUT["output_results\nMarkdown table output"]
     end
 
     subgraph LKML_Call["LKML Agent Call"]
-        LKML["LKML Agent<br/>recursive call"]
+        LKML["LKML Agent\nrecursive call"]
     end
 
     subgraph Cache["Disk Cache"]
-        CACHE["output/cgit/<commit-id>/<br/>commit file"]
+        CGIT_CACHE["output/cgit/<commit-id>/\n/commit file"]
     end
 
     FETCH --> PARSE --> ANALYZE --> CHECK --> RUN_LKML --> OUTPUT

@@ -1,9 +1,9 @@
 flowchart LR
     subgraph Integration["Patchwork Integration"]
         direction TB
-        GET_PROJECT["get_patchwork_project.sh<br/>Get all project lists<br/>Output to projects_list.md"]
-        GET_SERIES["get_patchwork_series.sh<br/>Get patch series by project<br/>Filter by date<br/>Output to date directory"]
-        BATCH["batch.sh<br/>Batch processing script"]
+        GET_PROJECT["get_patchwork_project.sh\nGet all project lists\nOutput to projects_list.md"]
+        GET_SERIES["get_patchwork_series.sh\nGet patch series by project\nFilter by date\nOutput to date directory"]
+        BATCH["batch.sh\nBatch processing script"]
     end
 
     GET_PROJECT --> GET_SERIES

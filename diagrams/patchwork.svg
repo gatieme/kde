@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 894.7500000000001 328" width="894.7500000000001" height="328" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 830.4000000000001 328" width="830.4000000000001" height="328" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
   text { font-family: 'Inter', system-ui, sans-serif; }
@@ -26,15 +26,15 @@
     <polygon points="8 0, 0 2.4, 8 4.8" fill="var(--_arrow)" />
   </marker>
 </defs>
-<rect x="40" y="40" width="814.7500000000001" height="248" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-<rect x="40" y="40" width="814.7500000000001" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="40" y="40" width="750.4000000000001" height="248" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+<rect x="40" y="40" width="750.4000000000001" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
 <text x="52" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Patchwork Integration&quot;</text>
-<polyline points="447.37500000000006,124 447.37500000000006,164" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="447.37500000000006,200 447.37500000000006,240" fill="none" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
-<rect x="134.65000000000003" y="88" width="625.45" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="56" y="164" width="782.7500000000001" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="295.52500000000003" y="240" width="303.70000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<text x="447.37500000000006" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;get_patchwork_project.sh&lt;br/&gt;Get all project lists&lt;br/&gt;Output to projects_list.md&quot;</text>
-<text x="447.37500000000006" y="182" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;get_patchwork_series.sh&lt;br/&gt;Get patch series by project&lt;br/&gt;Filter by date&lt;br/&gt;Output to date directory&quot;</text>
-<text x="447.37500000000006" y="258" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;batch.sh&lt;br/&gt;Batch processing script&quot;</text>
+<polyline points="415.20000000000005,124 415.20000000000005,164" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
+<polyline points="415.20000000000005,200 415.20000000000005,240" fill="none" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<rect x="123.92500000000001" y="88" width="582.5500000000001" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="56" y="164" width="718.4000000000001" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<rect x="274.07500000000005" y="240" width="282.25" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+<text x="415.20000000000005" y="106" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;get_patchwork_project.sh\nGet all project lists\nOutput to projects_list.md&quot;</text>
+<text x="415.20000000000005" y="182" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;get_patchwork_series.sh\nGet patch series by project\nFilter by date\nOutput to date directory&quot;</text>
+<text x="415.20000000000005" y="258" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;batch.sh\nBatch processing script&quot;</text>
 </svg>

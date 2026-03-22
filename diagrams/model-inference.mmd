@@ -1,9 +1,9 @@
 flowchart LR
     subgraph Module["Model Inference Module"]
         direction TB
-        REQUEST["ModelRequest<br/>set_request(type, content)<br/>get_messages() List[Dict]<br/>Types: summary, analysis"]
-        INFERENCE["ModelInference<br/>OpenAI Client ModelScope API<br/>inference(messages) str<br/>Streaming with tqdm progress<br/>Config: Qwen3-235B-A22B, temp=0"]
-        API["ModelScope API<br/>Qwen3-235B-A22B<br/>api-inference.modelscope.cn/v1/"]
+        REQUEST["ModelRequest\nset_request(type, content)\nget_messages() List[Dict]\nTypes: summary, analysis"]
+        INFERENCE["ModelInference\nOpenAI Client ModelScope API\ninference(messages) str\nStreaming with tqdm progress\nConfig: Qwen3-235B-A22B, temp=0"]
+        API["ModelScope API\nQwen3-235B-A22B\napi-inference.modelscope.cn/v1/"]
     end
 
     REQUEST --> INFERENCE --> API

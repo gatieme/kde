@@ -27,8 +27,11 @@ Model Inference Module 是 KDE 项目的 AI 模型集成层，负责与 ModelSco
 |                                                                                                                                                                                                                                                                                                                           |
 | +---------------------------------------------------------------------------+     +----------------------------------------------------------------------------------------------------------------------------------------------------+     +--------------------------------------------------------------------------+ |
 | |                                                                           |     |                                                                                                                                                    |     |                                                                          | |
-| | "ModelRequest<br/>set_request(type, content)<br/>get_messages() List[Dict |---->| "ModelInference<br/>OpenAI Client ModelScope API<br/>inference(messages) str<br/>Streaming with tqdm progress<br/>Config: Qwen3-235B-A22B, temp=0" |---->| "ModelScope API<br/>Qwen3-235B-A22B<br/>api-inference.modelscope.cn/v1/" | |
-| |                                                                           |     |                                                                                                                                                    |     |                                                                          | |
+| | "ModelRequest                                                             |---->| "ModelInference                                                                                                                                    |---->| "ModelScope API                                                                                             | |
+| |  set_request(type, content)                                                                              |     |   OpenAI Client ModelScope API                                                                                                         |     |   Qwen3-235B-A22B                                                                                           | |
+| |  get_messages() List[Dict                                                                           |     |   inference(messages) str                                                                                                             |     |   api-inference.modelscope.cn/v1/"                                                                          | |
+| |                                                                           |     |   Streaming with tqdm progress                                                                                                         |     |                                                                          | |
+| |                                                                           |     |   Config: Qwen3-235B-A22B, temp=0                                                                                               |     |                                                                          | |
 | +---------------------------------------------------------------------------+     +----------------------------------------------------------------------------------------------------------------------------------------------------+     +--------------------------------------------------------------------------+ |
 |                                                                                                                                                                                                                                                                                                                           |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -111,7 +114,7 @@ model = ModelInference(verbose=1)
 model.model = 'Qwen/Qwen3-235B-A22B'  # 模型 ID
 model.extra_body = {
     "enable_thinking": False,  # 启用思考过程
-    # " "thinking_budget": 4096  # 思考 token 预算
+    # "thinking_budget": 4096  # 思考 token 预算
 }
 ```
 
@@ -152,18 +155,18 @@ model.extra_body = {
 class ModelInference:
     def __init__(self, content=None, verbose=0):
         """初始化模型实例
-        
+
         Args:
             content: 初始内容（可选）
             verbose: 详细级别（0-3）
         """
-    
+
     def inference(self, messages):
         """执行模型推理
-        
+
         Args:
             messages: 消息列表，格式为 [{"role": "user", "content": "..."}]
-        
+
         Returns:
             str: 模型推理结果
         """
@@ -175,17 +178,17 @@ class ModelInference:
 class ModelRequest:
     def __init__(self):
         """初始化请求构建器"""
-    
+
     def set_content(self, content):
         """设置请求内容
-        
+
         Args:
             content: 请求内容字符串
         """
-    
+
     def get_messages(self):
         """获取消息列表
-        
+
         Returns:
             list: 消息列表
         """
@@ -193,11 +196,22 @@ class ModelRequest:
 
 ## 注意事项
 
-1. **API 密钥** - 当前使用硬编码的 ModelScope Token，建议改为环境变量配置
+1. **API 密钥** - 从环境变量 `OPENAI_API_KEY` 读取 ModelScope Token
 2. **网络连接** - 需要网络连接访问 ModelScope API
 3. **推理时间** - 大型模型推理可能需要较长时间，建议使用进度条
 4. **Token 限制** - 注意输入和输出的 token 限制
 5. **温度设置** - 生产环境建议使用 temperature=0 确保输出确定性
+
+## 代码规范
+
+### 命名约定
+
+- **函数**: `snake_case` (例如：`inference`, `get_answer`)
+- **类**: `CamelCase` (例如：`ModelInference`, `ModelRequest`)
+
+### 注释风格
+
+- **双语注释**: 英文用于代码结构，中文用于领域逻辑
 
 ## 扩展计划
 
