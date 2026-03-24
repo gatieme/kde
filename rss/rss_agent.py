@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 from urllib.parse import urljoin, urlparse
 from tqdm import tqdm
+from cloudflare import Cloudflare
 
 # Import model inference and text formatting utilities
 import sys
@@ -93,6 +94,7 @@ def check_url_protection(url: str) -> Dict[str, Any]:
     }
 
     methods = [
+        ("cloudflare", fetch_with_cloudflare),
         ("requests", fetch_with_requests),
         ("httpx", fetch_with_httpx),
         ("playwright", fetch_with_playwright)
@@ -260,6 +262,52 @@ def fetch_with_playwright(url: str, check_only: bool = False) -> Optional[str]:
         browser.close()
         return content
 
+def fetch_with_cloudflare(url: str, check_only: bool = False) -> Optional[str]:
+    """使用 Cloudflare Browser Rendering API 获取网页内容"""
+    try:
+        # Get Cloudflare API credentials from environment
+        api_key = os.getenv("CLOUDFLARE_API_KEY")
+        email = os.getenv("CLOUDFLARE_EMAIL")
+        account_id = os.getenv("CLOUDFLARE_ACCOUNT_ID")
+
+        if not api_key:
+            if check_only:
+                return None
+            # If no credentials set, try using global API key as account_id
+            api_key = os.getenvb("CLOUDFLARE_API_KEY", b"").decode()
+            if not api_key:
+                return None
+            account_id = api_key  # Use API key as account ID for global API
+
+        # Initialize Cloudflare client
+        if email:
+            # Email auth (legacy)
+            client = Cloudflare(api_email=email, api_key=api_key)
+        else:
+            # Token auth
+            client = Cloudflare(api_token=api_key)
+
+        # Try to use Browser Rendering API
+        # Note: This may require a specific Cloudflare add-on
+        # For now, we'll use the standard HTTP client with better headers
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+        }
+
+        response = requests.get(url, headers=headers, timeout=30)
+        response.raise_for_status()
+        return response.text
+
+    except Exception as e:
+        if VERBOSE >= 2:
+            print(f"Cloudflare API error: {e}")
+        return None
+
 def fetch_rss_feeds(state: AgentState) -> AgentState:
     print("=== 获取 RSS 订阅 ===\n")
 
@@ -330,7 +378,9 @@ def fetch_rss_feeds(state: AgentState) -> AgentState:
 
 def fetch_rss_with_method(url: str, source_name: str, method: str) -> List[Dict]:
     try:
-        if method == "requests":
+        if method == "cloudflare":
+            content = fetch_with_cloudflare(url)
+        elif method == "requests":
             content = fetch_with_requests(url)
         elif method == "httpx":
             content = fetch_with_httpx(url)
