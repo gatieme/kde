@@ -11,8 +11,8 @@
 .env
 
 # patchwork
-patchwork/series/
-patchwork/project/
+src/patchwork/series/
+src/patchwork/project/
 
 
 # lkml
@@ -23,4 +23,7 @@ patchwork/project/
 __pycache__
 
 # output cache
-output/
+src/output/
+
+# agent config
+.claude/
