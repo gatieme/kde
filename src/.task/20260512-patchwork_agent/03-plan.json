@@ -68,8 +68,8 @@
         "测试代码验证项目解析和三种日期模式计算正确"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: fetch_project_info converts numeric IDs and project names to project_ids list using load_projects_list and find_project_id_by_name. calculate_date_range supports four modes: single date, date range, recent N days, and default today. Tests verified for numeric ID, project name lookup, multiple projects, and all date modes."
     },
     {
       "id": "US-005",

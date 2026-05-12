@@ -372,6 +372,93 @@ def fetch_series_detail(series_id: int, cache_dir: str = "", verbose: int = 0) -
 
 
 # =============================================================================
+# Workflow Nodes (US-004)
+# =============================================================================
+
+def fetch_project_info(state: PatchworkAgentState) -> PatchworkAgentState:
+    """Fetch project info and convert project names/IDs to numeric IDs
+
+    Args:
+        state: Current workflow state
+
+    Returns:
+        Updated state with project_ids populated
+    """
+    # Load projects mapping
+    projects_map = load_projects_list()
+
+    project_ids: List[int] = []
+    for project in state.projects:
+        # If numeric string, convert directly
+        if project.isdigit():
+            project_ids.append(int(project))
+        else:
+            # Look up by name
+            pid = find_project_id_by_name(project, projects_map)
+            if pid:
+                project_ids.append(pid)
+            elif state.verbose >= 1:
+                print(f"警告: 项目 '{project}' 未找到")
+
+    if state.verbose >= 2:
+        print(f"解析项目: {state.projects} -> IDs: {project_ids}")
+
+    # Update state
+    state.project_ids = project_ids
+    return state
+
+
+def calculate_date_range(state: PatchworkAgentState) -> PatchworkAgentState:
+    """Calculate date range based on input parameters
+
+    Supports three modes:
+    1. Single date: --date specified
+    2. Date range: --date and --end-date specified
+    3. Recent N days: --days specified
+    4. Default: today
+
+    Args:
+        state: Current workflow state
+
+    Returns:
+        Updated state with date_range populated (dict with 'start' and 'end')
+    """
+    today = datetime.date.today()
+
+    if state.days is not None and state.days > 0:
+        # Mode 3: Recent N days
+        start_date = today - datetime.timedelta(days=state.days)
+        end_date = today
+        if state.verbose >= 2:
+            print(f"日期范围（最近 {state.days} 天）: {start_date} -> {end_date}")
+    elif state.date and state.end_date:
+        # Mode 2: Date range
+        start_date = datetime.date.fromisoformat(state.date)
+        end_date = datetime.date.fromisoformat(state.end_date)
+        if state.verbose >= 2:
+            print(f"日期范围: {start_date} -> {end_date}")
+    elif state.date:
+        # Mode 1: Single date
+        start_date = datetime.date.fromisoformat(state.date)
+        end_date = start_date
+        if state.verbose >= 2:
+            print(f"单一日期: {start_date}")
+    else:
+        # Mode 4: Default to today
+        start_date = today
+        end_date = today
+        if state.verbose >= 2:
+            print(f"默认日期: 今天 ({today})")
+
+    state.date_range = {
+        "start": start_date.isoformat(),
+        "end": end_date.isoformat()
+    }
+
+    return state
+
+
+# =============================================================================
 # Workflow Functions - Placeholder for subsequent user stories
 # =============================================================================
 
@@ -396,7 +483,7 @@ def run_patchwork_agent(
 
 
 # =============================================================================
-# Test Code for US-003 Field Extraction Functions
+# Test Code for US-003 and US-004
 # =============================================================================
 
 if __name__ == "__main__":
@@ -404,6 +491,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Test field extraction functions")
     parser.add_argument("--test", action="store_true", help="Run field extraction tests")
+    parser.add_argument("--test-us004", action="store_true", help="Run US-004 workflow node tests")
     parser.add_argument("--series-id", type=int, default=608868, help="Series ID to test")
     parser.add_argument("-v", "--verbose", action="count", default=0, help="Verbosity level")
     args = parser.parse_args()
@@ -501,5 +589,83 @@ if __name__ == "__main__":
             print(f"  total: {series_with_cover.get('total')}")
 
         print("\n" + "=" * 60)
-        print("All tests passed!")
+        print("All US-003 tests passed!")
+        print("=" * 60)
+
+    if args.test_us004:
+        print("\n" + "=" * 60)
+        print("Testing Workflow Nodes (US-004)")
+        print("=" * 60)
+
+        # Test fetch_project_info node
+        print("\n[fetch_project_info]")
+
+        # Test case 1: Numeric ID
+        state1 = PatchworkAgentState(messages=[], projects=["365"], verbose=args.verbose)
+        state1 = fetch_project_info(state1)
+        print(f"  Input: ['365']")
+        print(f"  Output: {state1.project_ids}")
+        print(f"  Expected: [365]")
+        assert state1.project_ids == [365], f"Project ID conversion failed: {state1.project_ids}"
+
+        # Test case 2: Project name
+        state2 = PatchworkAgentState(messages=[], projects=["Linux MM"], verbose=args.verbose)
+        state2 = fetch_project_info(state2)
+        print(f"\n  Input: ['Linux MM']")
+        print(f"  Output: {state2.project_ids}")
+        print(f"  Expected: [365]")
+        assert state2.project_ids == [365], f"Project name lookup failed: {state2.project_ids}"
+
+        # Test case 3: Multiple projects
+        state3 = PatchworkAgentState(messages=[], projects=["365", "Linux MM"], verbose=args.verbose)
+        state3 = fetch_project_info(state3)
+        print(f"\n  Input: ['365', 'Linux MM']")
+        print(f"  Output: {state3.project_ids}")
+        print(f"  Expected: [365, 365]")
+        assert state3.project_ids == [365, 365], f"Multiple projects failed: {state3.project_ids}"
+
+        # Test calculate_date_range node
+        print("\n[calculate_date_range]")
+
+        today = datetime.date.today().isoformat()
+
+        # Test case 1: Single date
+        state4 = PatchworkAgentState(messages=[], date="2022-01-27", verbose=args.verbose)
+        state4 = calculate_date_range(state4)
+        print(f"  Input: date='2022-01-27'")
+        print(f"  Output: {state4.date_range}")
+        print(f"  Expected: start='2022-01-27', end='2022-01-27'")
+        assert state4.date_range["start"] == "2022-01-27", f"Single date start failed"
+        assert state4.date_range["end"] == "2022-01-27", f"Single date end failed"
+
+        # Test case 2: Date range
+        state5 = PatchworkAgentState(messages=[], date="2022-01-24", end_date="2022-01-27", verbose=args.verbose)
+        state5 = calculate_date_range(state5)
+        print(f"\n  Input: date='2022-01-24', end_date='2022-01-27'")
+        print(f"  Output: {state5.date_range}")
+        print(f"  Expected: start='2022-01-24', end='2022-01-27'")
+        assert state5.date_range["start"] == "2022-01-24", f"Date range start failed"
+        assert state5.date_range["end"] == "2022-01-27", f"Date range end failed"
+
+        # Test case 3: Recent N days
+        state6 = PatchworkAgentState(messages=[], days=7, verbose=args.verbose)
+        state6 = calculate_date_range(state6)
+        expected_start = (datetime.date.today() - datetime.timedelta(days=7)).isoformat()
+        print(f"\n  Input: days=7")
+        print(f"  Output: {state6.date_range}")
+        print(f"  Expected: start='{expected_start}', end='{today}'")
+        assert state6.date_range["start"] == expected_start, f"Recent N days start failed"
+        assert state6.date_range["end"] == today, f"Recent N days end failed"
+
+        # Test case 4: Default (today)
+        state7 = PatchworkAgentState(messages=[], verbose=args.verbose)
+        state7 = calculate_date_range(state7)
+        print(f"\n  Input: (no date params - default)")
+        print(f"  Output: {state7.date_range}")
+        print(f"  Expected: start='{today}', end='{today}'")
+        assert state7.date_range["start"] == today, f"Default start failed"
+        assert state7.date_range["end"] == today, f"Default end failed"
+
+        print("\n" + "=" * 60)
+        print("All US-004 tests passed!")
         print("=" * 60)

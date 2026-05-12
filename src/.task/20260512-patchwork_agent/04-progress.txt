@@ -57,3 +57,17 @@ Started: Tue 12 May 2026 10:25:48 PM CST
   - 版本号直接在 series.version 字段，无需从 name 解析
   - 日期字段 date 是 ISO 格式如 "2022-01-27T00:07:24"
 ---
+
+## [2026-05-12 23:25] - US-004
+- 实现 fetch_project_info 节点：将项目名称/ID 转换为数字 ID 列表
+- 实现 calculate_date_range 节点：支持四种日期模式（单日期、日期范围、最近 N 天、默认今天）
+- 节点函数接收和返回 PatchworkAgentState，符合 LangGraph 工作流规范
+- verbose >= 2 时输出详细处理日志
+- 测试验证：项目解析（数字 ID、名称、多项目）和四种日期模式全部正确
+- Files changed: patchwork/patchwork_agent.py, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  - 节点函数直接修改 state 并返回 state，符合 LangGraph StateGraph 模式
+  - projects_list.md 包含 230 个项目映射，Linux MM ID=365
+  - 日期范围存储为 date_range dict，包含 start 和 end 两个 ISO 格式日期字符串
+  - 工作流节点命名遵循 lkml_agent.py 和 rss_agent.py 的命名风格
+---
