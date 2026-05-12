@@ -1,0 +1,224 @@
+{
+  "project": "KDE - Patchwork Agent",
+  "branchName": "ralph/patchwork-agent-langgraph",
+  "description": "实现基于 LangGraph 的 Patchwork agent，支持获取和分析 Linux 内核补丁系列，集成 LKML agent 进行深度分析，补齐测试用例。",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "创建模块基础结构和状态定义",
+      "description": "作为开发者，我需要创建 patchwork 模块的初始结构和状态类，以便后续实现工作流节点。",
+      "acceptanceCriteria": [
+        "创建 patchwork/__init__.py 文件，导出 run_patchwork_agent 和 build_patchwork_agent",
+        "创建 patchwork/patchwork_agent.py 文件头部导入区域，包含必要的依赖",
+        "定义 PatchworkAgentState dataclass，包含输入参数、中间状态、输出结果字段",
+        "文件结构符合项目约定（导入模式使用 sys.path.append）",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "实现辅助函数 - 项目列表加载和缓存机制",
+      "description": "作为开发者，我需要实现项目列表加载和缓存机制函数，以便后续节点可以查找项目 ID 和缓存 API 数据。",
+      "acceptanceCriteria": [
+        "实现 fetch_with_cache 函数：带缓存的 HTTP 请求，使用 MD5 hash 作为缓存文件名",
+        "实现 load_projects_list 函数：从 projects_list.md 或 API 加载项目列表",
+        "实现 fetch_projects_from_api 函数：从 Patchwork API 获取项目列表",
+        "实现 find_project_id_by_name 函数：支持精确匹配和模糊匹配项目名称",
+        "缓存目录为 output/patchwork/cache/",
+        "Typecheck passes",
+        "测试代码可成功加载项目列表并找到 Linux MM 的 ID（365）"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "实现字段提取函数系列",
+      "description": "作为开发者，我需要实现一系列字段提取函数，以便从 series API 响应中提取结构化数据。",
+      "acceptanceCriteria": [
+        "实现 extract_date 函数：从 patches 或 cover_letter 提取日期，格式为 YYYY/MM/DD",
+        "实现 extract_author 和 extract_email 函数：从 submitter 提取",
+        "实现 extract_subject 函数：从 name 或 patches[0].name 提取",
+        "实现 extract_version 函数：处理长版本号问题",
+        "实现 extract_web_url 和 extract_archive_url 函数：从 cover_letter 或 patches 提取",
+        "实现 extract_message_id_from_cover 函数：支持三种 lore.kernel.org URL 格式",
+        "实现 fetch_series_detail 函数：获取 series 详细信息",
+        "Typecheck passes",
+        "测试代码可成功提取真实 series 的所有字段"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "实现工作流节点 - fetch_project_info 和 calculate_date_range",
+      "description": "作为开发者，我需要实现两个基础节点函数，解析项目参数并计算日期范围。",
+      "acceptanceCriteria": [
+        "实现 fetch_project_info 节点：解析项目 ID/名称，转换为数字 ID 列表",
+        "实现 calculate_date_range 节点：支持单日期、日期范围、最近 N 天三种模式",
+        "默认日期模式为今天",
+        "节点函数接收和返回 PatchworkAgentState",
+        "verbose >= 2 时输出详细日志",
+        "Typecheck passes",
+        "测试代码验证项目解析和三种日期模式计算正确"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "实现工作流节点 - fetch_series_list 和 filter_and_sort",
+      "description": "作为开发者，我需要实现两个节点函数，从 Patchwork API 获取 series 列表并进行过滤排序。",
+      "acceptanceCriteria": [
+        "实现 fetch_series_list 节点：遍历项目和日期，调用 Patchwork API 获取 series ID",
+        "API URL 格式：https://patchwork.kernel.org/api/series/?project={id}&archive=both&format=json&before={date}T23:59:59&since={date}T00:00:00",
+        "实现 filter_and_sort 节点：去重、获取日期、按时间倒序排列、应用 max_series 限制",
+        "使用 fetch_with_cache 缓存 API 响应",
+        "verbose >= 1 时输出总 series 数量",
+        "Typecheck passes",
+        "测试代码验证获取、排序、过滤流程正确"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "实现核心节点 - process_series（并发处理）",
+      "description": "作为开发者，我需要实现 process_series 节点，处理所有 series 并支持并发，detail 模式调用 LKML agent。",
+      "acceptanceCriteria": [
+        "实现 process_series 节点：遍历 series_list 处理每个 series",
+        "实现 process_single_series 内部函数：获取详情、提取字段、调用 LKML agent（detail 模式）",
+        "支持串行处理（max_parallel=1）和并发处理（ThreadPoolExecutor）",
+        "detail 模式调用 run_lkml_agent，传递 message_id 和 level",
+        "单个 series 失败不影响其他 series",
+        "进度显示格式：[i/total] 处理 series {id}...",
+        "Typecheck passes",
+        "测试代码验证 simple 模式处理流程正确"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "实现输出和缓存节点",
+      "description": "作为开发者，我需要实现三个节点函数：汇聚结果、输出表格、缓存到文件系统。",
+      "acceptanceCriteria": [
+        "实现 aggregate_results 节点：生成 Markdown 表格行，使用 format_text_for_markdown",
+        "表格格式沿用 LKML agent：| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |",
+        "实现 output_results 节点：打印表头和表格行，detail 模式输出详细分析",
+        "实现 cache_results 节点：缓存到 output/patchwork/<project>/<date>/summary.md",
+        "detail 模式额外缓存 series_*_detail.md",
+        "Typecheck passes",
+        "测试代码验证完整流程输出正确表格并缓存文件"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "实现工作流构建和主入口函数",
+      "description": "作为开发者，我需要实现 build_patchwork_agent 和 run_patchwork_agent 函数，以及命令行参数解析。",
+      "acceptanceCriteria": [
+        "实现 build_patchwork_agent 函数：使用 StateGraph 构建工作流，8 个节点顺序连接",
+        "工作流节点顺序：fetch_project_info → calculate_date_range → fetch_series_list → filter_and_sort → process_series → aggregate_results → output_results → cache_results → END",
+        "实现 run_patchwork_agent 函数：初始化状态、调用工作流、返回结果",
+        "实现 parse_args 函数：支持 --project、--date、--end-date、--days、--level、--max-series、--max-parallel、--verbose 参数",
+        "命令行示例：python patchwork_agent.py --project 365 --date 2022-01-24 --level simple --max-series 2 -v",
+        "Typecheck passes",
+        "命令行调用成功运行并输出表格"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "集成到 kde.py 主入口",
+      "description": "作为开发者，我需要将 patchwork agent 集成到 kde.py 主入口，支持通过 --patchwork 参数调用。",
+      "acceptanceCriteria": [
+        "在 kde.py 顶部添加导入：from patchwork.patchwork_agent import run_patchwork_agent",
+        "实现 patchwork_run 函数：包装 run_patchwork_agent 调用",
+        "添加 argparse 参数：--patchwork（互斥组）、--date、--end-date、--days、--max-series、--max-parallel",
+        "在 if __name__ == '__main__' 中添加 --patchwork 处理逻辑",
+        "Typecheck passes",
+        "通过 kde.py 调用：python kde.py --patchwork 365 --date 2022-01-24 --level simple --max-series 2 -v 成功运行"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "创建测试脚本 test_patchwork.sh",
+      "description": "作为开发者，我需要创建综合测试脚本，覆盖所有使用场景。",
+      "acceptanceCriteria": [
+        "创建 test/test_patchwork.sh 文件，添加执行权限",
+        "测试命令覆盖：simple/detail 模式、通过 kde.py/直接调用、最近 N 天、多项目、项目名称、并发处理、verbose",
+        "测试数量：9 个测试命令",
+        "每个测试包含：名称、描述、命令、执行时间、返回码、状态标识",
+        "测试脚本使用 bash 数组存储测试配置",
+        "Typecheck passes",
+        "运行 ./test/test_patchwork.sh 所有测试通过"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "更新 test_all.sh 包含 patchwork 测试",
+      "description": "作为开发者，我需要将 patchwork 测试集成到总测试脚本中。",
+      "acceptanceCriteria": [
+        "在 test/test_all.sh 中添加 Patchwork Agent 测试调用",
+        "输出标识：=== 测试 Patchwork Agent ===",
+        "调用 bash \"$PROJECT_ROOT/test/test_patchwork.sh\"",
+        "Typecheck passes",
+        "运行 ./test/test_all.sh 包含 LKML、CGit、RSS、Patchwork 所有测试"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "更新文档 - patchwork/README.md",
+      "description": "作为开发者，我需要更新 patchwork/README.md，添加 LangGraph agent 的完整使用文档。",
+      "acceptanceCriteria": [
+        "添加 'Patchwork Agent（LangGraph 实现）' 章节",
+        "包含：概述、功能特性、使用方法（kde.py 和直接调用）、参数说明表格",
+        "包含：输出格式、缓存位置、测试、架构图、与 Shell 脚本的对比表格",
+        "包含：注意事项（网络连接、API 限制、Detail 模式耗时、并发风险）",
+        "Typecheck passes",
+        "文档 Markdown 格式正确"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "最终验证和清理",
+      "description": "作为开发者，我需要进行最终验证，清理临时测试代码，确保代码质量。",
+      "acceptanceCriteria": [
+        "清理 patchwork_agent.py 中的临时测试代码，保留正式命令行调用",
+        "运行 ./test/test_all.sh 所有测试通过（LKML、CGit、RSS、Patchwork）",
+        "运行 git clean -fdX 清理 output 缓存",
+        "再次运行 kde.py --patchwork 验证缓存重新创建",
+        "创建最终 commit，包含完整实现、测试和文档",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
