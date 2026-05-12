@@ -564,6 +564,150 @@ def filter_and_sort(state: PatchworkAgentState) -> PatchworkAgentState:
 
 
 # =============================================================================
+# Workflow Nodes (US-006)
+# =============================================================================
+
+def process_single_series(
+    series_id: int,
+    level: str,
+    cache_dir: str,
+    verbose: int
+) -> Dict[str, Any]:
+    """Process a single series: fetch detail, extract fields, call LKML agent if detail mode
+
+    Args:
+        series_id: Series ID to process
+        level: Analysis level ("simple" or "detail")
+        cache_dir: Cache directory path
+        verbose: Verbosity level
+
+    Returns:
+        Dict containing series info and analysis results
+    """
+    try:
+        # Fetch series detail
+        series = fetch_series_detail(series_id, cache_dir, verbose)
+        if not series:
+            return {"series_id": series_id, "error": "Failed to fetch series detail"}
+
+        # Extract fields
+        result = {
+            "series_id": series_id,
+            "date": extract_date(series),
+            "author": extract_author(series),
+            "email": extract_email(series),
+            "subject": extract_subject(series),
+            "version": extract_version(series),
+            "total": series.get("total", 1),
+            "web_url": extract_web_url(series),
+            "archive_url": extract_archive_url(series),
+            "lkml_result": None
+        }
+
+        # Call LKML agent in detail mode
+        if level == "detail":
+            archive_url = extract_archive_url(series)
+            message_id = extract_message_id_from_cover(archive_url)
+
+            if message_id:
+                if verbose >= 1:
+                    print(f"    调用 LKML agent 分析 {message_id}...")
+
+                try:
+                    lkml_result = run_lkml_agent(
+                        message_id=message_id,
+                        level=level,
+                        work_dir=None,
+                        verbose=verbose
+                    )
+                    result["lkml_result"] = lkml_result
+                except Exception as e:
+                    if verbose >= 1:
+                        print(f"    LKML agent 处理失败: {e}")
+                    result["lkml_error"] = str(e)
+
+        return result
+
+    except Exception as e:
+        return {"series_id": series_id, "error": str(e)}
+
+
+def process_series(state: PatchworkAgentState) -> PatchworkAgentState:
+    """Process all series in the list, support parallel processing
+
+    Args:
+        state: Current workflow state with series_list
+
+    Returns:
+        Updated state with processed_results populated
+    """
+    total = len(state.series_list)
+    results: List[Dict[str, Any]] = []
+
+    if total == 0:
+        if state.verbose >= 1:
+            print("没有 series 需要处理")
+        state.processed_results = results
+        return state
+
+    if state.verbose >= 1:
+        print(f"开始处理 {total} 个 series...")
+
+    # Serial processing (max_parallel=1)
+    if state.max_parallel <= 1:
+        for i, series_id in enumerate(state.series_list, 1):
+            if state.verbose >= 1:
+                print(f"[{i}/{total}] 处理 series {series_id}...")
+
+            result = process_single_series(
+                series_id,
+                state.level,
+                state.cache_dir,
+                state.verbose
+            )
+            results.append(result)
+
+    # Parallel processing
+    else:
+        with ThreadPoolExecutor(max_workers=state.max_parallel) as executor:
+            # Submit all tasks
+            future_to_id = {
+                executor.submit(
+                    process_single_series,
+                    series_id,
+                    state.level,
+                    state.cache_dir,
+                    state.verbose
+                ): series_id
+                for series_id in state.series_list
+            }
+
+            # Collect results with progress tracking
+            for i, future in enumerate(as_completed(future_to_id), 1):
+                series_id = future_to_id[future]
+                if state.verbose >= 1:
+                    print(f"[{i}/{total}] 完成 series {series_id}")
+
+                try:
+                    result = future.result()
+                    results.append(result)
+                except Exception as e:
+                    if state.verbose >= 1:
+                        print(f"    处理失败: {e}")
+                    results.append({"series_id": series_id, "error": str(e)})
+
+    # Sort results by series_id order to maintain consistency
+    results.sort(key=lambda x: x.get("series_id", 0))
+
+    if state.verbose >= 1:
+        success_count = sum(1 for r in results if "error" not in r)
+        print(f"处理完成: {success_count}/{total} 成功")
+
+    state.processed_results = results
+    return state
+
+
+# =============================================================================
 # Workflow Functions - Placeholder for subsequent user stories
 # =============================================================================
 
@@ -598,6 +742,7 @@ if __name__ == "__main__":
     parser.add_argument("--test", action="store_true", help="Run field extraction tests")
     parser.add_argument("--test-us004", action="store_true", help="Run US-004 workflow node tests")
     parser.add_argument("--test-us005", action="store_true", help="Run US-005 workflow node tests")
+    parser.add_argument("--test-us006", action="store_true", help="Run US-006 workflow node tests")
     parser.add_argument("--series-id", type=int, default=608868, help="Series ID to test")
     parser.add_argument("-v", "--verbose", action="count", default=0, help="Verbosity level")
     args = parser.parse_args()
@@ -842,4 +987,52 @@ if __name__ == "__main__":
 
         print("\n" + "=" * 60)
         print("All US-005 tests passed!")
+        print("=" * 60)
+
+    if args.test_us006:
+        print("\n" + "=" * 60)
+        print("Testing Workflow Nodes (US-006)")
+        print("=" * 60)
+
+        # Test process_single_series with known series (608868)
+        print("\n[process_single_series]")
+
+        result1 = process_single_series(608868, "simple", "", args.verbose)
+
+        print(f"  Series ID: {result1.get('series_id')}")
+        print(f"  Date: {result1.get('date')}")
+        print(f"  Author: {result1.get('author')}")
+        print(f"  Email: {result1.get('email')}")
+        print(f"  Subject: {result1.get('subject')}")
+        print(f"  Version: {result1.get('version')}")
+        print(f"  Total: {result1.get('total')}")
+        print(f"  Web URL: {result1.get('web_url')}")
+        print(f"  Archive URL: {result1.get('archive_url')}")
+
+        assert result1.get("series_id") == 608868, f"Series ID mismatch"
+        assert result1.get("date") == "2022/01/27", f"Date mismatch"
+        assert result1.get("author") == "Ariadne Conill", f"Author mismatch"
+        assert "error" not in result1, f"Processing failed: {result1.get('error')}"
+
+        # Test process_series node in simple mode
+        print("\n[process_series] - simple mode")
+
+        state2 = PatchworkAgentState(
+            messages=[],
+            series_list=[608868, 609110],
+            level="simple",
+            max_parallel=1,
+            verbose=args.verbose
+        )
+        state2 = process_series(state2)
+
+        print(f"  Processed {len(state2.processed_results)} series")
+        for r in state2.processed_results:
+            print(f"    - Series {r.get('series_id')}: {r.get('subject', '')[:50]}...")
+
+        assert len(state2.processed_results) == 2, f"Should process 2 series"
+        assert all("error" not in r for r in state2.processed_results), f"Processing errors"
+
+        print("\n" + "=" * 60)
+        print("All US-006 tests passed!")
         print("=" * 60)
