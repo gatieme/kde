@@ -32,8 +32,8 @@
         "测试代码可成功加载项目列表并找到 Linux MM 的 ID（365）"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Implemented fetch_with_cache, load_projects_list, fetch_projects_from_api, and find_project_id_by_name functions. Import checks passed, all tests verified (230 project mappings loaded, Linux MM ID=365 found correctly, cache read/write verified)."
     },
     {
       "id": "US-003",
