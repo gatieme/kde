@@ -244,6 +244,126 @@ https://patchwork.kernel.org/api/series/?project=365&archive=both&format=json&su
 2. **API 限制** - 注意 API 请求频率限制
 3. **数据量** - 大量数据获取可能需要较长时间
 
+---
+
+## Patchwork Agent（LangGraph 实现）
+
+基于 LangGraph StateGraph 实现的 Patchwork Agent，提供更强大的补丁分析能力，支持与 LKML Agent 集成进行深度分析。
+
+### 功能特性
+
+- **智能项目解析**: 支持项目 ID 和项目名称查询
+- **灵活日期选择**: 支持单日期、日期范围、最近 N 天三种模式
+- **并发处理**: 支持多线程并发处理 series
+- **深度分析**: detail 模式调用 LKML Agent 进行补丁深度分析
+- **缓存机制**: 自动缓存 API 响应，减少重复请求
+- **标准化输出**: Markdown 表格格式输出，与 LKML Agent 保持一致
+
+### 使用方法
+
+#### 通过 kde.py 主入口调用
+
+```bash
+# 简单模式（推荐）
+python kde.py --patchwork 365 --date 2022-01-27 --level simple --max-series 5 -v
+
+# 详细模式（调用 LKML Agent）
+python kde.py --patchwork 365 --date 2022-01-27 --level detail --max-series 2 -v
+
+# 最近 N 天
+python kde.py --patchwork 365 --days 7 --level simple --max-series 10 -v
+
+# 日期范围
+python kde.py --patchwork 365 --date 2022-01-24 --end-date 2022-01-27 --level simple -v
+
+# 多项目
+python kde.py --patchwork 365 366 --date 2022-01-27 --level simple -v
+
+# 项目名称
+python kde.py --patchwork "Linux MM" --date 2022-01-27 --level simple -v
+
+# 并发处理
+python kde.py --patchwork 365 --date 2022-01-27 --level simple --max-series 5 --max-parallel 3 -v
+```
+
+#### 直接调用 patchwork_agent.py
+
+```bash
+python patchwork/patchwork_agent.py --project 365 --date 2022-01-27 --level simple --max-series 2 -v
+```
+
+### 参数说明
+
+| 参数 | 说明 | 默认值 |
+|:----:|:----:|:------:|
+| `--patchwork` | 项目 ID 或名称（支持多个） | 必需 |
+| `--date` | 单日期或起始日期 (YYYY-MM-DD) | 今天 |
+| `--end-date` | 结束日期 (YYYY-MM-DD) | - |
+| `--days` | 最近 N 天 | - |
+| `--level` | 分析级别 (simple/detail) | simple |
+| `--max-series` | 最大处理 series 数量 | - |
+| `--max-parallel` | 并发线程数 | 1 |
+| `-v` | 详细程度 (-v/-vv/-vvv) | 0 |
+
+### 输出格式
+
+输出采用与 LKML Agent 相同的 Markdown 表格格式：
+
+```
+| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |
+|:----:|:----:|:----:|:----:|:------------:|:----:|
+| 2022/01/27 | Karolina Drobnik <karolinadrobnik@gmail.com> | [Introduce memblock simulator](https://...) | 609110 | v1 ☐ | [LORE v1,16](https://...) |
+```
+
+### 缓存位置
+
+- API 响应缓存: `output/patchwork/cache/`
+- Series 汇总: `output/patchwork/<project>/<date>/summary.md`
+- 详细分析: `output/patchwork/<project>/<date>/series_*_detail.md`
+
+### 测试
+
+```bash
+cd test
+./test_patchwork.sh
+```
+
+### 架构图
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Patchwork Agent Workflow                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  fetch_project_info → calculate_date_range → fetch_series_list │
+│         ↓                                                       │
+│  filter_and_sort → process_series → aggregate_results          │
+│         ↓                                                       │
+│  output_results → cache_results → END                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 与 Shell 脚本对比
+
+| 特性 | Shell 脚本 | LangGraph Agent |
+|:----:|:----------:|:---------------:|
+| 项目解析 | 仅数字 ID | ID + 名称 + 模糊匹配 |
+| 日期选择 | 单日期 | 单日期/范围/最近 N 天 |
+| 并发处理 | 无 | ThreadPoolExecutor |
+| 深度分析 | 无 | 集成 LKML Agent |
+| 缓存机制 | 无 | 自动缓存 API 响应 |
+| 错误处理 | 弱 | 单个失败不影响整体 |
+
+### 注意事项
+
+1. **网络连接**: 需要稳定的网络访问 patchwork.kernel.org 和 lore.kernel.org
+2. **API 限制**: Patchwork API 可能有请求频率限制，建议使用缓存
+3. **Detail 模式耗时**: detail 模式会调用 LKML Agent，每个 series 需额外时间
+4. **并发风险**: 高并发可能触发 API 限制，建议 max_parallel ≤ 3
+
+---
+
 ## 许可证
 
 MIT License

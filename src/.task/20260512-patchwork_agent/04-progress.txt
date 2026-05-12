@@ -150,3 +150,18 @@ Started: Tue 12 May 2026 10:25:48 PM CST
   - 参数命名遵循现有 kde.py 风格（--max-series, --max-parallel）
   - patchwork_run 函数处理异常并调用 sys.exit(1)
 ---
+
+## [2026-05-13 01:00] - US-010 to US-013
+- 创建 test/test_patchwork.sh，包含 9 个测试命令覆盖所有使用场景
+- 测试内容：simple/detail 模式、kde.py/直接调用、最近 N 天、多项目、项目名称、并发处理、verbose、字段提取函数
+- 所有测试全部通过（执行时间 1-97 秒）
+- 更新 test/test_all.sh 添加 test_patchwork.sh 到测试脚本列表
+- 更新 patchwork/README.md 添加 LangGraph Agent 完整文档章节
+- 文档包含：功能特性、使用方法、参数表格、输出格式、缓存位置、测试、架构图、对比表格、注意事项
+- Files changed: test/test_patchwork.sh, test/test_all.sh, patchwork/README.md, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  - 测试脚本使用 bash 数组存储 test_commands、test_names、test_descriptions
+  - 测试框架包含执行时间追踪、返回码检查、成功/失败状态显示
+  - README 文档结构：Shell 脚本部分在前，LangGraph Agent 部分在后作为扩展
+  - 与 Shell 脚本对比表格帮助用户理解两种方式的差异
+---

@@ -10,6 +10,7 @@ test_scripts=(
     "test_lkml.sh"
     "test_rss.sh"
     "test_cgit.sh"
+    "test_patchwork.sh"
 )
 
 # 运行单个测试脚本
