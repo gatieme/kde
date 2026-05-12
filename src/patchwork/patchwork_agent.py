@@ -868,12 +868,46 @@ def cache_results(state: PatchworkAgentState) -> PatchworkAgentState:
 
 
 # =============================================================================
-# Workflow Functions - Placeholder for subsequent user stories
+# Workflow Functions (US-008)
 # =============================================================================
 
 def build_patchwork_agent():
-    """Build Patchwork agent workflow - placeholder"""
-    pass
+    """Build Patchwork agent workflow using StateGraph
+
+    Workflow node order:
+    fetch_project_info → calculate_date_range → fetch_series_list →
+    filter_and_sort → process_series → aggregate_results →
+    output_results → cache_results → END
+
+    Returns:
+        StateGraph workflow
+    """
+    workflow = StateGraph(PatchworkAgentState)
+
+    # Add nodes
+    workflow.add_node("fetch_project_info", fetch_project_info)
+    workflow.add_node("calculate_date_range", calculate_date_range)
+    workflow.add_node("fetch_series_list", fetch_series_list)
+    workflow.add_node("filter_and_sort", filter_and_sort)
+    workflow.add_node("process_series", process_series)
+    workflow.add_node("aggregate_results", aggregate_results)
+    workflow.add_node("output_results", output_results)
+    workflow.add_node("cache_results", cache_results)
+
+    # Add edges
+    workflow.add_edge("fetch_project_info", "calculate_date_range")
+    workflow.add_edge("calculate_date_range", "fetch_series_list")
+    workflow.add_edge("fetch_series_list", "filter_and_sort")
+    workflow.add_edge("filter_and_sort", "process_series")
+    workflow.add_edge("process_series", "aggregate_results")
+    workflow.add_edge("aggregate_results", "output_results")
+    workflow.add_edge("output_results", "cache_results")
+    workflow.add_edge("cache_results", END)
+
+    # Set entry point
+    workflow.set_entry_point("fetch_project_info")
+
+    return workflow.compile()
 
 
 def run_patchwork_agent(
@@ -886,13 +920,121 @@ def run_patchwork_agent(
     max_parallel: int = 1,
     work_dir: str = None,
     verbose: int = 0
-):
-    """Run Patchwork agent - placeholder"""
-    pass
+) -> Dict[str, Any]:
+    """Run Patchwork agent workflow
+
+    Args:
+        projects: List of project IDs or names
+        date: Single date or start date (YYYY-MM-DD)
+        end_date: End date for date range (YYYY-MM-DD)
+        days: Number of recent days to include
+        level: Analysis level ("simple" or "detail")
+        max_series: Maximum number of series to process
+        max_parallel: Maximum parallel processing threads
+        work_dir: Working directory for output
+        verbose: Verbosity level (0-3)
+
+    Returns:
+        Dict containing workflow results
+    """
+    # Build workflow
+    agent = build_patchwork_agent()
+
+    # Initialize state
+    initial_state = PatchworkAgentState(
+        messages=[],
+        projects=projects,
+        date=date,
+        end_date=end_date,
+        days=days,
+        level=level,
+        max_series=max_series,
+        max_parallel=max_parallel,
+        work_dir=work_dir or "",
+        verbose=verbose
+    )
+
+    # Run workflow
+    result_dict = agent.invoke(initial_state)
+
+    # LangGraph returns a dict, extract fields
+    return {
+        "series_count": len(result_dict.get("processed_results", [])),
+        "output_lines": result_dict.get("output_lines", []),
+        "processed_results": result_dict.get("processed_results", []),
+        "work_dir": result_dict.get("work_dir", "")
+    }
+
+
+def parse_args():
+    """Parse command line arguments
+
+    Returns:
+        argparse.Namespace with parsed arguments
+    """
+    parser = argparse.ArgumentParser(
+        description="Patchwork Agent - Fetch and analyze Linux kernel patch series",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Example usage:
+  python patchwork_agent.py --project 365 --date 2022-01-24 --level simple --max-series 2 -v
+  python patchwork_agent.py --project "Linux MM" --days 7 --level detail
+  python patchwork_agent.py --project 365 366 --date 2022-01-24 --end-date 2022-01-27
+        """
+    )
+
+    parser.add_argument(
+        "--project",
+        nargs="+",
+        required=True,
+        help="Project IDs or names (e.g., 365, 'Linux MM')"
+    )
+    parser.add_argument(
+        "--date",
+        help="Single date or start date (YYYY-MM-DD)"
+    )
+    parser.add_argument(
+        "--end-date",
+        help="End date for date range (YYYY-MM-DD)"
+    )
+    parser.add_argument(
+        "--days",
+        type=int,
+        help="Number of recent days to include"
+    )
+    parser.add_argument(
+        "--level",
+        choices=["simple", "detail"],
+        default="simple",
+        help="Analysis level (default: simple)"
+    )
+    parser.add_argument(
+        "--max-series",
+        type=int,
+        help="Maximum number of series to process"
+    )
+    parser.add_argument(
+        "--max-parallel",
+        type=int,
+        default=1,
+        help="Maximum parallel processing threads (default: 1)"
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="count",
+        default=0,
+        help="Verbosity level (-v, -vv, -vvv)"
+    )
+
+    return parser.parse_args()
 
 
 # =============================================================================
-# Test Code for US-003 and US-004
+# Main Entry Point (US-008)
+# =============================================================================
+
+# =============================================================================
+# Test Code for US-003 to US-008
 # =============================================================================
 
 if __name__ == "__main__":
@@ -904,10 +1046,37 @@ if __name__ == "__main__":
     parser.add_argument("--test-us005", action="store_true", help="Run US-005 workflow node tests")
     parser.add_argument("--test-us006", action="store_true", help="Run US-006 workflow node tests")
     parser.add_argument("--test-us007", action="store_true", help="Run US-007 workflow node tests")
+    parser.add_argument("--test-us008", action="store_true", help="Run US-008 workflow tests")
     parser.add_argument("--series-id", type=int, default=608868, help="Series ID to test")
     parser.add_argument("-v", "--verbose", action="count", default=0, help="Verbosity level")
-    args = parser.parse_args()
 
+    # Parse known args first, leave rest for main agent if no test flags
+    args, remaining = parser.parse_known_args()
+
+    # If no test flags, run as main agent with remaining args
+    if not any([args.test, args.test_us004, args.test_us005, args.test_us006, args.test_us007, args.test_us008]):
+        # Parse remaining arguments for main agent
+        import sys
+        sys.argv = [sys.argv[0]] + remaining
+        main_args = parse_args()
+
+        result = run_patchwork_agent(
+            projects=main_args.project,
+            date=main_args.date,
+            end_date=main_args.end_date,
+            days=main_args.days,
+            level=main_args.level,
+            max_series=main_args.max_series,
+            max_parallel=main_args.max_parallel,
+            verbose=main_args.verbose
+        )
+
+        if main_args.verbose >= 1:
+            print(f"\n完成: 处理 {result['series_count']} 个 series")
+
+        exit(0)
+
+    # Test code below
     if args.test:
         print("=" * 60)
         print("Testing Field Extraction Functions (US-003)")
@@ -1294,4 +1463,54 @@ if __name__ == "__main__":
 
         print("\n" + "=" * 60)
         print("All US-007 tests passed!")
+        print("=" * 60)
+
+    if args.test_us008:
+        print("\n" + "=" * 60)
+        print("Testing Workflow Functions (US-008)")
+        print("=" * 60)
+
+        # Test build_patchwork_agent
+        print("\n[build_patchwork_agent]")
+
+        agent = build_patchwork_agent()
+        print(f"  Workflow built successfully")
+        print(f"  Nodes: {list(agent.nodes.keys())}")
+        assert agent is not None, f"Agent should be built"
+
+        # Test run_patchwork_agent with real data
+        print("\n[run_patchwork_agent] - simple mode, max_series=2")
+
+        result = run_patchwork_agent(
+            projects=["365"],
+            date="2022-01-27",
+            level="simple",
+            max_series=2,
+            max_parallel=1,
+            verbose=args.verbose
+        )
+
+        print(f"  Series count: {result['series_count']}")
+        print(f"  Output lines: {len(result['output_lines'])}")
+        print(f"  Work dir: {result['work_dir']}")
+
+        assert result['series_count'] == 2, f"Should process 2 series (max_series=2)"
+        assert len(result['output_lines']) == 2, f"Should have 2 output lines"
+        assert result['work_dir'] != "", f"Work directory should be set"
+
+        # Test command line parsing (simulate)
+        print("\n[parse_args] simulation")
+
+        # Simulate args
+        test_args = {
+            "project": ["365"],
+            "date": "2022-01-27",
+            "level": "simple",
+            "max_series": 2,
+            "verbose": 1
+        }
+        print(f"  Simulated args: {test_args}")
+
+        print("\n" + "=" * 60)
+        print("All US-008 tests passed!")
         print("=" * 60)

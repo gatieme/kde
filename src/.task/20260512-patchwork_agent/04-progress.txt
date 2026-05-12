@@ -119,3 +119,19 @@ Started: Tue 12 May 2026 10:25:48 PM CST
   - detail 模式 LKML 结果结构：{summary, analysis}，需要在缓存文件中分开写入
   - output_lines 存储格式化后的表格行，processed_results 存储原始结果数据
 ---
+
+## [2026-05-13 00:25] - US-008
+- 实现 build_patchwork_agent 函数：使用 StateGraph 构建工作流，8 个节点顺序连接
+- 工作流节点顺序：fetch_project_info → calculate_date_range → fetch_series_list → filter_and_sort → process_series → aggregate_results → output_results → cache_results → END
+- 实现 run_patchwork_agent 函数：初始化 PatchworkAgentState、调用 agent.invoke、返回结果 dict
+- 实现 parse_args 函数：支持 --project（多值）、--date、--end-date、--days、--level、--max-series、--max-parallel、--verbose 参数
+- 命令行示例成功运行：python patchwork_agent.py --project 365 --date 2022-01-27 --level simple --max-series 2 -v
+- 测试验证：工作流正确构建、命令行调用输出 Markdown 表格
+- Files changed: patchwork/patchwork_agent.py, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  - LangGraph invoke 返回 dict，不是 state object，需要使用 result_dict.get() 提取字段
+  - 命令行参数解析需要区分测试模式和主模式，使用 parse_known_args 保留剩余参数
+  - --project 参数使用 nargs='+' 支持多个项目
+  - 节点通过 workflow.add_edge 连接，最后连接到 END
+  - StateGraph 需要 set_entry_point 设置入口节点
+---
