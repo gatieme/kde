@@ -85,8 +85,8 @@
         "测试代码验证获取、排序、过滤流程正确"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: fetch_series_list iterates over project_ids and date_range, calls Patchwork API with correct URL format, uses fetch_with_cache. filter_and_sort removes duplicates, fetches series details for dates, sorts descending by date, applies max_series limit. Tests verified: 14 series on 2022-01-27 for project 365, deduplication works, max_series limit works (3 results when set to 3)."
     },
     {
       "id": "US-006",

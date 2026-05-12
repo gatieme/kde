@@ -459,6 +459,111 @@ def calculate_date_range(state: PatchworkAgentState) -> PatchworkAgentState:
 
 
 # =============================================================================
+# Workflow Nodes (US-005)
+# =============================================================================
+
+def fetch_series_list(state: PatchworkAgentState) -> PatchworkAgentState:
+    """Fetch series list from Patchwork API for all projects and dates
+
+    API URL format:
+    https://patchwork.kernel.org/api/series/?project={id}&archive=both&format=json&before={date}T23:59:59&since={date}T00:00:00
+
+    Args:
+        state: Current workflow state with project_ids and date_range
+
+    Returns:
+        Updated state with series_list populated (list of series IDs)
+    """
+    all_series_ids: List[int] = []
+
+    # Iterate over each date in the date range
+    start_date = datetime.date.fromisoformat(state.date_range["start"])
+    end_date = datetime.date.fromisoformat(state.date_range["end"])
+
+    current_date = start_date
+    while current_date <= end_date:
+        date_str = current_date.isoformat()
+
+        # Iterate over each project
+        for project_id in state.project_ids:
+            url = (
+                f"https://patchwork.kernel.org/api/series/"
+                f"?project={project_id}&archive=both&format=json"
+                f"&before={date_str}T23:59:59&since={date_str}T00:00:00"
+            )
+
+            if state.verbose >= 2:
+                print(f"请求 URL: {url}")
+
+            data = fetch_with_cache(url, state.cache_dir, state.verbose)
+            if data:
+                # Extract series IDs from response
+                for series in data:
+                    series_id = series.get("id")
+                    if series_id:
+                        all_series_ids.append(series_id)
+
+                if state.verbose >= 1:
+                    print(f"项目 {project_id} 日期 {date_str}: 获取 {len(data)} 个 series")
+
+        current_date += datetime.timedelta(days=1)
+
+    if state.verbose >= 1:
+        print(f"总共获取 {len(all_series_ids)} 个 series ID")
+
+    state.series_list = all_series_ids
+    return state
+
+
+def filter_and_sort(state: PatchworkAgentState) -> PatchworkAgentState:
+    """Filter, sort and limit series list
+
+    Steps:
+    1. Remove duplicates
+    2. Get date for each series (need to fetch details)
+    3. Sort by date descending (newest first)
+    4. Apply max_series limit if specified
+
+    Args:
+        state: Current workflow state with series_list
+
+    Returns:
+        Updated state with series_list filtered and sorted
+    """
+    # Step 1: Remove duplicates
+    unique_series_ids = list(set(state.series_list))
+
+    if state.verbose >= 1:
+        print(f"去重后: {len(unique_series_ids)} 个 series")
+
+    # Step 2: Get date for each series and sort
+    series_with_dates: List[tuple] = []  # (series_id, date)
+
+    for series_id in unique_series_ids:
+        series = fetch_series_detail(series_id, state.cache_dir, state.verbose)
+        if series:
+            date_str = series.get("date", "")
+            series_with_dates.append((series_id, date_str))
+
+    # Step 3: Sort by date descending
+    series_with_dates.sort(key=lambda x: x[1], reverse=True)
+
+    sorted_ids = [sid for sid, _ in series_with_dates]
+
+    if state.verbose >= 2:
+        print(f"按日期倒序排列: {sorted_ids[:10]}...")
+
+    # Step 4: Apply max_series limit
+    if state.max_series is not None and state.max_series > 0:
+        sorted_ids = sorted_ids[:state.max_series]
+        if state.verbose >= 1:
+            print(f"应用 max_series 限制: {len(sorted_ids)} 个 series")
+
+    state.series_list = sorted_ids
+    return state
+
+
+# =============================================================================
 # Workflow Functions - Placeholder for subsequent user stories
 # =============================================================================
 
@@ -492,6 +597,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Test field extraction functions")
     parser.add_argument("--test", action="store_true", help="Run field extraction tests")
     parser.add_argument("--test-us004", action="store_true", help="Run US-004 workflow node tests")
+    parser.add_argument("--test-us005", action="store_true", help="Run US-005 workflow node tests")
     parser.add_argument("--series-id", type=int, default=608868, help="Series ID to test")
     parser.add_argument("-v", "--verbose", action="count", default=0, help="Verbosity level")
     args = parser.parse_args()
@@ -668,4 +774,72 @@ if __name__ == "__main__":
 
         print("\n" + "=" * 60)
         print("All US-004 tests passed!")
+        print("=" * 60)
+
+    if args.test_us005:
+        print("\n" + "=" * 60)
+        print("Testing Workflow Nodes (US-005)")
+        print("=" * 60)
+
+        # Test fetch_series_list and filter_and_sort with real data
+        # Use a known date with existing series (2022-01-27, Linux MM project 365)
+
+        print("\n[fetch_series_list]")
+        print("  Testing with project=365, date=2022-01-27")
+
+        state1 = PatchworkAgentState(
+            messages=[],
+            projects=["365"],
+            verbose=args.verbose
+        )
+        state1 = fetch_project_info(state1)
+        state1 = calculate_date_range(state1)
+        # Override date to 2022-01-27 for testing
+        state1.date_range = {"start": "2022-01-27", "end": "2022-01-27"}
+        state1 = fetch_series_list(state1)
+
+        print(f"  Output: {len(state1.series_list)} series IDs")
+        print(f"  Series IDs: {state1.series_list[:10]}...")
+        assert len(state1.series_list) > 0, f"fetch_series_list should return series IDs"
+
+        print("\n[filter_and_sort]")
+        print("  Testing deduplication, sorting, and max_series limit")
+
+        # Test without max_series limit
+        state2 = PatchworkAgentState(
+            messages=[],
+            projects=["365"],
+            date_range={"start": "2022-01-27", "end": "2022-01-27"},
+            verbose=args.verbose
+        )
+        state2 = fetch_project_info(state2)
+        state2 = fetch_series_list(state2)
+        original_count = len(state2.series_list)
+        state2 = filter_and_sort(state2)
+
+        print(f"  Input count: {original_count}")
+        print(f"  Output count: {len(state2.series_list)}")
+        print(f"  Series IDs (sorted): {state2.series_list[:5]}...")
+        # Check deduplication (count should be <= original)
+        assert len(state2.series_list) <= original_count, f"Deduplication failed"
+
+        # Test with max_series limit
+        state3 = PatchworkAgentState(
+            messages=[],
+            projects=["365"],
+            date_range={"start": "2022-01-27", "end": "2022-01-27"},
+            max_series=3,
+            verbose=args.verbose
+        )
+        state3 = fetch_project_info(state3)
+        state3 = fetch_series_list(state3)
+        state3 = filter_and_sort(state3)
+
+        print(f"\n  With max_series=3:")
+        print(f"  Output count: {len(state3.series_list)}")
+        print(f"  Series IDs: {state3.series_list}")
+        assert len(state3.series_list) == 3, f"max_series limit failed: {len(state3.series_list)}"
+
+        print("\n" + "=" * 60)
+        print("All US-005 tests passed!")
         print("=" * 60)

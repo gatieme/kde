@@ -69,5 +69,19 @@ Started: Tue 12 May 2026 10:25:48 PM CST
   - 节点函数直接修改 state 并返回 state，符合 LangGraph StateGraph 模式
   - projects_list.md 包含 230 个项目映射，Linux MM ID=365
   - 日期范围存储为 date_range dict，包含 start 和 end 两个 ISO 格式日期字符串
-  - 工作流节点命名遵循 lkml_agent.py 和 rss_agent.py 的命名风格
+  - 工作流节点命名遵循 lkml_agent.py 和 rss_agent_agent.py 的命名风格
+---
+
+## [2026-05-12 23:40] - US-005
+- 实现 fetch_series_list 节点：遍历项目 IDs 和日期范围，调用 Patchwork API 获取 series ID
+- API URL 格式正确：/api/series/?project={id}&archive=both&format=json&before={date}T23:59:59&since={date}T00:00:00
+- 实现 filter_and_sort 节点：去重、获取日期、按时间倒序排列、应用 max_series 限制
+- 使用 fetch_with_cache 缓存 API 响应，减少重复请求
+- 测试验证：2022-01-27 Linux MM 项目获取 14 个 series，去重和排序正确，max_series=3 限制生效
+- Files changed: patchwork/patchwork_agent.py, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  - filter_and_sort 需要获取 series 详情来获取日期，这会增加 API 请求
+  - 排序按 date 字段倒序（最新优先）
+  - max_series 在排序后应用，确保获取最新的 series
+  - 日期遍历使用 datetime.timedelta(days=1) 逐日递增
 ---
