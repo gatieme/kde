@@ -153,8 +153,8 @@
         "通过 kde.py 调用：python kde.py --patchwork 365 --date 2022-01-24 --level simple --max-series 2 -v 成功运行"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Added import of run_patchwork_agent at top of kde.py, implemented patchwork_run wrapper function, added --patchwork to mutually_exclusive_group with nargs='+', added --date, --end-date, --days, --max-series, --max-parallel arguments, added patchwork handling in main block. CLI test verified: python kde.py --patchwork 365 --date 2022-01-27 --level simple --max-series 2 -v runs successfully and outputs Markdown table with 2 series."
     },
     {
       "id": "US-010",

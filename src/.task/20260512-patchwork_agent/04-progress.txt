@@ -135,3 +135,18 @@ Started: Tue 12 May 2026 10:25:48 PM CST
   - 节点通过 workflow.add_edge 连接，最后连接到 END
   - StateGraph 需要 set_entry_point 设置入口节点
 ---
+
+## [2026-05-13 00:35] - US-009
+- 在 kde.py 顶部添加导入：from patchwork.patchwork_agent import run_patchwork_agent
+- 实现 patchwork_run 函数：包装 run_patchwork_agent 调用，处理异常
+- 添加 argparse 参数：--patchwork（互斥组，nargs='+'）、--date、--end-date、--days、--max-series、--max-parallel
+- 在 if __name__ == '__main__' 中添加 --patchwork 处理逻辑，打印项目信息和调用参数
+- 命令行调用成功：python kde.py --patchwork 365 --date 2022-01-27 --level simple --max-series 2 -v
+- 测试验证：输出正确的 Markdown 表格，缓存文件创建成功
+- Files changed: kde.py, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  --patchwork 参数使用 nargs='+' 支持多个项目名称或 ID
+  - kde.py 使用 mutually_exclusive_group 确保只能选择一种 agent 模式
+  - 参数命名遵循现有 kde.py 风格（--max-series, --max-parallel）
+  - patchwork_run 函数处理异常并调用 sys.exit(1)
+---
