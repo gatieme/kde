@@ -1,0 +1,59 @@
+# Ralph Progress Log
+Started: Tue 12 May 2026 10:25:48 PM CST
+---
+
+## Codebase Patterns
+- Example: 项目使用 LangGraph StateGraph 模式，参考 lkml/lkml_agent.py 和 rss/rss_agent.py
+- Example: 状态类使用 @dataclass 和 Annotated[List[Dict[str, Any]], add_messages] 消息累积
+- Example: 导入模式：sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+- Example: projects_list.md 是 Markdown 表格格式：| ID | PROJECT | EMAIL |
+- Example: 缓存目录为 output/patchwork/cache/，使用 MD5 hash[:12] 作为文件名
+- Example: Patchwork API URL 格式：https://patchwork.kernel.org/api/series/{id}/?format=json
+
+---
+
+## [2026-05-12 22:35] - US-001
+- 创建 patchwork/__init__.py，导出 run_patchwork_agent 和 build_patchwork_agent
+- 创建 patchwork/patchwork_agent.py，包含必要依赖导入（LangGraph、requests、dataclass）
+- 定义 PatchworkAgentState dataclass，包含输入参数、中间状态、输出结果字段
+- 文件结构符合项目约定（使用 sys.path.append）
+- Import 和语法检查通过
+- Files changed: patchwork/__init__.py, patchwork/patchwork_agent.py, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  - gatieme 分支包含源代码，master 不包含，需要从 gatieme 创建分支
+  - 项目使用 LangGraph StateGraph 模式，参考 lkml/lkml_agent.py 和 rss/rss_agent.py
+  - 状态类使用 @dataclass 和 Annotated[List[Dict[str, Any]], add_messages] 消息累积
+  - 导入模式：sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+---
+
+## [2026-05-12 22:45] - US-002
+- 实现 fetch_with_cache 函数：带缓存的 HTTP 请求，使用 MD5 hash[:12] 作为缓存文件名
+- 实现 load_projects_list 函数：从 projects_list.md 解析 Markdown 表格加载项目列表
+- 实现 fetch_projects_from_api 函数：从 Patchwork API 获取项目列表的备用方案
+- 实现 find_project_id_by_name 函数：支持精确匹配和模糊匹配查找项目 ID
+- 缓存目录为 output/patchwork/cache/
+- 测试验证：成功加载 230 个项目映射，正确找到 Linux MM ID (365)
+- Files changed: patchwork/patchwork_agent.py, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  - projects_list.md 是 Markdown 表格格式，需要跳过前两行（表头和分隔线）
+  - 项目映射需要同时记录数字 ID 和名称作为 key
+  - Patchwork API URL 格式：https://patchwork.kernel.org/api/series/{id}/?format=json
+  - 缓存使用 hashlib.md5(url.encode()).hexdigest()[:12] 作为文件名
+---
+
+## [2026-05-12 23:10] - US-003
+- 实现 extract_date 函数：解析 ISO 日期格式，输出 YYYY/MM/DD
+- 实现 extract_author 和 extract_email 函数：从 submitter 字段提取
+- 实现 extract_subject 函数：优先使用 name，fallback 到 patches[0].name
+- 实现 extract_version 函数：处理版本号输出 v{version}
+- 实现 extract_web_url 和 extract_archive_url 函数：优先从 cover_letter 提取，fallback 到 patches
+- 实现 extract_message_id_from_cover 函数：支持三种 lore.kernel.org URL 格式 (/r/, /{list}/, /all/)
+- 实现 fetch_series_detail 函数：使用缓存获取 series 详细信息
+- 测试验证：series 608868（无 cover_letter）和 609110（有 cover_letter）所有字段正确提取
+- Files changed: patchwork/patchwork_agent.py, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  - Series 数据结构：cover_letter 字段可能为 null，需要优先检查后 fallback 到 patches[0]
+  - lore.kernel.org URL 格式：/r/{msg_id} 最常见，也有 /{list}/{msg_id} 和 /all/{msg_id}
+  - 版本号直接在 series.version 字段，无需从 name 解析
+  - 日期字段 date 是 ISO 格式如 "2022-01-27T00:07:24"
+---
