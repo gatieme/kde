@@ -1,76 +1,232 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1410.2125 816" width="1410.2125" height="816" style="--bg:#ffffff;--fg:#1f2328;--line:#d1d9e0;--accent:#0969da;--muted:#59636e;background:var(--bg)">
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
-  text { font-family: 'Inter', system-ui, sans-serif; }
-  svg {
-    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
-    --_text:          var(--fg);
-    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
-    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
-    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
-    --_line:          var(--line, color-mix(in srgb, var(--fg) 30%, var(--bg)));
-    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 50%, var(--bg)));
-    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
-    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
-    --_group-fill:    var(--bg);
-    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
-    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
-    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
-  }
-</style>
-<defs>
-  <marker id="arrowhead" markerWidth="8" markerHeight="4.8" refX="8" refY="2.4" orient="auto">
-    <polygon points="0 0, 8 2.4, 0 4.8" fill="var(--_arrow)" />
-  </marker>
-  <marker id="arrowhead-start" markerWidth="8" markerHeight="4.8" refX="0" refY="2.4" orient="auto-start-reverse">
-    <polygon points="8 0, 0 2.4, 8 4.8" fill="var(--_arrow)" />
-  </marker>
-</defs>
-<rect x="313.225" y="40" width="643.8125" height="112" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-<rect x="313.225" y="40" width="643.8125" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-<text x="325.225" y="54" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;kde.py CLI Entry&quot;</text>
-<rect x="106.58750000000009" y="196" width="1199.2125" height="112" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-<rect x="106.58750000000009" y="196" width="1199.2125" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-<text x="118.58750000000009" y="210" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;LangGraph Agents&quot;</text>
-<rect x="40" y="352" width="493.01250000000005" height="424" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-<rect x="40" y="352" width="493.01250000000005" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-<text x="52" y="366" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Model Inference Module&quot;</text>
-<rect x="553.0125" y="352" width="817.2" height="112" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
-<rect x="553.0125" y="352" width="817.2" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
-<text x="565.0125" y="366" dy="0.35em" font-size="12" font-weight="600" fill="var(--_text-sec)">&quot;Disk Cache System&quot;</text>
-<polyline points="379.82500000000005,132 379.82500000000005,252" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="634.2375000000001,132 634.2375000000001,252" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="890.4375000000001,132 890.4375000000001,252" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="379.82500000000005,288 379.82500000000005,308 184.1875,308 184.1875,426 62,426" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="634.2375000000001,288 634.2375000000001,308 315.13750000000005,308 315.13750000000005,426 365.70000000000005,426" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="890.4375000000001,288 890.4375000000001,308 446.0875000000001,308 446.0875000000001,426 365.70000000000005,426" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="213.85000000000002,444 213.85000000000002,564" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="213.85000000000002,600 213.85000000000002,720" fill="none" stroke="var(--_line)" stroke-width="0.75" marker-end="url(#arrowhead)" />
-<polyline points="379.82500000000005,288 379.82500000000005,308 691.1125000000002,308 691.1125000000002,408" fill="none" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
-<polyline points="634.2375000000001,288 634.2375000000001,308 958.0375000000001,308 958.0375000000001,408" fill="none" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
-<polyline points="890.4375000000001,288 890.4375000000001,308 1228.5375000000001,308 1228.5375000000001,408" fill="none" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
-<rect x="335.225" y="96" width="89.2" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="593.2125000000001" y="96" width="82.05000000000001" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="845.8375000000001" y="96" width="89.2" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="267.30000000000007" y="252" width="225.05" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="528.8625000000001" y="252" width="210.75000000000003" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="777.9125000000001" y="252" width="225.05" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="62" y="564" width="303.70000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="62" y="408" width="303.70000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="79.875" y="720" width="267.95000000000005" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="575.0125000000002" y="408" width="232.20000000000002" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="831.2125000000001" y="408" width="253.65" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<rect x="1108.8625000000002" y="408" width="239.35000000000002" height="36" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
-<text x="379.82500000000005" y="114" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;--lkml&quot;</text>
-<text x="634.2375000000001" y="114" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;--rss&quot;</text>
-<text x="890.4375000000001" y="114" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;--cgit&quot;</text>
-<text x="379.82500000000005" y="270" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;LKML Agent\nlkml_agent.py&quot;</text>
-<text x="634.2375000000001" y="270" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;RSS Agent\nrss_agent.py&quot;</text>
-<text x="890.4375000000001" y="270" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;CGit Agent\ncgit_agent.py&quot;</text>
-<text x="213.85000000000002" y="582" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelInference\nmodel/model_infer.py&quot;</text>
-<text x="213.85000000000002" y="426" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelRequest\nmodel/model_request.py&quot;</text>
-<text x="213.85000000000002" y="738" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;ModelScope API\nQwen3-235B-A22B&quot;</text>
-<text x="691.1125000000002" y="426" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;output/lkml/\n/.cover .mbx&quot;</text>
-<text x="958.0375000000001" y="426" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;output/rss/\n/.txt hash-based&quot;</text>
-<text x="1228.5375000000001" y="426" text-anchor="middle" dy="0.35em" font-size="13" font-weight="500" fill="var(--_text)">&quot;output/cgit/\n/commit files&quot;</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+    .title { font-size: 28px; font-weight: 700; fill: #2d3748; }
+    .subtitle { font-size: 16px; fill: #718096; }
+    .layer-label { font-size: 18px; font-weight: 700; fill: #4a5568; letter-spacing: 1px; }
+    .node-title { font-size: 18px; font-weight: 600; fill: #1a202c; }
+    .node-desc { font-size: 14px; fill: #4a5568; }
+    .step-label { font-size: 12px; fill: #2d3748; font-weight: 500; }
+    .arrow-label { font-size: 13px; fill: #4a5568; font-weight: 500; }
+    .legend-label { font-size: 13px; fill: #4a5568; }
+    .storage-label { font-size: 12px; fill: #2d3748; }
+    .storage-desc { font-size: 11px; fill: #718096; }
+  </style>
+
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#faf8f5"/>
+      <stop offset="100%" stop-color="#f5f3f0"/>
+    </linearGradient>
+    <linearGradient id="agent-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b5e8d8"/>
+      <stop offset="100%" stop-color="#8fd4c4"/>
+    </linearGradient>
+    <linearGradient id="input-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c8ddf0"/>
+      <stop offset="100%" stop-color="#a8c5e6"/>
+    </linearGradient>
+    <linearGradient id="external-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8ecd8"/>
+      <stop offset="100%" stop-color="#f4e4c1"/>
+    </linearGradient>
+    <linearGradient id="storage-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f0eee8"/>
+      <stop offset="100%" stop-color="#e8e6e3"/>
+    </linearGradient>
+    <linearGradient id="core-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2f1"/>
+      <stop offset="100%" stop-color="#c8e6c9"/>
+    </linearGradient>
+    <filter id="shadow-soft" x="-10%" y="-10%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00000015"/>
+    </filter>
+    <filter id="shadow-card" x="-5%" y="-5%" width="115%" height="125%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000010"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#4a5568"/>
+    </marker>
+    <marker id="arrow-dashed" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#718096"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#bg-gradient)"/>
+
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" class="title">KDE System Architecture</text>
+  <text x="600" y="65" text-anchor="middle" class="subtitle">Kernel Development Explorer — LangGraph Multi-Agent System</text>
+
+  <!-- Layer Labels with decorative lines -->
+  <text x="50" y="130" class="layer-label">CLI</text>
+  <line x1="50" y1="140" x2="90" y2="140" stroke="#4a5568" stroke-width="3" stroke-linecap="round"/>
+  <text x="50" y="280" class="layer-label">Agents</text>
+  <line x1="50" y1="290" x2="90" y2="290" stroke="#4a5568" stroke-width="3" stroke-linecap="round"/>
+  <text x="50" y="520" class="layer-label">Core</text>
+  <line x1="50" y1="530" x2="90" y2="530" stroke="#4a5568" stroke-width="3" stroke-linecap="round"/>
+  <text x="50" y="680" class="layer-label">Storage</text>
+  <line x1="50" y1="690" x2="90" y2="690" stroke="#4a5568" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- CLI Entry Node -->
+  <rect x="450" y="100" width="300" height="70" rx="16" fill="url(#input-gradient)" stroke="#4a5568" stroke-width="2" filter="url(#shadow-soft)"/>
+  <text x="600" y="128" text-anchor="middle" class="node-title">CLI Entry Point</text>
+  <text x="600" y="150" text-anchor="middle" class="node-desc">kde.py --lkml / --cgit / --rss</text>
+
+  <!-- LKML Agent -->
+  <rect x="100" y="220" width="260" height="160" rx="16" fill="url(#agent-gradient)" stroke="#4a5568" stroke-width="2" filter="url(#shadow-soft)"/>
+  <text x="230" y="250" text-anchor="middle" class="node-title">LKML Agent</text>
+  <text x="230" y="272" text-anchor="middle" class="node-desc">Linux Kernel Mailing List</text>
+  <!-- Workflow steps inside LKML -->
+  <rect x="115" y="290" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="142" y="308" text-anchor="middle" class="step-label">fetch</text>
+  <rect x="180" y="290" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="207" y="308" text-anchor="middle" class="step-label">parse</text>
+  <rect x="245" y="290" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="272" y="308" text-anchor="middle" class="step-label">summary</text>
+  <rect x="115" y="330" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="142" y="348" text-anchor="middle" class="step-label">analyze</text>
+  <rect x="180" y="330" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="207" y="348" text-anchor="middle" class="step-label">output</text>
+
+  <!-- CGit Agent -->
+  <rect x="380" y="220" width="260" height="160" rx="16" fill="url(#agent-gradient)" stroke="#4a5568" stroke-width="2" filter="url(#shadow-soft)"/>
+  <text x="510" y="250" text-anchor="middle" class="node-title">CGit Agent</text>
+  <text x="510" y="272" text-anchor="middle" class="node-desc">Git Commit Analysis</text>
+  <!-- Workflow steps inside CGit -->
+  <rect x="395" y="290" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="422" y="308" text-anchor="middle" class="step-label">fetch</text>
+  <rect x="460" y="290" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="487" y="308" text-anchor="middle" class="step-label">parse</text>
+  <rect x="525" y="290" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="552" y="308" text-anchor="middle" class="step-label">analyze</text>
+  <rect x="395" y="330" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="422" y="348" text-anchor="middle" class="step-label">patchset</text>
+  <rect x="460" y="330" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="487" y="348" text-anchor="middle" class="step-label">output</text>
+
+  <!-- RSS Agent -->
+  <rect x="660" y="220" width="260" height="160" rx="16" fill="url(#agent-gradient)" stroke="#4a5568" stroke-width="2" filter="url(#shadow-soft)"/>
+  <text x="790" y="250" text-anchor="middle" class="node-title">RSS Agent</text>
+  <text x="790" y="272" text-anchor="middle" class="node-desc">Tech Article Analysis</text>
+  <!-- Workflow steps inside RSS -->
+  <rect x="675" y="290" width="60" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="705" y="308" text-anchor="middle" class="step-label">detect</text>
+  <rect x="745" y="290" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="772" y="308" text-anchor="middle" class="step-label">fetch</text>
+  <rect x="810" y="290" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="837" y="308" text-anchor="middle" class="step-label">analyze</text>
+  <rect x="675" y="330" width="60" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="705" y="348" text-anchor="middle" class="step-label">summarize</text>
+  <rect x="745" y="330" width="55" height="30" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="772" y="348" text-anchor="middle" class="step-label">output</text>
+
+  <!-- External Sources -->
+  <rect x="940" y="220" width="180" height="160" rx="16" fill="url(#external-gradient)" stroke="#4a5568" stroke-width="2" filter="url(#shadow-soft)"/>
+  <text x="1030" y="250" text-anchor="middle" class="node-title">External Sources</text>
+  <rect x="955" y="270" width="75" height="28" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="992" y="287" text-anchor="middle" class="step-label">LKML Lore</text>
+  <rect x="1035" y="270" width="75" height="28" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="1072" y="287" text-anchor="middle" class="step-label">Git.kernel</text>
+  <rect x="955" y="305" width="75" height="28" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="992" y="322" text-anchor="middle" class="step-label">Phoronix</text>
+  <rect x="1035" y="305" width="75" height="28" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="1072" y="322" text-anchor="middle" class="step-label">LWN.net</text>
+
+  <!-- Model Inference Core -->
+  <rect x="100" y="500" width="380" height="120" rx="16" fill="url(#core-gradient)" stroke="#4a5568" stroke-width="2" filter="url(#shadow-soft)"/>
+  <text x="290" y="530" text-anchor="middle" class="node-title">Model Inference</text>
+  <text x="290" y="552" text-anchor="middle" class="node-desc">ModelScope Qwen3-235B-A22B</text>
+  <rect x="115" y="565" width="150" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="190" y="582" text-anchor="middle" class="step-label">ModelInference</text>
+  <text x="190" y="597" text-anchor="middle" font-size="11" fill="#718096">OpenAI API client</text>
+  <rect x="280" y="565" width="150" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="355" y="582" text-anchor="middle" class="step-label">ModelRequest</text>
+  <text x="355" y="597" text-anchor="middle" font-size="11" fill="#718096">Prompt templates</text>
+
+  <!-- Utils Module -->
+  <rect x="500" y="500" width="380" height="120" rx="16" fill="url(#core-gradient)" stroke="#4a5568" stroke-width="2" filter="url(#shadow-soft)"/>
+  <text x="690" y="530" text-anchor="middle" class="node-title">Utils Module</text>
+  <text x="690" y="552" text-anchor="middle" class="node-desc">Common Utilities</text>
+  <rect x="515" y="565" width="110" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="570" y="582" text-anchor="middle" class="step-label">Formatter</text>
+  <text x="570" y="597" text-anchor="middle" font-size="11" fill="#718096">Markdown output</text>
+  <rect x="635" y="565" width="110" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="690" y="582" text-anchor="middle" class="step-label">Monitor</text>
+  <text x="690" y="597" text-anchor="middle" font-size="11" fill="#718096">Progress bar</text>
+  <rect x="755" y="565" width="110" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="810" y="582" text-anchor="middle" class="step-label">Fetcher</text>
+  <text x="810" y="597" text-anchor="middle" font-size="11" fill="#718096">HTTP/Playwright</text>
+
+  <!-- Output Storage -->
+  <rect x="100" y="660" width="780" height="100" rx="16" fill="url(#storage-gradient)" stroke="#4a5568" stroke-width="2" filter="url(#shadow-soft)"/>
+  <text x="490" y="690" text-anchor="middle" class="node-title">Output Cache Directory</text>
+  <rect x="115" y="705" width="170" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="200" y="720" text-anchor="middle" class="storage-label">output/lkml/</text>
+  <text x="200" y="735" text-anchor="middle" class="storage-desc">Patch cache (.cover/.mbx)</text>
+  <rect x="295" y="705" width="170" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="380" y="720" text-anchor="middle" class="storage-label">output/cgit/</text>
+  <text x="380" y="735" text-anchor="middle" class="storage-desc">Commit cache</text>
+  <rect x="475" y="705" width="170" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="560" y="720" text-anchor="middle" class="storage-label">output/rss/</text>
+  <text x="560" y="735" text-anchor="middle" class="storage-desc">Article cache (.txt)</text>
+  <rect x="655" y="705" width="120" height="40" rx="8" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="715" y="720" text-anchor="middle" class="storage-label">.env</text>
+  <text x="715" y="735" text-anchor="middle" class="storage-desc">API Key config</text>
+
+  <!-- Arrows: CLI to Agents -->
+  <path d="M 600 170 L 600 195 L 230 195 L 230 215" stroke="#4a5568" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 600 195 L 510 195 L 510 215" stroke="#4a5568" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 600 195 L 790 195 L 790 215" stroke="#4a5568" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <!-- Arrow label with background -->
+  <rect x="520" y="180" width="160" height="24" rx="4" fill="#faf8f5" stroke="#e2e0dc" stroke-width="1"/>
+  <text x="600" y="196" text-anchor="middle" class="arrow-label">dispatch(agent_type)</text>
+
+  <!-- Arrows: Agents to External Sources -->
+  <path d="M 360 310 L 935 310" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-dashed)"/>
+  <rect x="560" y="295" width="110" height="24" rx="4" fill="#faf8f5" stroke="#e2e0dc" stroke-width="1"/>
+  <text x="615" y="311" text-anchor="middle" class="arrow-label">fetch(patch)</text>
+  <path d="M 640 310 L 935 310" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" fill="none"/>
+  <path d="M 920 310 L 935 310" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-dashed)"/>
+  <path d="M 790 310 L 935 310" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" fill="none"/>
+
+  <!-- Arrows: Agents to Model Inference -->
+  <path d="M 230 380 L 230 420 L 290 420 L 290 495" stroke="#4a5568" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 510 380 L 510 420 L 290 420" stroke="#4a5568" stroke-width="2.5" fill="none"/>
+  <path d="M 790 380 L 790 420 L 290 420" stroke="#4a5568" stroke-width="2.5" fill="none"/>
+  <rect x="310" y="405" width="150" height="24" rx="4" fill="#faf8f5" stroke="#e2e0dc" stroke-width="1"/>
+  <text x="385" y="421" text-anchor="middle" class="arrow-label">inference(messages)</text>
+
+  <!-- Arrows: Agents to Utils -->
+  <path d="M 230 380 L 230 450 L 690 450 L 690 495" stroke="#4a5568" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 510 380 L 510 450 L 690 450" stroke="#4a5568" stroke-width="2.5" fill="none"/>
+  <path d="M 790 380 L 790 450 L 690 450" stroke="#4a5568" stroke-width="2.5" fill="none"/>
+  <rect x="495" y="435" width="130" height="24" rx="4" fill="#faf8f5" stroke="#e2e0dc" stroke-width="1"/>
+  <text x="560" y="451" text-anchor="middle" class="arrow-label">format_output()</text>
+
+  <!-- Arrows: Agents to Storage (Write) -->
+  <path d="M 230 380 L 230 600 L 200 600 L 200 655" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-dashed)"/>
+  <rect x="145" y="585" width="100" height="24" rx="4" fill="#faf8f5" stroke="#e2e0dc" stroke-width="1"/>
+  <text x="195" y="601" text-anchor="middle" class="arrow-label">cache(patch)</text>
+  <path d="M 510 380 L 510 600 L 380 600 L 380 655" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-dashed)"/>
+  <path d="M 790 380 L 790 600 L 560 600 L 560 655" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" fill="none" marker-end="url(#arrow-dashed)"/>
+
+  <!-- Arrow: Model to .env -->
+  <path d="M 290 620 L 290 640 L 715 640 L 715 700" stroke="#4a5568" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <rect x="430" y="625" width="140" height="24" rx="4" fill="#faf8f5" stroke="#e2e0dc" stroke-width="1"/>
+  <text x="500" y="641" text-anchor="middle" class="arrow-label">getenv(API_KEY)</text>
+
+  <!-- Legend Box -->
+  <rect x="940" y="660" width="220" height="100" rx="12" fill="#ffffff" stroke="#4a5568" stroke-width="1.5" filter="url(#shadow-card)"/>
+  <text x="955" y="682" font-size="14" font-weight="600" fill="#2d3748">Legend</text>
+  <line x1="955" y1="700" x2="985" y2="700" stroke="#4a5568" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="995" y="704" class="legend-label">Read / Call</text>
+  <line x1="955" y1="720" x2="985" y2="720" stroke="#718096" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow-dashed)"/>
+  <text x="995" y="724" class="legend-label">Write / Network</text>
+  <rect x="955" y="738" width="25" height="14" rx="4" fill="url(#agent-gradient)" stroke="#4a5568" stroke-width="1"/>
+  <text x="985" y="748" class="legend-label">Agent / Core</text>
+
+  <!-- Version info -->
+  <text x="1180" y="795" text-anchor="end" font-size="11" fill="#a0aec0">KDE Architecture v2.0 — Claude Official Style</text>
 </svg>
