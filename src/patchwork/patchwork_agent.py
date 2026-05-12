@@ -708,6 +708,166 @@ def process_series(state: PatchworkAgentState) -> PatchworkAgentState:
 
 
 # =============================================================================
+# Workflow Nodes (US-007)
+# =============================================================================
+
+def aggregate_results(state: PatchworkAgentState) -> PatchworkAgentState:
+    """Generate Markdown table rows from processed results
+
+    Table format:
+    | 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |
+
+    Args:
+        state: Current workflow state with processed_results
+
+    Returns:
+        Updated state with output_lines populated
+    """
+    output_lines: List[str] = []
+
+    for result in state.processed_results:
+        if "error" in result:
+            # Skip failed results
+            if state.verbose >= 1:
+                print(f"跳过失败的 series {result.get('series_id')}: {result.get('error')}")
+            continue
+
+        # Extract fields
+        date = result.get("date", "")
+        author = result.get("author", "")
+        email = result.get("email", "")
+        subject = result.get("subject", "")
+        version = result.get("version", "v1")
+        total = result.get("total", 1)
+        web_url = result.get("web_url", "")
+        archive_url = result.get("archive_url", "")
+        series_id = result.get("series_id", "")
+
+        # Format author with email
+        author_str = f"{author} &lt;{email}&gt;" if email else author
+
+        # Format subject as link
+        subject_str = f"[{format_text_for_markdown(subject)}]({web_url})" if web_url else format_text_for_markdown(subject)
+
+        # Format lore link with version and total
+        lore_link = f"[LORE {version},{total}]({archive_url})" if archive_url else ""
+
+        # Build table row
+        # Format: | 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |
+        row = f"| {date} | {author_str} | {subject_str} | {series_id} | {version} ☐ | {lore_link} |"
+        output_lines.append(row)
+
+    if state.verbose >= 1:
+        print(f"生成 {len(output_lines)} 行表格")
+
+    state.output_lines = output_lines
+    return state
+
+
+def output_results(state: PatchworkAgentState) -> PatchworkAgentState:
+    """Print results as Markdown table
+
+    Args:
+        state: Current workflow state with output_lines
+
+    Returns:
+        State unchanged (just prints output)
+    """
+    # Print table header
+    print("\n| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |")
+    print("|:----:|:----:|:----:|:----:|:------------:|:----:|")
+
+    # Print table rows
+    for line in state.output_lines:
+        print(line)
+
+    # In detail mode, also print LKML analysis
+    if state.level == "detail":
+        for result in state.processed_results:
+            if "lkml_result" in result and result["lkml_result"]:
+                lkml = result["lkml_result"]
+                print(f"\n### Series {result.get('series_id')} - LKML 分析")
+                if isinstance(lkml, dict):
+                    # Print summary if available
+                    summary = lkml.get("summary", "")
+                    if summary:
+                        print(f"\n**摘要:**\n{summary}")
+                    # Print analysis if available
+                    analysis = lkml.get("analysis", "")
+                    if analysis:
+                        print(f"\n**详细分析:**\n{analysis}")
+
+    return state
+
+
+def cache_results(state: PatchworkAgentState) -> PatchworkAgentState:
+    """Cache results to file system
+
+    Cache location: output/patchwork/<project>/<date>/summary.md
+    Detail mode: additionally cache series_*_detail.md
+
+    Args:
+        state: Current workflow state with output_lines and processed_results
+
+    Returns:
+        State unchanged (just writes files)
+    """
+    # Determine cache directory
+    if not state.work_dir:
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        state.work_dir = os.path.join(repo_root, "output", "patchwork")
+
+    # Use first project ID for directory name
+    project_id = state.project_ids[0] if state.project_ids else "unknown"
+    project_dir = os.path.join(state.work_dir, str(project_id))
+
+    # Use first date from date_range for directory name
+    date_dir = state.date_range.get("start", datetime.date.today().isoformat())
+    cache_dir = os.path.join(project_dir, date_dir)
+
+    # Create directory
+    os.makedirs(cache_dir, exist_ok=True)
+
+    # Write summary.md
+    summary_file = os.path.join(cache_dir, "summary.md")
+    with open(summary_file, 'w', encoding='utf-8') as f:
+        f.write("# Patchwork Series Summary\n\n")
+        f.write("| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |\n")
+        f.write("|:----:|:----:|:----:|:----:|:------------:|:----:|\n")
+        for line in state.output_lines:
+            f.write(line + "\n")
+
+    if state.verbose >= 1:
+        print(f"缓存保存到: {summary_file}")
+
+    # In detail mode, cache detailed analysis for each series
+    if state.level == "detail":
+        for result in state.processed_results:
+            if "lkml_result" in result and result["lkml_result"]:
+                series_id = result.get("series_id")
+                detail_file = os.path.join(cache_dir, f"series_{series_id}_detail.md")
+
+                lkml = result["lkml_result"]
+                with open(detail_file, 'w', encoding='utf-8') as f:
+                    f.write(f"# Series {series_id} - LKML 分析\n\n")
+                    f.write(f"**主题:** {result.get('subject', '')}\n\n")
+                    f.write(f"**作者:** {result.get('author', '')} &lt;{result.get('email', '')}&gt;\n\n")
+
+                    if isinstance(lkml, dict):
+                        summary = lkml.get("summary", "")
+                        if summary:
+                            f.write(f"## 摘要\n\n{summary}\n\n")
+                        analysis = lkml.get("analysis", "")
+                        if analysis:
+                            f.write(f"## 详细分析\n\n{analysis}\n\n")
+
+                if state.verbose >= 1:
+                    print(f"详细分析缓存到: {detail_file}")
+
+    return state
+
+
+# =============================================================================
 # Workflow Functions - Placeholder for subsequent user stories
 # =============================================================================
 
@@ -743,6 +903,7 @@ if __name__ == "__main__":
     parser.add_argument("--test-us004", action="store_true", help="Run US-004 workflow node tests")
     parser.add_argument("--test-us005", action="store_true", help="Run US-005 workflow node tests")
     parser.add_argument("--test-us006", action="store_true", help="Run US-006 workflow node tests")
+    parser.add_argument("--test-us007", action="store_true", help="Run US-007 workflow node tests")
     parser.add_argument("--series-id", type=int, default=608868, help="Series ID to test")
     parser.add_argument("-v", "--verbose", action="count", default=0, help="Verbosity level")
     args = parser.parse_args()
@@ -1035,4 +1196,102 @@ if __name__ == "__main__":
 
         print("\n" + "=" * 60)
         print("All US-006 tests passed!")
+        print("=" * 60)
+
+    if args.test_us007:
+        print("\n" + "=" * 60)
+        print("Testing Workflow Nodes (US-007)")
+        print("=" * 60)
+
+        # Prepare test data
+        test_results = [
+            {
+                "series_id": 608868,
+                "date": "2022/01/27",
+                "author": "Ariadne Conill",
+                "email": "ariadne@dereferenced.org",
+                "subject": "[v3] fs/exec: require argv[0] presence in do_execveat_common()",
+                "version": "v3",
+                "total": 1,
+                "web_url": "https://patchwork.kernel.org/project/linux-mm/patch/xxx/",
+                "archive_url": "https://lore.kernel.org/r/xxx"
+            },
+            {
+                "series_id": 609110,
+                "date": "2022/01/27",
+                "author": "Karolina Drobnik",
+                "email": "karolinadrobnik@gmail.com",
+                "subject": "Introduce memblock simulator",
+                "version": "v1",
+                "total": 16,
+                "web_url": "https://patchwork.kernel.org/project/linux-mm/cover/yyy/",
+                "archive_url": "https://lore.kernel.org/r/yyy"
+            }
+        ]
+
+        # Test aggregate_results
+        print("\n[aggregate_results]")
+
+        state1 = PatchworkAgentState(
+            messages=[],
+            processed_results=test_results,
+            level="simple",
+            verbose=args.verbose
+        )
+        state1 = aggregate_results(state1)
+
+        print(f"  Output lines: {len(state1.output_lines)}")
+        for line in state1.output_lines:
+            print(f"    {line}")
+
+        assert len(state1.output_lines) == 2, f"Should have 2 table rows"
+        assert "2022/01/27" in state1.output_lines[0], f"Date should be in row"
+
+        # Test output_results
+        print("\n[output_results]")
+
+        state2 = PatchworkAgentState(
+            messages=[],
+            output_lines=state1.output_lines,
+            processed_results=test_results,
+            level="simple",
+            verbose=args.verbose
+        )
+        state2 = output_results(state2)
+
+        print("  (Output printed above)")
+
+        # Test cache_results
+        print("\n[cache_results]")
+
+        state3 = PatchworkAgentState(
+            messages=[],
+            project_ids=[365],
+            date_range={"start": "2022-01-27", "end": "2022-01-27"},
+            output_lines=state1.output_lines,
+            processed_results=test_results,
+            level="simple",
+            verbose=args.verbose
+        )
+        state3 = cache_results(state3)
+
+        # Check if cache file exists
+        import tempfile
+        cache_dir = os.path.join(state3.work_dir, "365", "2022-01-27")
+        summary_file = os.path.join(cache_dir, "summary.md")
+
+        print(f"  Cache directory: {cache_dir}")
+        print(f"  Summary file: {summary_file}")
+
+        assert os.path.exists(summary_file), f"Summary file should exist"
+
+        # Read and verify content
+        with open(summary_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        print(f"  Content preview:\n{content[:200]}...")
+        assert "| 时间 |" in content, f"Table header should exist"
+
+        print("\n" + "=" * 60)
+        print("All US-007 tests passed!")
         print("=" * 60)

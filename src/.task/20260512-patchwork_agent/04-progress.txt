@@ -101,3 +101,21 @@ Started: Tue 12 May 2026 10:25:48 PM CST
   - 错误处理使用 try-except 包裹，失败返回 {"error": str(e)}
   - run_lkml_agent 导入在文件头部，传递 message_id 和 level 参数
 ---
+
+## [2026-05-13 00:10] - US-007
+- 实现 aggregate_results 节点：生成 Markdown 表格行，使用 format_text_for_markdown 处理特殊字符
+- 表格格式：| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |
+- 作者格式：name <email>，使用 &lt; 和 &gt; 转义
+- 主题格式：[subject](web_url) 作为链接
+- Lore 链接格式：[LORE v{version},{total}](archive_url)
+- 实现 output_results 节点：打印表头和表格行，detail 模式打印 LKML 分析结果
+- 实现 cache_results 节点：缓存到 output/patchwork/<project>/<date>/summary.md
+- detail 模式额外缓存 series_{id}_detail.md 包含摘要和分析
+- 测试验证：2 行表格正确生成，输出打印正确，缓存文件创建成功
+- Files changed: patchwork/patchwork_agent.py, .task/20260512-patchwork_agent/03-plan.json
+- **Learnings for future iterations:**
+  - format_text_for_markdown 函数处理 [、]、:、/ 等特殊字符，在表格中使用避免渲染问题
+  - 缓存目录结构：output/patchwork/{project_id}/{date}/summary.md
+  - detail 模式 LKML 结果结构：{summary, analysis}，需要在缓存文件中分开写入
+  - output_lines 存储格式化后的表格行，processed_results 存储原始结果数据
+---
