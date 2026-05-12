@@ -3,8 +3,6 @@
 get_patchwork_project()
 {
 	local PAGE=$1
-
-	cd project
 	wget "https://patchwork.kernel.org/api/projects/?page=${PAGE}" -O projects_list.json -o /dev/null
 
 	if [ $? -ne 0 ]; then
@@ -19,19 +17,20 @@ get_patchwork_project()
 		EMAIL=`echo ${project} | jq -r ".list_email"`
 		echo "| " $ID " | " $NAME " |" $EMAIL " |" | tee -a projects_list.md
 	done
-
-	cd ..
-
 	return 0
 }
 
 
-echo "| ID | PROJECT | EMAIL |" | tee projects_list.md
-echo "|:--:|:-------:|:-----:|" | tee -a projects_list.md
-
 if [ ! -d "project" ]; then
 	mkdir project
 fi
+
+cd project
+rm -rf projects_list.md
+
+echo "| ID | PROJECT | EMAIL |" | tee projects_list.md
+echo "|:--:|:-------:|:-----:|" | tee -a projects_list.md
+
 
 for i in `seq 1 10`
 do
@@ -40,3 +39,5 @@ do
 		break
 	fi
 done
+
+cd ..
