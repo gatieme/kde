@@ -162,7 +162,7 @@ class LKML:
             print("| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |")
             print("|:---:|:----:|:---:|:----:|:---------:|:----:|")
             if not self.total:
-                print(f"| {self.date} | {self.author} <{self.email}> | [{self.subject}]({self.web_url}) | {self.summary} | v{self.version} ☐☑✓ | [LORE]({self.archive_url}) |")
+                print(f"| {self.date} | {self.author} <{self.email}> | [{self.subject}]({self.web_url}) | {self.summary} | v{self.version} ☐☑✓ | [{self.date}, LORE]({self.archive_url}) |")
             else:
                 print(f"| {self.date} | {self.author} <{self.email}> | [{self.subject}]({self.web_url}) | {self.summary} | v{self.version} ☐☑✓ | [{self.date}, LORE v{self.version}, 0/{self.total}]({self.archive_url}) |")
 
@@ -173,9 +173,9 @@ class LKML:
             md_file.write("| 时间 | 作者 | 特性 | 描述 | 是否合入主线 | 链接 |\n")
             md_file.write("|:---:|:----:|:---:|:----:|:---------:|:----:|\n")
             if not self.total:
-                md_file.write(f"| {self.date} | {self.author} <{self.email}> | [{self.subject}]({self.web_url}) | {self.summary} | v{self.version} ☐☑✓ | [LORE]({self.archive_url}) |\n")
+                md_file.write(f"| {self.date} | {self.author} <{self.email}> | [{self.subject}]({self.web_url}) | {self.summary} | v{self.version} ☐☑✓ | [{self.date}, LORE]({self.archive_url}) |\n")
             else:
-                md_file.write(f"| {self.date} | {self.author} <{self.email}> | [{self.subject}]({self.web_url}) | {self.summary} | v{self.version} ☐☑✓ | [{date}, LORE v{self.version}, 0/{self.total}]({self.archive_url}) |\n")
+                md_file.write(f"| {self.date} | {self.author} <{self.email}> | [{self.subject}]({self.web_url}) | {self.summary} | v{self.version} ☐☑✓ | [{self.date}, LORE v{self.version}, 0/{self.total}]({self.archive_url}) |\n")
 
     def cover_series(self):
         if self.cover_mbx() != None:

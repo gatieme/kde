@@ -283,7 +283,7 @@ def output_results(state: LKMLAgentState) -> LKMLAgentState:
     formatted_summary = format_text_for_markdown(state.summary)
 
     if not state.total:
-        print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{state.version} ☐☑✓ | [LORE]({state.archive_url}) |")
+        print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{state.version} ☐☑✓ | [{state.date}, LORE]({state.archive_url}) |")
     else:
         print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{state.version} ☐☑✓ | [{state.date}, LORE v{state.version}, {state.current}/{state.total}]({state.archive_url}) |")
 
