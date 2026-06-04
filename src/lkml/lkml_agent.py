@@ -70,8 +70,6 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
         if state.verbose >= 3:
             for line in process.stdout:
                 print(line, end='')
-            for line in process.stderr:
-                print(line, end='', file=sys.stderr)
         elif state.verbose >= 1:
             with tqdm(total=100, desc="LKML 补丁下载进度", unit="%") as pbar:
                 monitor_process_with_progress(process, pbar, state.verbose)
