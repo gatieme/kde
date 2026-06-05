@@ -15,24 +15,40 @@ kde/
 ├── .env                # Environment configuration (OPENAI_API_KEY, etc.)
 ├── lkml/               # LKML patch analysis module
 │   ├── lkml_agent.py  # LangGraph-based LKML agent
-│   └── lkml.py        # Core patch analyzer
+│   ├── lkml.py        # Core patch analyzer (legacy)
+│   └── AGENTS.md      # Module-specific docs
 ├── rss/                # RSS/news analysis module
 │   ├── rss_agent.py  # LangGraph-based RSS agent
-│   └── detect_anti_crawler.py
+│   ├── detect_anti_crawler.py
+│   └── AGENTS.md      # Module-specific docs
 ├── cgit/               # CGit commit analysis module
 │   └── cgit_agent.py  # LangGraph-based CGit agent
 ├── model/              # AI model integration
 │   ├── model_infer.py # ModelScope inference wrapper
 │   └── model_request.py # Request builder
+├── utils/              # Cross-module utilities
+│   ├── text_formatter.py # Markdown formatting
+│   ├── http_fetcher.py  # HTTP request wrappers
+│   ├── process_monitor.py # Process tracking
+│   └── AGENTS.md      # Module-specific docs
+├── patchwork/          # Patchwork integration module
+│   ├── patchwork_agent.py # LangGraph-based Patchwork agent
+│   ├── get_patchwork_project.sh
+│   ├── get_patchwork_series.sh
+│   └── batch.sh
 ├── output/              # Unified cache directory for all agents
 │   ├── cgit/          # CGit commit cache
 │   ├── lkml/          # LKML patch cache
-│   └── rss/           # RSS article cache
+│   ├── rss/           # RSS article cache
+│   └── patchwork/     # Patchwork series cache
 ├── test/               # Test suite
 │   ├── test_all.sh
 │   ├── test_all_commands.py
-│   └── test_*.sh      # Per-agent test scripts
-└── patchwork/          # Patchwork integration scripts
+│   ├── test_*.sh      # Per-agent test scripts
+│   └── test_*.py      # Python unit tests
+└── diagrams/           # Architecture diagrams
+    ├── architecture.svg
+    └── architecture.excalidraw.*
 ```
 
 ## WHERE TO LOOK

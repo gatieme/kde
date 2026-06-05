@@ -90,11 +90,13 @@ RSS Agent 的工作流程由以下几个主要步骤组成：
 
 ### 主要功能
 
-- **智能防爬虫检测** - 自动检测并选择最佳访问方式（requests、httpx、Playwright）
+- **智能防爬虫检测** - 自动检测并选择最佳访问方式（Cloudflare、requests、httpx、Playwright）
+- **Cloudflare Bypass** - 集成 Cloudflare SDK,支持 Browser Rendering API 绕过反爬虫
+- **多 HTTP 后端** - 提供四种访问方式: Cloudflare API、requests、httpx、Playwright 真实浏览器
 - **多源支持** - 支持 Phoronix 和 LWN 两个技术新闻源
 - **内核识别** - 自动识别涉及 Linux 内核的文章
 - **补丁链接提取** - 提取邮件列表中的补丁相关链接
-- **AI 摘要生成** - 使用 ModelScope Qwen3-235B-AA2B 模型生成高质量摘要
+- **AI 摘要生成** - 使用 ModelScope Qwen3-235B-A22B 模型生成高质量摘要
 - **灵活配置** - 支持命令行参数自定义
 - **进度条显示** - 在 verbose 模式下显示操作进度
 - **详细日志控制** - 通过 verbose 级别控制日志输出的详细程度
@@ -103,14 +105,18 @@ RSS Agent 的工作流程由以下几个主要步骤组成：
 ### 技术实现
 
 - **状态管理** - 使用 LangGraph 实现状态管理和工作流
-- **防爬虫绕过** - 使用 Playwright 模拟真实浏览器行为
-- **多 HTTP 后端** - 支持 requests、httpx、Playwright 三种访问方式
+- **反爬虫绕过** - 四层防御机制:
+  - **Cloudflare API** - 使用 Cloudflare SDK 和 Browser Rendering API
+  - **requests** - 标准 HTTP 请求库,配合优化的 Headers
+  - **httpx** - 现代 HTTP 客户端,支持 HTTP/2
+  - **Playwright** - 真实浏览器模拟,支持 JavaScript 执行、Cookie、LocalStorage
+- **多 HTTP 后端** - 自动检测和选择最佳访问方式
 - **内容解析** - 使用 feedparser 和 BeautifulSoup4 解析 RSS 和 HTML
 - **模型推理** - 集成 ModelScope Qwen3-235B-A22B 模型进行摘要生成
 - **结果展示** - 以 Markdown 格式展示分析结果
 - **进度条实现** - 使用 tqdm 库实现进度条显示
 - **日志控制** - 通过 verbose 级别参数控制日志输出
-- **缓存系统** - 基于文章链接哈希的磁盘缓存，支持持久化存储
+- **缓存系统** - 基于文章链接哈希的磁盘缓存,支持持久化存储
 
 ### 状态类定义
 
@@ -238,10 +244,41 @@ output/rss/
 ## 注意事项
 
 1. **网络连接** - 确保网络连接正常，能够访问 Phoronix 和 LWN
-2. **API 配置** - 确保 ModelScope API 密钥正确配置
-3. **防爬虫限制** - 某些网站可能限制自动化访问，建议合理设置请求间隔
-4. **文章数量** - 大量文章获取可能需要较长时间，建议使用 `--max-articles` 限制数量
-5. **缓存管理** - 文章内容会自动缓存到磁盘，重复运行时会使用缓存
+2. **API 配置** - 确保 ModelScope API 密钥正确配置（`OPENAI_API_KEY`）
+3. **Cloudflare API 配置** - 如需使用 Cloudflare Bypass,需配置以下环境变量:
+   - `CLOUDFLARE_API_KEY` - Cloudflare API Token 或 Global API Key
+   - `CLOUDFLARE_EMAIL` - Cloudflare Email (如使用 Global API Key)
+   - `CLOUDFLARE_ACCOUNT_ID` - Cloudflare Account ID (可选)
+4. **Playwright 浏览器** - 如需使用 Playwright 真实浏览器模拟,需安装浏览器:
+   ```bash
+   playwright install
+   ```
+5. **防爬虫限制** - 某些网站可能限制自动化访问，建议合理设置请求间隔
+6. **文章数量** - 大量文章获取可能需要较长时间，建议使用 `--max-articles` 限制数量
+7. **缓存管理** - 文章内容会自动缓存到磁盘，重复运行时会使用缓存
+
+## Cloudflare Bypass 配置
+
+### 使用 Cloudflare API Token (推荐)
+
+```bash
+# 在 .env 文件中添加:
+CLOUDFLARE_API_KEY=your-cloudflare-api-token
+```
+
+### 使用 Global API Key
+
+```bash
+# 在 .env 文件中添加:
+CLOUDFLARE_API_KEY=your-global-api-key
+CLOUDFLARE_EMAIL=your-email@example.com
+```
+
+### 配置说明
+
+- **API Token** - 推荐,安全性更高,支持细粒度权限控制
+- **Global API Key** - 传统方式,需要 Email + API Key 组合
+- **Browser Rendering API** - 需要 Cloudflare Workers 或特殊订阅支持
 
 ## 代码规范
 
