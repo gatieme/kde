@@ -3,7 +3,7 @@
 from openai import OpenAI
 
 
-model_request_type = ["summary", "analysis"]
+model_request_type = ["summary", "analysis", "discussion_summary", "discussion_analysis"]
 
 
 messages_summary = [
@@ -31,9 +31,36 @@ messages_analysis = [
     }
 ]
 
+
+messages_discussion_summary = [
+    {
+        'role': 'system',
+        'content': '你是 Linux 内核社区讨论分析专家。请根据以下 LKML 邮件线程内容，总结讨论的主题、各专家的关键观点、以及最终结论或共识/分歧。要求：1) 明确说明讨论的核心议题 2) 列出主要参与者的立场和关键论据 3) 总结讨论结果（达成共识或仍存分歧）4) 300 字以内',
+    },
+    {
+        'role': 'user',
+        'content': '''以下是 LKML 邮件线程的完整内容，请按照系统设定的要求，用中文对该讨论进行总结，字数控制在 300 字以内。'''
+    }
+]
+
+
+messages_discussion_analysis = [
+    {
+        'role': 'system',
+        'content': '你是 Linux 内核社区讨论深度分析专家。请根据以下 LKML 那件线程内容，进行全面深入的分析：1) 讨论的核心议题和背景 2) 每个关键参与者的观点、论据和立场 3) 技术层面的争议焦点 4) 讨论中的共识和分歧点 5) 最终走向和建议 6) 对内核开发的影响评估',
+    },
+    {
+        'role': 'user',
+        'content': '''以下是 LKML 那件线程的完整内容，请按照系统设定的要求，用中文对该讨论进行全面深入的分析。'''
+    }
+]
+
+
 messages_mapping = {
     "summary" : messages_summary,
-    "analysis" : messages_analysis
+    "analysis" : messages_analysis,
+    "discussion_summary" : messages_discussion_summary,
+    "discussion_analysis" : messages_discussion_analysis,
 }
 
 class ModelRequest:
