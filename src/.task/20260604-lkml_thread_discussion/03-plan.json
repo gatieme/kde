@@ -3,7 +3,7 @@
     "name": "LKML Discussion Agent Implementation",
     "description": "在 LKML agent 中新增 discussion 模式，支持对不含 patch 的纯讨论邮件进行线程分析、摘要生成和详细解读",
     "created_date": "2026-06-05",
-    "status": "pending",
+    "status": "completed",
     "architecture": "双流程并列模式。在 lkml_agent.py 中新增 DiscussionAgentState 状态类和 5 个 discussion workflow 节点，与现有 patch 流程完全隔离。CLI 层新增 --mode=discussion 参数。",
     "tech_stack": ["Python", "LangGraph", "b4 (mbox)", "mailbox 标准库", "ModelScope Qwen3-235B-A22B"]
   },

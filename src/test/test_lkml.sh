@@ -14,6 +14,11 @@ test_commands=(
     # 直接调用 lkml_agent.py 测试
     "python3 \"$PROJECT_ROOT/lkml/lkml_agent.py\" --message_id=20260122161647.142704-2-realwujing@gmail.com --level=simple"
     "python3 \"$PROJECT_ROOT/lkml/lkml_agent.py\" --message_id=20260122161647.142704-2-realwujing@gmail.com --level=detail"
+
+    # Discussion 模式测试
+    "python3 \"$PROJECT_ROOT/kde.py\" --level=simple --mode=discussion --lkml 20260415000910.2h5misvwc45bdumu@airbuntu"
+    "python3 \"$PROJECT_ROOT/kde.py\" --level=detail --mode=discussion --lkml 20260415000910.2h5misvwc45bdumu@airbuntu"
+    "python3 \"$PROJECT_ROOT/lkml/lkml_agent.py\" --message_id=20260415000910.2h5misvwc45bdumu@airbuntu --level=simple --mode=discussion"
 )
 
 # 测试名称列表
@@ -22,6 +27,9 @@ test_names=(
     "LKML 详细模式测试（通过 kde.py）"
     "LKML 简单模式测试（直接调用）"
     "LKML 详细模式测试（直接调用）"
+    "Discussion 简单模式测试（通过 kde.py）"
+    "Discussion 详细模式测试（通过 kde.py）"
+    "Discussion 直接调用测试"
 )
 
 # 测试描述列表
@@ -30,6 +38,9 @@ test_descriptions=(
     "通过 kde.py 测试 LKML agent 的详细模式分析"
     "直接调用 lkml_agent.py 测试简单模式分析"
     "直接调用 lkml_agent.py 测试详细模式分析"
+    "通过 kde.py 测试 LKML Discussion agent 的简单模式分析"
+    "通过 kde.py 测试 LKML Discussion agent 的详细模式分析"
+    "直接调用 lkml_agent.py 测试 Discussion 简单模式分析"
 )
 
 # 运行单个测试
