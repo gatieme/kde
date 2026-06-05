@@ -14,8 +14,9 @@ from utils import format_text_for_markdown
 # Legacy functions for backward compatibility (moved to utils.py)
 from utils import chinese_to_english_punctuation, add_space_after_punctuation, replace_newline_with_br
 def replace_newline_with_br(text):
-    """Replace newline characters with <br> tag"""
-    return text.replace('\n', '<br>')
+    """Replace newline characters with <br> tag, collapse consecutive newlines into one"""
+    import re
+    return re.sub(r'\n+', '<br>', text)
 def lkml_run(lkml_message_id, level, verbose=0):
     """运行 LKML agent 分析补丁"""
     try:

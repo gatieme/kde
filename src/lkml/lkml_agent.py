@@ -148,10 +148,21 @@ def parse_patch(state: LKMLAgentState) -> LKMLAgentState:
         with open(file_to_parse, 'r', encoding='utf-8') as file:
             content = file.read()
 
-        # 提取主题
+        # 提取主题：优先提取 PATCHSET 标题，回退从所有 Subject 行中找原始标题（不含 Re:/Fwd:）
         subject_match = re.search(r'Subject: \[PATCH.*\] (.*)', content)
         if subject_match:
             state.subject = subject_match.group(1)
+        else:
+            # 从所有 Subject 行中优先选择不含回复前缀的原始标题
+            all_subjects = re.findall(r'Subject: (.*)', content)
+            for subj in all_subjects:
+                subj_stripped = subj.strip()
+                if not re.match(r'^(\s*(Re|Fwd|回复|转发)\s*:\s*)+', subj_stripped):
+                    state.subject = subj_stripped
+                    break
+            # 若全部都是回复帖，取第一个并剥离前缀
+            if not state.subject and all_subjects:
+                state.subject = re.sub(r'^(\s*(Re|Fwd|回复|转发)\s*:\s*)+', '', all_subjects[0]).strip()
 
         # 提取版本
         version_match = re.search(r'Subject:.*v([0-9]{1,}).*', content)
@@ -185,12 +196,10 @@ def parse_patch(state: LKMLAgentState) -> LKMLAgentState:
             state.author = author_match.group(1)
             state.email = author_match.group(2)
 
-        # 提取消息 ID
-        message_id_match = re.search(r'Message-Id: <(.*)>', content)
-        if message_id_match:
-            message_id = message_id_match.group(1)
-            state.web_url = f"https://lore.kernel.org/all/{message_id}"
-            state.archive_url = state.web_url
+        # 链接始终使用用户指定的 lkml_id（权威来源），而非从下载内容提取的 Message-Id
+        # 因为 cover letter 的 Message-Id 与用户指定的 patch Message-Id 不同
+        state.web_url = f"https://lore.kernel.org/all/{state.lkml_id}"
+        state.archive_url = state.web_url
 
         # 提取内容
         state.content = content
@@ -529,7 +538,9 @@ def parse_thread(state: DiscussionAgentState) -> DiscussionAgentState:
             # Date parsing failed, keep original string
             pass
 
-        state.web_url = f"https://lore.kernel.org/all/{original_email['message_id']}"
+        # 链接始终使用用户指定的 lkml_id（权威来源），而非从邮件内容提取的 message_id
+        # 因为线程的原始邮件可能与用户指定的起始邮件不同
+        state.web_url = f"https://lore.kernel.org/all/{state.lkml_id}"
         state.archive_url = state.web_url
 
     state.reply_count = len(emails) - 1  # Original email is not a reply

@@ -94,12 +94,23 @@ class LKML:
         with open(file_path, 'r') as file:
             content = file.read()
 
-        # 提取主题
+        # 提取主题：优先提取 PATCHSET 标题，回退从所有 Subject 行中找原始标题（不含 Re:/Fwd:）
         subject_match = re.search(r'Subject: \[PATCH.*\] (.*)', content)
         if subject_match:
             self.subject = subject_match.group(1)
         else:
-            subject = ""
+            # 从所有 Subject 行中优先选择不含回复前缀的原始标题
+            all_subjects = re.findall(r'Subject: (.*)', content)
+            for subj in all_subjects:
+                subj_stripped = subj.strip()
+                if not re.match(r'^(\s*(Re|Fwd|回复|转发)\s*:\s*)+', subj_stripped):
+                    self.subject = subj_stripped
+                    break
+            # 若全部都是回复帖，取第一个并剥离前缀
+            if not self.subject and all_subjects:
+                self.subject = re.sub(r'^(\s*(Re|Fwd|回复|转发)\s*:\s*)+', '', all_subjects[0]).strip()
+            elif not self.subject:
+                self.subject = ""
 
         # 提取版本
         version_match = re.search(r'Subject:.*v([0-9]{1,}).*', content)
@@ -146,16 +157,17 @@ class LKML:
         else:
             self.email = ""
 
-        # 提取消息 ID
-        message_id_match = re.search(r'Message-Id: <(.*)>', content)
+        # 提取消息 ID — 大小写不敏感，lkml_id 作为兜底
+        message_id_match = re.search(r'Message-Id: <(.*)>', content, re.IGNORECASE)
         if message_id_match:
             self.message_id = message_id_match.group(1)
             self.web_url = self.message_id_to_url(self.message_id)
             self.archive_url = self.web_url
         else:
-            self.message_id = ""
-            self.web_url = ""
-            self.archive_url = ""
+            # 正则未匹配时用 lkml_id 生成 URL（lkml_id 本身即为有效的 message ID）
+            self.message_id = self.lkml_id
+            self.web_url = self.message_id_to_url(self.lkml_id)
+            self.archive_url = self.web_url
         return True
 
     def show(self):

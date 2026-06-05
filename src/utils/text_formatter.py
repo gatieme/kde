@@ -23,8 +23,9 @@ def add_space_after_punctuation(text):
 
 
 def replace_newline_with_br(text):
-    """Replace newline characters with <br> tag"""
-    return text.replace('\n', '<br>')
+    """Replace newline characters with <br> tag, collapse consecutive newlines into one"""
+    import re
+    return re.sub(r'\n+', '<br>', text)
 
 
 def format_text_for_markdown(text):
@@ -32,10 +33,10 @@ def format_text_for_markdown(text):
 
     Apply all formatting functions in order:
     1. Convert Chinese punctuation to English
-    2. Replace newlines with <br>
-    3. Add space after punctuation
+    2. Add space after punctuation
+    3. Replace newlines with <br> (after spacing, so <br> tags won't get spaces injected)
     """
     text = chinese_to_english_punctuation(text)
-    text = replace_newline_with_br(text)
     text = add_space_after_punctuation(text)
+    text = replace_newline_with_br(text)
     return text
