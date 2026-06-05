@@ -34,8 +34,8 @@ if [[ "$TOOL" != "amp" && "$TOOL" != "claude" ]]; then
   exit 1
 fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORK_DIR="$SCRIPT_DIR/../.task/20260512-patchwork_agent"
-PRD_FILE="$WORK_DIR/03-prd.json"
+WORK_DIR="$SCRIPT_DIR/../.task/20260604-lkml_thread_discussion"
+PRD_FILE="$WORK_DIR/03-plan.json"
 PROGRESS_FILE="$WORK_DIR/04-progress.txt"
 ARCHIVE_DIR="$WORK_DIR/archive"
 LAST_BRANCH_FILE="$WORK_DIR/.last-branch"

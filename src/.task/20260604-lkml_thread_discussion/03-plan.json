@@ -1,0 +1,351 @@
+{
+  "meta": {
+    "name": "LKML Discussion Agent Implementation",
+    "description": "在 LKML agent 中新增 discussion 模式，支持对不含 patch 的纯讨论邮件进行线程分析、摘要生成和详细解读",
+    "created_date": "2026-06-05",
+    "status": "pending",
+    "architecture": "双流程并列模式。在 lkml_agent.py 中新增 DiscussionAgentState 状态类和 5 个 discussion workflow 节点，与现有 patch 流程完全隔离。CLI 层新增 --mode=discussion 参数。",
+    "tech_stack": ["Python", "LangGraph", "b4 (mbox)", "mailbox 标准库", "ModelScope Qwen3-235B-A22B"]
+  },
+  "tasks": [
+    {
+      "id": "task-1",
+      "name": "新增 discussion prompt 到 ModelRequest",
+      "description": "在 model/model_request.py 中新增 discussion_summary 和 discussion_analysis 两种 prompt 类型",
+      "files": ["model/model_request.py"],
+      "steps": [
+        {
+          "id": "step-1-1",
+          "name": "新增 discussion_summary prompt",
+          "description": "在 messages_analysis 定义之后，新增 messages_discussion_summary 和 messages_discussion_analysis prompt 列表",
+          "action": "edit",
+          "file": "model/model_request.py",
+          "code_location": "messages_analysis 定义之后",
+          "code": "messages_discussion_summary = [\n    {\n        'role': 'system',\n        'content': '你是 Linux 内核社区讨论分析专家。请根据以下 LKML 那件线程内容，总结讨论的主题、各专家的关键观点、以及最终结论或共识/分歧。要求：1) 明确说明讨论的核心议题 2) 列出主要参与者的立场和关键论据 3) 总结讨论结果（达成共识或仍存分歧）4) 300 字以内',\n    },\n    {\n        'role': 'user',\n        'content': '''以下是 LKML 那件线程的完整内容，请按照系统设定的要求，用中文对该讨论进行总结，字数控制在 300 字以内。'''\n    }\n]\n\nmessages_discussion_analysis = [\n    {\n        'role': 'system',\n        'content': '你是 Linux 内核社区讨论深度分析专家。请根据以下 LKML 那件线程内容，进行全面深入的分析：1) 讨论的核心议题和背景 2) 每个关键参与者的观点、论据和立场 3) 技术层面的争议焦点 4) 讨论中的共识和分歧点 5) 最终走向和建议 6) 对内核开发的影响评估',\n    },\n    {\n        'role': 'user',\n        'content': '''以下是 LKML 那件线程的完整内容，请按照系统设定的要求，用中文对该讨论进行全面深入的分析。'''\n    }\n]",
+          "dependencies": []
+        },
+        {
+          "id": "step-1-2",
+          "name": "更新 model_request_type 和 messages_mapping",
+          "description": "将 model_request_type 从两项扩展为四项，messages_mapping 字典同步更新",
+          "action": "edit",
+          "file": "model/model_request.py",
+          "code_location": "model_request_type 和 messages_mapping 定义处",
+          "code": "model_request_type = [\"summary\", \"analysis\", \"discussion_summary\", \"discussion_analysis\"]\n\nmessages_mapping = {\n    \"summary\": messages_summary,\n    \"analysis\": messages_analysis,\n    \"discussion_summary\": messages_discussion_summary,\n    \"discussion_analysis\": messages_discussion_analysis,\n}",
+          "dependencies": ["step-1-1"]
+        },
+        {
+          "id": "step-1-3",
+          "name": "验证 ModelRequest 可接受新的 request 类型",
+          "description": "运行测试命令验证新 prompt 类型可正常工作",
+          "action": "verify",
+          "command": "python3 -c \"from model.model_request import ModelRequest; mr = ModelRequest('discussion_summary', 'test content'); print('discussion_summary OK'); mr2 = ModelRequest('discussion_analysis', 'test content'); print('discussion_analysis OK')\"",
+          "expected_output": "输出 discussion_summary OK 和 discussion_analysis OK，无报错",
+          "dependencies": ["step-1-2"]
+        },
+        {
+          "id": "step-1-4",
+          "name": "提交 Task 1 改动",
+          "description": "Git commit 提交 model/model_request.py 的改动",
+          "action": "commit",
+          "command": "git add model/model_request.py && git commit -m \"feat(model): add discussion_summary and discussion_analysis prompt types\"",
+          "dependencies": ["step-1-3"]
+        }
+      ]
+    },
+    {
+      "id": "task-2",
+      "name": "新增 DiscussionAgentState 和 discussion workflow 到 lkml_agent.py",
+      "description": "这是最大的改动，包括新增状态类、5 个节点函数、workflow 构建函数和运行函数",
+      "files": ["lkml/lkml_agent.py"],
+      "steps": [
+        {
+          "id": "step-2-1",
+          "name": "新增 DiscussionAgentState dataclass",
+          "description": "在 LKMLAgentState 类定义之后新增 DiscussionAgentState 状态类",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "LKMLAgentState 类定义之后（约第 42 行）",
+          "code": "@dataclass\nclass DiscussionAgentState:\n    messages: Annotated[List[Dict[str, Any]], add_messages]\n    lkml_id: str = \"\"              # 原始 message-id\n    level: str = \"simple\"          # simple / detail\n    work_dir: str = \"\"             # 缓存工作目录 output/lkml/<id>/\n    mbx_file: str = \"\"             # b4 mbox 下载的 .mbx 文件路径\n    thread_emails: List[Dict] = field(default_factory=list)  # 解析出的所有邮件列表\n    subject: str = \"\"              # 讨论主题\n    author: str = \"\"               # 原始邮件作者\n    email: str = \"\"                # 原始邮件作者邮箱\n    date: str = \"\"                 # 原始邮件日期\n    web_url: str = \"\"              # lore.kernel.org 链接\n    archive_url: str = \"\"          # 归档链接\n    reply_count: int = 0           # 回复数量\n    summary: str = \"TODO\"          # AI 生成的讨论摘要\n    analysis: str = \"\"             # AI 详细分析 (仅 detail)\n    verbose: int = 0",
+          "dependencies": []
+        },
+        {
+          "id": "step-2-2",
+          "name": "新增 fetch_thread 节点函数",
+          "description": "用 b4 mbox 下载线程 mbox 文件，包含 curl fallback 逻辑",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "output_results 函数之后",
+          "code": "def fetch_thread(state: DiscussionAgentState) -> DiscussionAgentState:\n    \"\"\"用 b4 mbox 下载线程 mbox 文件\"\"\"\n    if state.verbose >= 2:\n        print(\"=== 下载 LKML 讨论线程 ===\\n\")\n\n    if not state.work_dir:\n        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\n        cache_root = os.path.join(repo_root, \"output\", \"lkml\")\n        state.work_dir = os.path.join(cache_root, state.lkml_id)\n    os.makedirs(state.work_dir, exist_ok=True)\n\n    original_dir = os.getcwd()\n    os.chdir(state.work_dir)\n\n    try:\n        command = [\"b4\", \"mbox\", state.lkml_id]\n\n        if state.verbose >= 2:\n            print(f\"执行命令: {' '.join(command)}\")\n\n        process = subprocess.Popen(\n            command,\n            stdout=subprocess.PIPE,\n            stderr=subprocess.STDOUT,\n            text=True\n        )\n\n        if state.verbose >= 3:\n            for line in process.stdout:\n                print(line, end='')\n        elif state.verbose >= 1:\n            with tqdm(total=100, desc=\"LKML 线程下载进度\", unit=\"%") as pbar:\n                monitor_process_with_progress(process, pbar, state.verbose)\n        else:\n            try:\n                output = process.communicate(timeout=300)[0]\n            except subprocess.TimeoutExpired:\n                process.terminate()\n                process.wait(timeout=5)\n                raise Exception(\"下载讨论线程超时（300秒），进程已终止\")\n\n        returncode = process.wait()\n        if returncode != 0:\n            # b4 mbox 失败，尝试 curl fallback\n            if state.verbose >= 1:\n                print(f\"b4 mbox 失败（返回码: {returncode}），尝试 curl fallback...\")\n            import gzip\n            import shutil\n            import urllib.request\n            mbox_url = f\"https://lore.kernel.org/all/{state.lkml_id}/t.mbox.gz\"\n            gz_path = os.path.join(state.work_dir, \"thread.mbox.gz\")\n            try:\n                urllib.request.urlretrieve(mbox_url, gz_path)\n                with gzip.open(gz_path, 'rb') as f_in:\n                    mbx_path = os.path.join(state.work_dir, \"thread.mbx\")\n                    with open(mbx_path, 'wb') as f_out:\n                        shutil.copyfileobj(f_in, f_out)\n                if state.verbose >= 1:\n                    print(\"curl fallback 成功\")\n            except Exception as e:\n                raise Exception(f\"下载讨论线程失败: b4 mbox 返回 {returncode}, curl fallback 也失败: {e}\")\n\n        # 查找下载的 .mbx 文件\n        files = os.listdir(state.work_dir)\n        mbx_files = [f for f in files if f.endswith('.mbx')]\n\n        if mbx_files:\n            state.mbx_file = os.path.join(state.work_dir, mbx_files[0])\n            if state.verbose >= 2:\n                print(f\"找到 MailBox 文件: {state.mbx_file}\")\n        else:\n            raise Exception(\"下载讨论线程失败：没有找到 .mbx 文件\")\n\n    finally:\n        os.chdir(original_dir)\n\n    return state",
+          "dependencies": ["step-2-1"]
+        },
+        {
+          "id": "step-2-3",
+          "name": "新增邮件正文提取辅助函数",
+          "description": "新增 _extract_email_body 函数，处理 multipart 邮件、去除引用和签名",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "fetch_thread 函数之后",
+          "code": "def _extract_email_body(msg) -> str:\n    \"\"\"从邮件对象提取正文，去除引用和签名\"\"\"\n    import html as html_module\n\n    body = \"\"\n    if msg.is_multipart():\n        for part in msg.walk():\n            content_type = part.get_content_type()\n            if content_type == 'text/plain':\n                charset = part.get_content_charset() or 'utf-8'\n                payload = part.get_payload(decode=True)\n                if payload:\n                    body = payload.decode(charset, errors='replace')\n                    break\n            elif content_type == 'text/html' and not body:\n                charset = part.get_content_charset() or 'utf-8'\n                payload = part.get_payload(decode=True)\n                if payload:\n                    html_content = payload.decode(charset, errors='replace')\n                    body = html_module.unescape(re.sub(r'<[^>]+>', '', html_content))\n    else:\n        content_type = msg.get_content_type()\n        charset = msg.get_content_charset() or 'utf-8'\n        payload = msg.get_payload(decode=True)\n        if payload:\n            decoded = payload.decode(charset, errors='replace')\n            if content_type == 'text/html':\n                body = html_module.unescape(re.sub(r'<[^>]+>', '', decoded))\n            else:\n                body = decoded\n\n    # 去掉引用部分（以 > 开头的行）\n    lines = body.split('\\n')\n    filtered = []\n    for line in lines:\n        stripped = line.strip()\n        if stripped.startswith('>'):\n            continue\n        filtered.append(line)\n    body = '\\n'.join(filtered)\n\n    # 去掉签名部分（-- 分隔符后的内容）\n    sig_idx = body.find('\\n-- \\n')\n    if sig_idx >= 0:\n        body = body[:sig_idx]\n\n    return body.strip()",
+          "dependencies": ["step-2-2"]
+        },
+        {
+          "id": "step-2-4",
+          "name": "新增 parse_thread 节点函数",
+          "description": "用 Python mailbox 模块解析 mbox 文件，提取邮件列表并识别原始邮件",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "_extract_email_body 之后",
+          "code": "def parse_thread(state: DiscussionAgentState) -> DiscussionAgentState:\n    \"\"\"用 Python mailbox 模块解析 mbox 文件，提取邮件列表\"\"\"\n    import mailbox\n\n    if state.verbose >= 2:\n        print(\"=== 解析讨论线程 ===\\n\")\n\n    if not state.mbx_file:\n        raise Exception(\"没有找到可解析的 mbox 文件\")\n\n    mbox = mailbox.mbox(state.mbx_file)\n    emails = []\n    original_email = None\n\n    for msg in mbox:\n        subject = msg[\"Subject\"] or \"\"\n        # 去掉 Re: 前缀以获取纯主题\n        clean_subject = re.sub(r'^Re:\\s*', '', subject).strip()\n\n        from_str = msg[\"From\"] or \"\"\n        # 提取作者名和邮箱\n        from_match = re.match(r'(.*)\\s*<(.*)>', from_str)\n        if from_match:\n            author_name = from_match.group(1).strip()\n            author_email = from_match.group(2).strip()\n        else:\n            author_name = from_str\n            author_email = from_str\n\n        date_str = msg[\"Date\"] or \"\"\n        message_id = msg[\"Message-Id\"] or \"\"\n        # Message-Id 通常被 <> 包裹，去掉\n        if message_id.startswith('<') and message_id.endswith('>'):\n            message_id = message_id[1:-1]\n\n        in_reply_to = msg.get(\"In-Reply-To\", \"\") or \"\"\n        if in_reply_to.startswith('<') and in_reply_to.endswith('>'):\n            in_reply_to = in_reply_to[1:-1]\n\n        references = msg.get(\"References\", \"\") or \"\"\n\n        body = _extract_email_body(msg)\n\n        email_data = {\n            \"subject\": clean_subject,\n            \"from_name\": author_name,\n            \"from_email\": author_email,\n            \"date\": date_str,\n            \"message_id\": message_id,\n            \"in_reply_to\": in_reply_to,\n            \"references\": references,\n            \"body\": body,\n        }\n        emails.append(email_data)\n\n        # 识别原始邮件：没有 In-Reply-To 的邮件\n        if not in_reply_to:\n            if original_email is None or not original_email.get(\"in_reply_to\"):\n                original_email = email_data\n\n    if not emails:\n        raise Exception(\"mbox 文件中没有找到任何邮件\")\n\n    state.thread_emails = emails\n\n    # 设置原始邮件的元数据\n    if original_email:\n        state.subject = original_email[\"subject\"]\n        state.author = original_email[\"from_name\"]\n        state.email = original_email[\"from_email\"]\n        state.date = original_email[\"date\"]\n\n        # 格式化日期\n        try:\n            date_value = int(datetime.datetime.strptime(\n                original_email[\"date\"], '%a, %d %b %Y %H:%M:%S %z'\n            ).timestamp())\n            state.date = datetime.datetime.fromtimestamp(date_value).strftime('%Y/%m/%d')\n        except (ValueError, OSError):\n            # 日期解析失败，保留原始字符串\n            pass\n\n        state.web_url = f\"https://lore.kernel.org/all/{original_email['message_id']}\n        state.archive_url = state.web_url\n\n    state.reply_count = len(emails) - 1  # 原始邮件不算回复\n\n    if state.verbose >= 2:\n        print(f\"讨论主题: {state.subject}\")\n        print(f\"原始作者: {state.author} <{state.email}>\")\n        print(f\"日期: {state.date}\")\n        print(f\"邮件总数: {len(emails)}\")\n        print(f\"回复数: {state.reply_count}\")\n        print(f\"链接: {state.web_url}\")\n\n    return state",
+          "dependencies": ["step-2-3"]
+        },
+        {
+          "id": "step-2-5",
+          "name": "新增 generate_discussion_summary 节点函数",
+          "description": "AI 生成讨论摘要，包含线程截断逻辑（>23 封邮件时只取前 20 + 后 3）",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "parse_thread 之后",
+          "code": "def generate_discussion_summary(state: DiscussionAgentState) -> DiscussionAgentState:\n    \"\"\"AI 生成讨论摘要\"\"\"\n    if state.verbose >= 2:\n        print(\"=== 生成讨论摘要 ===\\n\")\n\n    try:\n        # 将线程邮件格式化为结构化文本\n        formatted_thread = _format_thread_emails(state.thread_emails)\n\n        if not formatted_thread:\n            raise Exception(\"没有找到可分析的讨论内容\")\n\n        # 截断过长线程（只取前 20 封 + 最后 3 封结论性回复）\n        if len(state.thread_emails) > 23:\n            truncated_emails = state.thread_emails[:20] + state.thread_emails[-3:]\n            formatted_thread = _format_thread_emails(truncated_emails)\n\n        model_req = ModelRequest(\"discussion_summary\", formatted_thread)\n        messages = model_req.get_messages()\n\n        model_infer = ModelInference(verbose=state.verbose)\n        model_infer.inference(messages)\n\n        state.summary = model_infer.get_answer()\n        if state.verbose >= 2:\n            print(\"讨论摘要生成完成\")\n            print(f\"摘要: {state.summary[:100]}...\")\n\n    except Exception as e:\n        print(f\"生成讨论摘要失败: {e}\")\n        state.summary = \"无法生成讨论摘要\"\n\n    return state",
+          "dependencies": ["step-2-4"]
+        },
+        {
+          "id": "step-2-6",
+          "name": "新增 _format_thread_emails 辅助函数",
+          "description": "将邮件列表格式化为结构化文本，供 AI 分析",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "generate_discussion_summary 之后",
+          "code": "def _format_thread_emails(thread_emails: List[Dict]) -> str:\n    \"\"\"将邮件列表格式化为结构化文本，供 AI 分析\"\"\"\n    parts = []\n    for i, email_data in enumerate(thread_emails):\n        if i == 0 and not email_data.get(\"in_reply_to\"):\n            # 原始邮件\n            parts.append(f\"[原始邮件]\")\n            parts.append(f\"作者: {email_data['from_name']} <{email_data['from_email']}>\")\n            parts.append(f\"日期: {email_data['date']}\")\n            parts.append(f\"主题: {email_data['subject']}\")\n            parts.append(f\"内容: {email_data['body']}\")\n        else:\n            # 回复邮件\n            parts.append(f\"\\n[回复 {i}] by {email_data['from_name']} <{email_data['from_email']}> on {email_data['date']}\")\n            parts.append(f\"内容: {email_data['body']}\")\n        parts.append(\"\")  # 空行分隔\n\n    return '\\n'.join(parts)",
+          "dependencies": ["step-2-5"]
+        },
+        {
+          "id": "step-2-7",
+          "name": "新增 analyze_discussion 节点函数",
+          "description": "AI 详细分析讨论内容（仅 detail 级别执行）",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "_format_thread_emails 之后",
+          "code": "def analyze_discussion(state: DiscussionAgentState) -> DiscussionAgentState:\n    \"\"\"AI 详细分析讨论内容（仅 detail 级别）\"\"\"\n    if state.verbose >= 2:\n        print(\"=== 分析讨论内容 ===\\n\")\n\n    # 只有 detail 级别才进行详细分析\n    if state.level != \"detail\":\n        return state\n\n    try:\n        formatted_thread = _format_thread_emails(state.thread_emails)\n\n        if len(state.thread_emails) > 23:\n            truncated_emails = state.thread_emails[:20] + state.thread_emails[-3:]\n            formatted_thread = _format_thread_emails(truncated_emails)\n\n        model_req = ModelRequest(\"discussion_analysis\", formatted_thread)\n        messages = model_req.get_messages()\n\n        model_infer = ModelInference(verbose=state.verbose)\n        model_infer.inference(messages)\n\n        state.analysis = model_infer.get_answer()\n        if state.verbose >= 2:\n            print(\"讨论分析完成\")\n\n    except Exception as e:\n        print(f\"分析讨论内容失败: {e}\")\n\n    return state",
+          "dependencies": ["step-2-6"]
+        },
+        {
+          "id": "step-2-8",
+          "name": "新增 output_discussion 节点函数",
+          "description": "格式化输出讨论结果到终端，Markdown 表格格式",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "analyze_discussion 之后",
+          "code": "def output_discussion(state: DiscussionAgentState) -> DiscussionAgentState:\n    \"\"\"格式化输出讨论结果到终端\"\"\"\n    if state.verbose >= 2:\n        print(\"=== 输出讨论结果 ===\\n\")\n\n    print()\n    print(\"| 时间 | 作者 | 主题 | 讨论摘要 | 回复数 | 链接 |\")\n    print(\"|:---:|:----:|:---:|:----:|:-----:|:----:|\")\n\n    formatted_summary = format_text_for_markdown(state.summary)\n\n    print(f\"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | {state.reply_count} | [{state.date}, LORE]({state.archive_url}) |\")\n\n    # detail 级别，打印详细分析\n    if state.level == \"detail\" and state.analysis:\n        if state.verbose >= 2:\n            print(\"\\n=== 详细讨论分析 ===\\n\")\n        if state.verbose >= 3:\n            print(state.analysis)\n\n    return state",
+          "dependencies": ["step-2-7"]
+        },
+        {
+          "id": "step-2-9",
+          "name": "新增 build_discussion_agent 和 run_discussion_agent",
+          "description": "构建 discussion workflow 和运行函数",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "output_discussion 之后",
+          "code": "def build_discussion_agent():\n    \"\"\"构建 discussion workflow\"\"\"\n    workflow = StateGraph(DiscussionAgentState)\n\n    workflow.add_node(\"fetch_thread\", fetch_thread)\n    workflow.add_node(\"parse_thread\", parse_thread)\n    workflow.add_node(\"generate_discussion_summary\", generate_discussion_summary)\n    workflow.add_node(\"analyze_discussion\", analyze_discussion)\n    workflow.add_node(\"output_discussion\", output_discussion)\n\n    workflow.set_entry_point(\"fetch_thread\")\n    workflow.add_edge(\"fetch_thread\", \"parse_thread\")\n    workflow.add_edge(\"parse_thread\", \"generate_discussion_summary\")\n    workflow.add_edge(\"generate_discussion_summary\", \"analyze_discussion\")\n    workflow.add_edge(\"analyze_discussion\", \"output_discussion\")\n    workflow.add_edge(\"output_discussion\", END)\n\n    return workflow.compile()\n\ndef run_discussion_agent(lkml_id: str, level: str = \"simple\", work_dir: str = None, verbose: int = 0):\n    \"\"\"运行 discussion agent 分析纯讨论邮件线程\"\"\"\n    if verbose >= 1:\n        print()\n        print(\"---------------------\")\n        print(\"运行 LKML Discussion agent (级别: \" + level + \")\n        print(\"分析 message-id: \" + lkml_id)\n        print(\"---------------------\")\n        print()\n\n    agent = build_discussion_agent()\n\n    initial_state = DiscussionAgentState(\n        messages=[{\"role\": \"system\", \"content\": \"你是一个 LKML 讨论分析智能体，负责下载、解析和分析 Linux 内核邮件列表中的讨论线程。\"}],\n        lkml_id=lkml_id,\n        level=level,\n        work_dir=work_dir,\n        verbose=verbose\n    )\n\n    result = agent.invoke(initial_state)\n    return result",
+          "dependencies": ["step-2-8"]
+        },
+        {
+          "id": "step-2-10",
+          "name": "更新 lkml_agent.py 的 parse_args 函数支持 --mode",
+          "description": "修改 parse_args 函数新增 --mode 参数，修改 __main__ 部分支持 mode 选择",
+          "action": "edit",
+          "file": "lkml/lkml_agent.py",
+          "code_location": "parse_args 函数和 __main__ 部分",
+          "code": "def parse_args():\n    \"\"\"解析命令行参数\"\"\"\n    import argparse\n    parser = argparse.ArgumentParser(\n        description=\"LKML 补丁/讨论分析智能体\",\n        formatter_class=argparse.RawDescriptionHelpFormatter,\n        epilog=\"\"\"\n示例:\n  python lkml_agent.py --message_id=20250621235745.3994-1-atomlin@atomlin.co --level=simple              # 补丁简要分析\n  python lkml_agent.py --message_id=20250621235745.3994-1-atomlin@atomlin.co --level=detail              # 补丁详细分析\n  python lkml_agent.py --message_id=20260415000910.2h5misvwc45bdumu@airbuntu --mode=discussion --level=simple  # 讨论简要分析\n  python lkml_agent.py --message_id=20260415000910.2h5misvwc45bdumu@airbuntu --mode=discussion --level=detail # 讨论详细分析\n\"\"\"\n    )\n    parser.add_argument(\n        \"--message_id\",\n        type=str,\n        required=True,\n        help=\"指定 LKML 那件的 message-id\"\n    )\n    parser.add_argument(\n        \"--level\",\n        type=str,\n        choices=[\"simple\", \"detail\"],\n        default=\"simple\",\n        help=\"分析级别: simple (简要分析) 或 detail (详细分析)\"\n    )\n    parser.add_argument(\n        \"--mode\",\n        type=str,\n        choices=[\"patch\", \"discussion\"],\n        default=\"patch\",\n        help=\"分析模式: patch (补丁分析) 或 discussion (讨论分析)\"\n    )\n    return parser.parse_args()\n\nif __name__ == \"__main__\":\n    args = parse_args()\n    if args.mode == \"discussion\":\n        run_discussion_agent(args.message_id, args.level)\n    else:\n        run_lkml_agent(args.message_id, args.level)",
+          "dependencies": ["step-2-9"]
+        },
+        {
+          "id": "step-2-11",
+          "name": "验证 lkml_agent.py 语法正确",
+          "description": "运行 Python AST 解析验证语法",
+          "action": "verify",
+          "command": "python3 -c \"import ast; ast.parse(open('lkml/lkml_agent.py').read()); print('语法检查通过')\"",
+          "expected_output": "输出 语法检查通过，无报错",
+          "dependencies": ["step-2-10"]
+        },
+        {
+          "id": "step-2-12",
+          "name": "提交 Task 2 改动",
+          "description": "Git commit 提交 lkml/lkml_agent.py 的改动",
+          "action": "commit",
+          "command": "git add lkml/lkml_agent.py && git commit -m \"feat(lkml): add DiscussionAgentState and discussion workflow nodes\"",
+          "dependencies": ["step-2-11"]
+        }
+      ]
+    },
+    {
+      "id": "task-3",
+      "name": "新增 --mode 参数和 discussion runner 到 kde.py",
+      "description": "修改 CLI 主入口，新增 --mode 参数和 lkml_discussion_run 函数",
+      "files": ["kde.py"],
+      "steps": [
+        {
+          "id": "step-3-1",
+          "name": "新增 lkml_discussion_run 函数",
+          "description": "在 lkml_run 函数之后新增 discussion runner",
+          "action": "edit",
+          "file": "kde.py",
+          "code_location": "lkml_run 函数之后（约第 26 行）",
+          "code": "def lkml_discussion_run(lkml_message_id, level, verbose=0):\n    \"\"\"运行 LKML Discussion agent 分析讨论线程\"\"\"\n    try:\n        from lkml.lkml_agent import run_discussion_agent\n        run_discussion_agent(lkml_id=lkml_message_id, level=level, verbose=verbose)\n    except Exception as e:\n        print(f\"运行 LKML Discussion agent 失败: {e}\")\n        sys.exit(1)",
+          "dependencies": []
+        },
+        {
+          "id": "step-3-2",
+          "name": "在 argparse 中新增 --mode 参数",
+          "description": "在 --level 参数之后新增 --mode 参数",
+          "action": "edit",
+          "file": "kde.py",
+          "code_location": "parser.add_argument('--level', ...) 之后（约第 86 行）",
+          "code": "    # 添加模式参数（仅用于 lkml）\n    parser.add_argument('--mode', type=str, default='patch',\n                       choices=['patch', 'discussion'],\n                       help='LKML 分析模式: patch (补丁分析) 或 discussion (讨论分析)')",
+          "dependencies": ["step-3-1"]
+        },
+        {
+          "id": "step-3-3",
+          "name": "修改 lkml 调用逻辑以支持 mode 参数",
+          "description": "修改 lkml 调用代码，根据 mode 选择 patch 或 discussion 流程",
+          "action": "edit",
+          "file": "kde.py",
+          "code_location": "lkml 调用代码（约第 104-113 行）",
+          "code": "    if args.lkml:\n        # 运行 LKML agent\n        level = args.level\n        if level not in ['simple', 'detail']:\n            level = 'simple'\n\n        mode = args.mode\n        if mode not in ['patch', 'discussion']:\n            mode = 'patch'\n\n        if mode == 'discussion':\n            print(f\"运行 LKML Discussion agent (级别: {level})\")\n            print(f\"分析 message-id: {args.lkml}\")\n            print(f\"模式: discussion\")\n            print()\n            lkml_discussion_run(lkml_message_id=args.lkml, level=level, verbose=args.verbose)\n        else:\n            print(f\"运行 LKML agent (级别: {level})\")\n            print(f\"分析 message-id: {args.lkml}\")\n            print()\n            lkml_run(lkml_message_id=args.lkml, level=level, verbose=args.verbose)",
+          "dependencies": ["step-3-2"]
+        },
+        {
+          "id": "step-3-4",
+          "name": "验证 kde.py CLI 参数解析",
+          "description": "运行 --help 验证新增参数可见",
+          "action": "verify",
+          "command": "python3 kde.py --help",
+          "expected_output": "输出中包含 --mode 参数说明，选项为 patch 和 discussion",
+          "dependencies": ["step-3-3"]
+        },
+        {
+          "id": "step-3-5",
+          "name": "提交 Task 3 改动",
+          "description": "Git commit 提交 kde.py 的改动",
+          "action": "commit",
+          "command": "git add kde.py && git commit -m \"feat(cli): add --mode parameter and discussion runner\"",
+          "dependencies": ["step-3-4"]
+        }
+      ]
+    },
+    {
+      "id": "task-4",
+      "name": "更新 lkml/__init__.py 导出",
+      "description": "新增 run_discussion_agent 导出",
+      "files": ["lkml/__init__.py"],
+      "steps": [
+        {
+          "id": "step-4-1",
+          "name": "新增 run_discussion_agent 导出",
+          "description": "修改 __init__.py 导出 run_discussion_agent",
+          "action": "edit",
+          "file": "lkml/__init__.py",
+          "code_location": "整个文件",
+          "code": "# -*- coding: utf-8 -*-\n\n# lkml/__init__.py\nfrom .lkml import LKML\nfrom .lkml_agent import run_lkml_agent, run_discussion_agent",
+          "dependencies": []
+        },
+        {
+          "id": "step-4-2",
+          "name": "验证导出正确",
+          "description": "运行 Python import 验证导出",
+          "action": "verify",
+          "command": "python3 -c \"from lkml import run_lkml_agent, run_discussion_agent; print('导出验证通过')\"",
+          "expected_output": "输出 导出验证通过，无报错",
+          "dependencies": ["step-4-1"]
+        },
+        {
+          "id": "step-4-3",
+          "name": "提交 Task 4 改动",
+          "description": "Git commit 提交 lkml/__init__.py 的改动",
+          "action": "commit",
+          "command": "git add lkml/__init__.py && git commit -m \"feat(lkml): export run_discussion_agent in __init__.py\"",
+          "dependencies": ["step-4-2"]
+        }
+      ]
+    },
+    {
+      "id": "task-5",
+      "name": "更新 test_lkml.sh 新增 discussion 测试场景",
+      "description": "在测试脚本中新增 3 个 discussion 测试命令",
+      "files": ["test/test_lkml.sh"],
+      "steps": [
+        {
+          "id": "step-5-1",
+          "name": "确定测试用的纯讨论邮件 message-id",
+          "description": "验证 message-id 20260415000910.2h5misvwc45bdumu@airbuntu 可通过 b4 mbox 下载",
+          "action": "verify",
+          "command": "b4 mbox 20260415000910.2h5misvwc45bdumu@airbuntu --outdir /tmp/test_discussion && ls /tmp/test_discussion/*.mbx",
+          "expected_output": "成功下载 .mbx 文件",
+          "dependencies": []
+        },
+        {
+          "id": "step-5-2",
+          "name": "在 test_lkml.sh 中新增 discussion 测试命令",
+          "description": "在 test_commands、test_names、test_descriptions 数组末尾新增 3 条测试",
+          "action": "edit",
+          "file": "test/test_lkml.sh",
+          "code_location": "test_commands、test_names、test_descriptions 数组末尾",
+          "code": "# Discussion 模式测试\n    \"python3 \"$PROJECT_ROOT/kde.py\" --level=simple --mode=discussion --lkml 20260415000910.2h5misvwc45bdumu@airbuntu\"\n    \"python3 \"$PROJECT_ROOT/kde.py\" --level=detail --mode=discussion --lkml 20260415000910.2h5misvwc45bdumu@airbuntu\"\n    \"python3 \"$PROJECT_ROOT/lkml/lkml_agent.py\" --message_id=20260415000910.2h5misvwc45bdumu@airbuntu --level=simple --mode=discussion\"\n\n# 在 test_names 数组末尾新增\n    \"Discussion 简单模式测试（通过 kde.py）\"\n    \"Discussion 详细模式测试（通过 kde.py）\"\n    \"Discussion 直接调用测试\"\n\n# 在 test_descriptions 数组末尾新增\n    \"通过 kde.py 测试 LKML Discussion agent 的简单模式分析\"\n    \"通过 kde.py 测试 LKML Discussion agent 的详细模式分析\"\n    \"直接调用 lkml_agent.py 测试 Discussion 简单模式分析\"",
+          "dependencies": ["step-5-1"]
+        },
+        {
+          "id": "step-5-3",
+          "name": "提交 Task 5 改动",
+          "description": "Git commit 提交 test/test_lkml.sh 的改动",
+          "action": "commit",
+          "command": "git add test/test_lkml.sh && git commit -m \"test(lkml): add discussion mode test cases\"",
+          "dependencies": ["step-5-2"]
+        }
+      ]
+    },
+    {
+      "id": "task-6",
+      "name": "端到端验证",
+      "description": "运行端到端测试验证 discussion 模式和 patch 模式都工作正常",
+      "files": [],
+      "steps": [
+        {
+          "id": "step-6-1",
+          "name": "通过 kde.py 运行 discussion 简单模式",
+          "description": "测试 discussion 简单模式输出 Markdown 表格",
+          "action": "verify",
+          "command": "python3 kde.py --level=simple --mode=discussion --lkml 20260415000910.2h5misvwc45bdumu@airbuntu -v",
+          "expected_output": "成功输出 Markdown 表格，包含主题、摘要、回复数、链接列",
+          "dependencies": ["task-5"]
+        },
+        {
+          "id": "step-6-2",
+          "name": "通过 kde.py 运行 discussion 详细模式",
+          "description": "测试 discussion 详细模式输出表格 + 详细分析",
+          "action": "verify",
+          "command": "python3 kde.py --level=detail --mode=discussion --lkml 20260415000910.2h5misvwc45bdumu@airbuntu -vv",
+          "expected_output": "成功输出表格 + 详细分析内容",
+          "dependencies": ["step-6-1"]
+        },
+        {
+          "id": "step-6-3",
+          "name": "通过 kde.py 运行原有 patch 模式",
+          "description": "验证 patch 流程未受影响",
+          "action": "verify",
+          "command": "python3 kde.py --level=simple --lkml 20260122161647.142704-2-realwujing@gmail.com -v",
+          "expected_output": "输出与之前一致，是否合入主线 列仍存在，patch 流程不受影响",
+          "dependencies": ["step-6-2"]
+        },
+        {
+          "id": "step-6-4",
+          "name": "验证默认 mode 为 patch",
+          "description": "不指定 --mode 时默认执行 patch 流程",
+          "action": "verify",
+          "command": "python3 kde.py --level=simple --lkml 20260122161647.142704-2-realwujing@gmail.com -v",
+          "expected_output": "不指定 --mode 时默认执行 patch 流程，行为与步骤 3 一致",
+          "dependencies": ["step-6-3"]
+        }
+      ]
+    }
+  ]
+}
