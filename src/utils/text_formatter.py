@@ -10,15 +10,56 @@ def chinese_to_english_punctuation(text):
     return text.translate(translation_table)
 
 
+def clean_bracket_spaces(text):
+    """Remove stray spaces inside paired brackets.
+
+    AI models sometimes output 'func( )' or 'name( ) ' with spaces inside
+    or trailing brackets. Clean these to 'func()' and 'func() '.
+    """
+    import re
+    # 清除括号内部的空白：( ) → (), [ ] → [], < > → <>
+    text = re.sub(r'\(\s+\)', '()', text)
+    text = re.sub(r'\[\s+\]', '[]', text)
+    # 尖括号仅当内部全是空白时才清理（避免破坏 HTML 标签 <br> 等）
+    text = re.sub(r'<\s+>', '<>', text)
+    return text
+
+
 def add_space_after_punctuation(text):
-    """Add space after punctuation marks"""
-    punctuations = '.,!?;:"\'()[]<>，。！？；："''（）【】《》'
+    """Add space after punctuation marks that need trailing spacing.
+
+    Context-aware logic:
+    - Bracket punctuation (()[]<>): no internal/trailing spaces
+    - Period inside identifiers (email, domain, version): no space
+    - Terminal punctuation (comma, period at sentence end, etc.): add space
+    """
+    # 保护标识符内部的点：邮箱 (user@host.dom)、版本号 (v1.2.3) 等
+    # 规则：点的前后都是字母/数字/@时，视为标识符内部，不加空格
+
     result = ""
-    for char in text:
-        if char in punctuations:
-            result += char + " "
+    i = 0
+    while i < len(text):
+        char = text[i]
+        if char == '.' and i > 0 and i + 1 < len(text):
+            prev_is_alnum = text[i - 1].isalnum() or text[i - 1] == '@'
+            next_is_alnum = text[i + 1].isalnum()
+            if prev_is_alnum and next_is_alnum:
+                result += char
+                i += 1
+                continue
+        # 通用标点后置空格逻辑（排除括号）
+        spaced_punctuation = ',.!?:;"\''
+        bracket_punctuation = '()[]<>'
+        if char in bracket_punctuation:
+            result += char
+        elif char in spaced_punctuation:
+            if i + 1 < len(text) and text[i + 1] not in (' ', '\n', '\t'):
+                result += char + " "
+            else:
+                result += char
         else:
             result += char
+        i += 1
     return result
 
 
@@ -33,10 +74,12 @@ def format_text_for_markdown(text):
 
     Apply all formatting functions in order:
     1. Convert Chinese punctuation to English
-    2. Add space after punctuation
-    3. Replace newlines with <br> (after spacing, so <br> tags won't get spaces injected)
+    2. Clean stray spaces inside paired brackets (AI output artifact)
+    3. Add space after punctuation (context-aware, brackets excluded)
+    4. Replace newlines with <br> (after spacing, so <br> tags won't get spaces injected)
     """
     text = chinese_to_english_punctuation(text)
+    text = clean_bracket_spaces(text)
     text = add_space_after_punctuation(text)
     text = replace_newline_with_br(text)
     return text
