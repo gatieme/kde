@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
 
 import os
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 from tqdm import tqdm
+
+# 模型 fallback 链：主模型额度耗尽时依次尝试备选模型
+FALLBACK_MODELS = [
+    'Qwen/Qwen3-235B-A22B',          # 主模型：Qwen3-235B-A22B
+    'deepseek-ai/DeepSeek-V4-Pro',   # 第一备选：DeepSeek-V4-Pro
+    'deepseek-ai/DeepSeek-V4-Flash', # 第二备选：DeepSeek-V4-Flash
+]
 
 
 class ModelInference:
-    def __init__(self, content = None, verbose=0):
+    def __init__(self, content = None, verbose=0, fallback_models=None):
         self.client = OpenAI(
             base_url = 'https://api-inference.modelscope.cn/v1/',
             api_key = os.getenv("OPENAI_API_KEY"), # ModelScope API KEY
@@ -20,14 +27,35 @@ class ModelInference:
             # "thinking_budget": 4096
         }
 
-        self.model = 'Qwen/Qwen3-235B-A22B',  # ModelScope Model-Id
+        self.fallback_models = fallback_models or FALLBACK_MODELS
+        self.current_model = self.fallback_models[0]  # 当前实际使用的模型
         self.response = None
         self.answer = None
         self.verbose = verbose
 
     def inference(self, messages):
+        """推理请求，支持 429 额度耗尽时自动 fallback 到备选模型"""
+        for i, model in enumerate(self.fallback_models):
+            try:
+                self.current_model = model
+                return self._try_inference(model, messages)
+            except RateLimitError as e:
+                # 429 额度耗尽，尝试 fallback
+                if i < len(self.fallback_models) - 1:
+                    next_model = self.fallback_models[i + 1]
+                    print(f"模型 {model} 额度耗尽(429)，切换到 {next_model}")
+                else:
+                    # 所有模型都额度耗尽
+                    print(f"所有模型额度耗尽，无法继续推理")
+                    raise
+
+    def _try_inference(self, model, messages):
+        """尝试使用指定模型进行推理"""
+        if self.verbose >= 1:
+            print(f"使用模型: {model}")
+
         self.response = self.client.chat.completions.create(
-            model='Qwen/Qwen3-235B-A22B',
+            model=model,
             messages=messages,
             stream=True,
             temperature=0,
@@ -52,18 +80,20 @@ class ModelInference:
         return self.answer
 
     def _process_stream(self, response, answer, done_thinking, pbar):
-        """处理流式响应"""
+        """处理流式响应，兼容不同模型的 delta 字段差异"""
         for chunk in response:
-            thinking_chunk = chunk.choices[0].delta.reasoning_content
-            answer_chunk = chunk.choices[0].delta.content
+            delta = chunk.choices[0].delta
+            # 不同模型的 reasoning_content 可能为 None 或不存在
+            thinking_chunk = getattr(delta, 'reasoning_content', None) or ''
+            answer_chunk = getattr(delta, 'content', None) or ''
             
-            if thinking_chunk != '':
+            if thinking_chunk:
                 if self.verbose >= 2:
                     print(thinking_chunk, end='', flush=True)
                 answer += thinking_chunk
                 if pbar and pbar.n < pbar.total:
                     pbar.update(1)
-            elif answer_chunk != '':
+            elif answer_chunk:
                 if not done_thinking:
                     done_thinking = True
                 if self.verbose >= 2:
@@ -77,10 +107,6 @@ class ModelInference:
             pbar.refresh()
         
         return answer, done_thinking
-        if self.verbose >= 2:
-            print("\n")
-        self.answer = answer
-        return self.answer
 
     def show(self):
         print(self.answer)
