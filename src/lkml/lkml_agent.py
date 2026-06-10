@@ -323,11 +323,11 @@ def output_results(state: LKMLAgentState) -> LKMLAgentState:
         print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{state.version} ☐☑✓ | [{state.date}, LORE v{state.version}, {state.current}/{state.total}]({state.archive_url}) |")
 
     # 如果是 detail 级别，打印详细分析
+    # detail 模式下始终输出详细分析内容，verbose 只控制标题显示
     if state.level == "detail" and state.analysis:
-        if state.verbose >= 2:
+        if state.verbose >= 1:
             print("\n=== 详细分析 ===\n")
-        if state.verbose >= 3:
-            print(state.analysis)
+        print(state.analysis)
 
     return state
 
@@ -657,11 +657,11 @@ def output_discussion(state: DiscussionAgentState) -> DiscussionAgentState:
     print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | {state.reply_count} | [{state.date}, LORE]({state.archive_url}) |")
 
     # detail level: print detailed analysis
+    # detail 模式下始终输出详细分析内容，verbose 只控制标题显示
     if state.level == "detail" and state.analysis:
-        if state.verbose >= 2:
+        if state.verbose >= 1:
             print("\n=== 详细讨论分析 ===\n")
-        if state.verbose >= 3:
-            print(state.analysis)
+        print(state.analysis)
 
     return state
 
