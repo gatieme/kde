@@ -52,7 +52,7 @@ class DiscussionAgentState:
     messages: Annotated[List[Dict[str, Any]], add_messages]
     lkml_id: str = ""              # Original message-id
     level: str = "simple"          # simple / detail
-    work_dir: str = ""             # Cache working directory output/lkml/<id>/
+    work_dir: str = ""             # Cache working directory output/lkml/<id>/discussion/
     mbx_file: str = ""             # b4 mbox downloaded .mbx file path
     thread_emails: List[Dict] = field(default_factory=list)  # All parsed emails
     subject: str = ""              # Discussion subject
@@ -73,7 +73,7 @@ def fetch_patch(state: LKMLAgentState) -> LKMLAgentState:
     if not state.work_dir:
         repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         cache_root = os.path.join(repo_root, "output", "lkml")
-        state.work_dir = os.path.join(cache_root, state.lkml_id)
+        state.work_dir = os.path.join(cache_root, state.lkml_id, "patchset")
     os.makedirs(state.work_dir, exist_ok=True)
 
     # 切换到工作目录
@@ -339,7 +339,7 @@ def fetch_thread(state: DiscussionAgentState) -> DiscussionAgentState:
     if not state.work_dir:
         repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         cache_root = os.path.join(repo_root, "output", "lkml")
-        state.work_dir = os.path.join(cache_root, state.lkml_id)
+        state.work_dir = os.path.join(cache_root, state.lkml_id, "discussion")
     os.makedirs(state.work_dir, exist_ok=True)
 
     original_dir = os.getcwd()
@@ -873,8 +873,8 @@ def parse_args():
     parser.add_argument(
         "--mode",
         type=str,
-        choices=["patch", "discussion", "all"],
-        default="patch",
+        choices=["patchset", "discussion", "all"],
+        default="patchset",
         help="分析模式: patch (补丁分析) 或 discussion (讨论分析) 或 all (两者都执行)"
     )
     return parser.parse_args()

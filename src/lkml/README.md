@@ -45,7 +45,7 @@ LKML Agent 是一个专门用于分析 Linux 内核邮件列表（LKML）的智�
 |                   "Disk Cache"                     |
 | +------------------------------------------------+ |
 | |                                                | |
-| |  "output/lkml/<message-id>/                  | |
+| |  "output/lkml/<message-id>/patchset/        | |
 | |   .cover .mbx"                               | |
 | |                                                | |
 | +------------------------------------------------+ |
@@ -117,7 +117,7 @@ lkml/
 - **进度条显示** - 在 verbose 模式下显示补丁下载和分析的进度
 - **详细日志控制** - 通过 verbose 级别控制日志输出的详细程度
 - **超时处理** - 检测并处理 b4 下载超时情况
-- **磁盘缓存** - 自动缓存补丁文件到 `output/lkml/<message-id>/` 目录
+- **磁盘缓存** - 自动缓存补丁文件到 `output/lkml/<message-id>/patchset/` 目录
 
 #### 讨论分析模式
 
@@ -177,7 +177,7 @@ class DiscussionAgentState:
     messages: Annotated[List[Dict[str, Any]], add_messages]
     lkml_id: str = ""              # Original message-id
     level: str = "simple"          # simple / detail
-    work_dir: str = ""             # Cache working directory output/lkml/<id>/
+    work_dir: str = ""             # Cache working directory output/lkml/<id>/discussion/
     mbx_file: str = ""             # b4 mbox downloaded .mbx file path
     thread_emails: List[Dict] = field(default_factory=list)  # All parsed emails
     subject: str = ""              # Discussion subject
@@ -361,12 +361,14 @@ python3 ../kde.py --lkml 20260415000910.2h5misvwc45bdumu@airbuntu --level detail
 
 ## 缓存机制
 
-补丁下载后会自动缓存到 `output/lkml/<message-id>/` 目录：
+补丁和讨论内容下载后会分别缓存到不同目录：
 
 ```
-output/lkml/
-└── <message-id>/
-    ├── <message-id>.cover   # Cover 文件
+output/lkml/<message-id>/
+├── patchset/              # b4 am 下载的补丁文件
+│   ├── <message-id>.cover   # Cover 文件
+│   └── <message-id>.mbx     # MailBox 文件
+└── discussion/              # b4 mbox 下载的讨论线程
     └── <message-id>.mbx     # MailBox 文件
 ```
 
@@ -374,7 +376,7 @@ output/lkml/
 
 - **自动创建** - 缓存目录和文件自动创建
 - **持久化存储** - 缓存文件持久化，可重复使用
-- **按消息 ID 分组** - 每个补丁独立存储在各自的目录中
+- **按消息 ID 和模式分组** - 补丁存储在 patchset/ 目录，讨论存储在 discussion/ 目录
 - **清理方便** - 使用 `git clean -fdX` 可以清理所有缓存
 
 使用 `git clean -fdX` 可以清理所有缓存。

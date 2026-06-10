@@ -23,15 +23,17 @@ lkml/
 |------|----------|-------|
 | Agent workflow | lkml_agent.py | fetch → parse → generate_summary → analyze → output |
 | State definition | lkml_agent.py:21-40 | LKMLAgentState with all workflow fields |
-| Patch download | lkml_agent.py:42+ | Uses b4 tool, caches to output/lkml/ |
+| Patch download | lkml_agent.py:69+ | Uses b4 am, caches to output/lkml/<id>/patchset/ |
+| Thread download | lkml_agent.py:334+ | Uses b4 mbox, caches to output/lkml/<id>/discussion/ |
 | Patch parsing | lkml_agent.py | Extracts author, date, version, subject |
 
 ## CONVENTIONS
 
 - State class: `LKMLAgentState` with `@dataclass`
 - Workflow nodes: `fetch_patch`, `parse_patch`, `generate_summary`, `analyze_patch`, `output_results`
-- Cache location: `output/lkml/<{message-id}>/`
-- Uses b4 tool for patch downloads
+- Cache location (patchset): `output/lkml/<{message-id}>/patchset/`
+- Cache location (discussion): `output/lkml/<{message-id}>/discussion/`
+- Uses b4 tool for patch/discussion downloads
 
 ## ANTI-PATTERNS
 

@@ -104,8 +104,8 @@ if __name__ == "__main__":
                        help='对于 lkml: simple/detail; 对于 rss: 文章数量')
 
     # 添加模式参数（仅用于 lkml）
-    parser.add_argument('--mode', type=str, default='patch',
-                       choices=['patch', 'discussion', 'all'],
+    parser.add_argument('--mode', type=str, default='patchset',
+                       choices=['patchset', 'discussion', 'all'],
                        help='LKML 分析模式: patch (补丁分析) 或 discussion (讨论分析) 或 all (两者都执行)')
 
     # 添加日期参数（用于 patchwork）
@@ -130,8 +130,8 @@ if __name__ == "__main__":
             level = 'simple'
 
         mode = args.mode
-        if mode not in ['patch', 'discussion', 'all']:
-            mode = 'patch'
+        if mode not in ['patchset', 'discussion', 'all']:
+            mode = 'patchset'
 
         if mode == 'discussion':
             print(f"运行 LKML Discussion agent (级别: {level})")

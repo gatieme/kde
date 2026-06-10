@@ -160,10 +160,13 @@ kde/
 │   └── README.md
 │
 └── output/                 # 统一缓存目录
-    ├── lkml/               # LKML 补丁缓存
-    │   └── <message-id>/   # 按消息 ID 分组
-    │       ├── <id>.cover  # Cover 文件
-    │       └── <id>.mbx    # MailBox 文件
+    ├── lkml/               # LKML 补丁和讨论缓存
+    │   └── <message-id>/
+    │       ├── patchset/   # b4 am 下载的补丁文件
+    │       │   ├── <id>.cover  # Cover 文件
+    │       │   └── <id>.mbx    # MailBox 文件
+    │       └── discussion/  # b4 mbox 下载的讨论线程
+    │           └── <id>.mbx    # MailBox 文件
     ├── rss/                # RSS 文章缓存
     │   └── <hash-id>.txt   # 基于链接哈希的缓存文件
     └── cgit/               # CGit commit 缓存
@@ -195,7 +198,7 @@ kde/
 |                   "Disk Cache"                     |
 | +------------------------------------------------+ |
 | |                                                | |
-| |  "output/lkml/<message-id>/                  | |
+| |  "output/lkml/<message-id>/patchset/        | |
 | |   .cover .mbx"                               | |
 | |                                                | |
 | +------------------------------------------------+ |
@@ -220,7 +223,7 @@ kde/
 - 详细模式下的深度技术分析
 - Markdown 表格格式输出
 - 支持进度条和详细日志
-- 自动缓存到 `output/lkml/<message-id>/`
+- 自动缓存到 `output/lkml/<message-id>/patchset/`
 
 ### 2. CGit Commit 分析
 
@@ -390,9 +393,9 @@ kde/
 | +-----------------------------------------------------------------------------------------------------+ |
 | |                                                                                                     | |
 | | "LKML Cache output/lkml/                                                                         | |
-| |  Group by message ID                                                                               | |
+| |  Group by message ID + mode (patchset/discussion)                                                | |
 | |  Auto-create directories                                                                           | |
-| |  .cover .mbx files"                                                                             | |
+| |  patch: .cover .mbx; discussion: .mbx files"                                                | |
 | |                                                                                                     | |
 | +-----------------------------------------------------------------------------------------------------+ |
 |                                                                                                         |

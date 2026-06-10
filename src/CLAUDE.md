@@ -34,7 +34,8 @@ KDE (Kernel Development Explorer) 是一个基于 LangGraph 的 Linux 内核开�
 
 所有缓存统一存储在 `output/` 目录：
 
-- `output/lkml/<message-id>/` - LKML 补丁（.cover, .mbx 文件）
+- `output/lkml/<message-id>/patchset/` - LKML 补丁（b4 am 下载的 .cover, .mbx 文件）
+- `output/lkml/<message-id>/discussion/` - LKML 讨论线程（b4 mbox 下载的 .mbx 文件）
 - `output/rss/<hash-id>.txt` - RSS 文章（基于 URL 的 MD5 哈希）
 - `output/cgit/<commit-id>/` - CGit commit 文件
 
@@ -152,7 +153,7 @@ from utils import format_text_for_markdown
 
 ### LKML Agent 工作流
 
-1. **fetch_patch** - 使用 `b4 am` 下载补丁到 `output/lkml/<message-id>/`
+1. **fetch_patch** - 使用 `b4 am` 下载补丁到 `output/lkml/<message-id>/patchset/`
 2. **parse_patch** - 解析 .cover/.mbx 文件提取元数据
 3. **generate_summary** - AI 生成摘要（300 字限制）
 4. **analyze_patch** - 仅在 detail `level` 执行深度 AI 分析
