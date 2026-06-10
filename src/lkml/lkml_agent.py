@@ -345,6 +345,9 @@ def fetch_thread(state: DiscussionAgentState) -> DiscussionAgentState:
     original_dir = os.getcwd()
     os.chdir(state.work_dir)
 
+    # 记录已有 .mbx 文件，避免选中 b4 am 等先前的下载产物
+    existing_mbx = set(f for f in os.listdir(state.work_dir) if f.endswith('.mbx'))
+
     try:
         command = ["b4", "mbox", state.lkml_id]
 
@@ -385,21 +388,36 @@ def fetch_thread(state: DiscussionAgentState) -> DiscussionAgentState:
                     mbx_path = os.path.join(state.work_dir, "thread.mbx")
                     with open(mbx_path, 'wb') as f_out:
                         shutil.copyfileobj(f_in, f_out)
+                state.mbx_file = mbx_path
                 if state.verbose >= 1:
                     print("curl fallback 成功")
             except Exception as e:
                 raise Exception(f"下载讨论线程失败: b4 mbox 返回 {returncode}, curl fallback 也失败: {e}")
 
-        # Find downloaded .mbx file
-        files = os.listdir(state.work_dir)
-        mbx_files = [f for f in files if f.endswith('.mbx')]
+        # b4 mbox 成功时：精准定位新下载的 .mbx 文件
+        # 若 curl fallback 已设置 state.mbx_file，则跳过搜索
+        if not state.mbx_file:
+            current_files = os.listdir(state.work_dir)
+            # 优先级1：以 message-id 命名的文件（b4 mbox 的命名惯例）
+            expected_mbx = f"{state.lkml_id}.mbx"
+            if expected_mbx in current_files:
+                state.mbx_file = os.path.join(state.work_dir, expected_mbx)
+            else:
+                # 优先级2：本次新增的 .mbx 文件
+                new_mbx = [f for f in current_files if f.endswith('.mbx') and f not in existing_mbx]
+                if new_mbx:
+                    state.mbx_file = os.path.join(state.work_dir, new_mbx[0])
+                else:
+                    # 优先级3：最近修改的 .mbx（b4 可能覆盖了已有文件）
+                    mbx_all = [f for f in current_files if f.endswith('.mbx')]
+                    if mbx_all:
+                        mbx_all.sort(key=lambda f: os.path.getmtime(os.path.join(state.work_dir, f)), reverse=True)
+                        state.mbx_file = os.path.join(state.work_dir, mbx_all[0])
+            if not state.mbx_file:
+                raise Exception("下载讨论线程失败：没有找到 .mbx 文件")
 
-        if mbx_files:
-            state.mbx_file = os.path.join(state.work_dir, mbx_files[0])
-            if state.verbose >= 2:
-                print(f"找到 MailBox 文件: {state.mbx_file}")
-        else:
-            raise Exception("下载讨论线程失败：没有找到 .mbx 文件")
+        if state.verbose >= 2:
+            print(f"找到 MailBox 文件: {state.mbx_file}")
 
     finally:
         os.chdir(original_dir)
