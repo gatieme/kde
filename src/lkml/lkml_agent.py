@@ -758,6 +758,34 @@ def run_discussion_agent(lkml_id: str, level: str = "simple", work_dir: str = No
     result = agent.invoke(initial_state)
     return result
 
+
+def run_all_agent(lkml_id: str, level: str = "simple", work_dir: str = None, verbose: int = 0):
+    """Run both patch and discussion agents sequentially.
+    simple: patch summary + discussion summary
+    detail: patch summary + patch analysis + discussion summary + discussion analysis
+    """
+    if verbose >= 1:
+        print()
+        print("---------------------")
+        print("运行 LKML All agent (级别: " + level + ")")
+        print("分析 message-id: " + lkml_id)
+        print("模式: all (补丁分析 + 讨论分析)")
+        print("---------------------")
+        print()
+
+    # Phase 1: Patch analysis
+    if verbose >= 1:
+        print(">>> 阶段 1: 补丁分析 <<<")
+    patch_result = run_lkml_agent(lkml_id=lkml_id, level=level, work_dir=work_dir, verbose=verbose)
+
+    # Phase 2: Discussion analysis
+    if verbose >= 1:
+        print()
+        print(">>> 阶段 2: 讨论分析 <<<")
+    discussion_result = run_discussion_agent(lkml_id=lkml_id, level=level, work_dir=work_dir, verbose=verbose)
+
+    return {"patch": patch_result, "discussion": discussion_result}
+
 def build_lkml_agent():
     workflow = StateGraph(LKMLAgentState)
 
@@ -829,9 +857,9 @@ def parse_args():
     parser.add_argument(
         "--mode",
         type=str,
-        choices=["patch", "discussion"],
+        choices=["patch", "discussion", "all"],
         default="patch",
-        help="分析模式: patch (补丁分析) 或 discussion (讨论分析)"
+        help="分析模式: patch (补丁分析) 或 discussion (讨论分析) 或 all (两者都执行)"
     )
     return parser.parse_args()
 
@@ -839,5 +867,7 @@ if __name__ == "__main__":
     args = parse_args()
     if args.mode == "discussion":
         run_discussion_agent(args.message_id, args.level)
+    elif args.mode == "all":
+        run_all_agent(args.message_id, args.level)
     else:
         run_lkml_agent(args.message_id, args.level)

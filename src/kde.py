@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 # 加载环境变量
 load_dotenv()
 
-from lkml.lkml_agent import run_lkml_agent, run_discussion_agent
+from lkml.lkml_agent import run_lkml_agent, run_discussion_agent, run_all_agent
 from cgit.cgit_agent import run_cgit_agent
 from patchwork.patchwork_agent import run_patchwork_agent
 from utils import format_text_for_markdown
@@ -31,6 +31,14 @@ def lkml_discussion_run(lkml_message_id, level, verbose=0):
         run_discussion_agent(lkml_id=lkml_message_id, level=level, verbose=verbose)
     except Exception as e:
         print(f"运行 LKML Discussion agent 失败: {e}")
+        sys.exit(1)
+
+def lkml_all_run(lkml_message_id, level, verbose=0):
+    """运行 LKML All agent（补丁分析 + 讨论分析）"""
+    try:
+        run_all_agent(lkml_id=lkml_message_id, level=level, verbose=verbose)
+    except Exception as e:
+        print(f"运行 LKML All agent 失败: {e}")
         sys.exit(1)
 
 def rss_run(source=None, max_articles=None, verbose=0):
@@ -97,8 +105,8 @@ if __name__ == "__main__":
 
     # 添加模式参数（仅用于 lkml）
     parser.add_argument('--mode', type=str, default='patch',
-                       choices=['patch', 'discussion'],
-                       help='LKML 分析模式: patch (补丁分析) 或 discussion (讨论分析)')
+                       choices=['patch', 'discussion', 'all'],
+                       help='LKML 分析模式: patch (补丁分析) 或 discussion (讨论分析) 或 all (两者都执行)')
 
     # 添加日期参数（用于 patchwork）
     parser.add_argument('--date', type=str, help='指定日期或起始日期 (YYYY-MM-DD)')
@@ -122,7 +130,7 @@ if __name__ == "__main__":
             level = 'simple'
 
         mode = args.mode
-        if mode not in ['patch', 'discussion']:
+        if mode not in ['patch', 'discussion', 'all']:
             mode = 'patch'
 
         if mode == 'discussion':
@@ -131,6 +139,12 @@ if __name__ == "__main__":
             print(f"模式: discussion")
             print()
             lkml_discussion_run(lkml_message_id=args.lkml, level=level, verbose=args.verbose)
+        elif mode == 'all':
+            print(f"运行 LKML All agent (级别: {level})")
+            print(f"分析 message-id: {args.lkml}")
+            print(f"模式: all (补丁分析 + 讨论分析)")
+            print()
+            lkml_all_run(lkml_message_id=args.lkml, level=level, verbose=args.verbose)
         else:
             print(f"运行 LKML agent (级别: {level})")
             print(f"分析 message-id: {args.lkml}")
