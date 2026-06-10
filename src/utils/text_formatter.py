@@ -69,6 +69,25 @@ def replace_newline_with_br(text):
     return re.sub(r'\n+', '<br>', text)
 
 
+def clean_email_subject(subject):
+    """统一清理邮件标题前缀（Re:/Fwd: 等），保留 [PATCH...] 等实质内容。
+
+    各 agent 的标题提取逻辑应统一使用此函数，确保不同模式下表现一致。
+    [PATCH...] 前缀是补丁标题的实质内容，不应剥离；
+    Re:/Fwd: 只是回复标记，应去除。
+
+    Examples:
+        "Re: [PATCH 1/6] sched/proxy: Remove..." -> "[PATCH 1/6] sched/proxy: Remove..."
+        "Re: Re: [PATCH v2] mm: fix" -> "[PATCH v2] mm: fix"
+        "[PATCH 0/6] sched/proxy: doodles" -> "[PATCH 0/6] sched/proxy: doodles"
+        "Fwd: some discussion topic" -> "some discussion topic"
+    """
+    import re
+    # 剥离所有 Re:/Fwd: 前缀（可能有多个叠加），保留其他内容
+    cleaned = re.sub(r'^(\s*(Re|Fwd|回复|转发)\s*:\s*)+', '', subject)
+    return cleaned.strip()
+
+
 def format_text_for_markdown(text):
     """Format text for markdown table display
 

@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 # Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import format_text_for_markdown, monitor_process_with_progress
+from utils import format_text_for_markdown, clean_email_subject, monitor_process_with_progress
 from model import ModelInference, ModelRequest
 from lkml.lkml_agent import run_lkml_agent
 
@@ -108,10 +108,10 @@ def parse_commit(state: CGitAgentState) -> CGitAgentState:
         with open(state.commit_file, 'r', encoding='utf-8') as file:
             content = file.read()
 
-        # 提取主题
+        # 提取主题，统一用 clean_email_subject 清理 Re:/Fwd:，保留 [PATCH...]
         subject_match = re.search(r'Subject: (.*)', content)
         if subject_match:
-            state.subject = subject_match.group(1)
+            state.subject = clean_email_subject(subject_match.group(1))
 
         # 提取日期
         date_str_match = re.search(r'Date: (.*) [-|+]([0-9]{1,}).*', content)
@@ -327,7 +327,7 @@ def output_results(state: CGitAgentState) -> CGitAgentState:
     formatted_summary = format_text_for_markdown(state.summary)
 
     # Print table row
-    print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{version} ☐☑✓ | [CGIT]({state.web_url}) |")
+    print(f"| {state.date} | {state.author} <{state.email}> | {state.subject} | {formatted_summary} | v{version} ☐☑✓ | [CGIT]({state.web_url}) |")
 
     # 如果是 detail 级别，打印详细分析
     if state.level == "detail" and state.analysis:

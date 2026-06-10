@@ -15,7 +15,7 @@ from langgraph.graph.message import add_messages
 
 # Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import format_text_for_markdown
+from utils import format_text_for_markdown, clean_email_subject
 from model import ModelInference, ModelRequest
 from lkml.lkml_agent import run_lkml_agent
 
@@ -238,21 +238,23 @@ def extract_email(series: Dict[str, Any]) -> str:
 def extract_subject(series: Dict[str, Any]) -> str:
     """Extract subject from series name or first patch name
 
+    Uses clean_email_subject to strip Re:/Fwd: but keep [PATCH...] intact.
+
     Args:
         series: Series JSON data from Patchwork API
 
     Returns:
-        Subject string
+        Cleaned subject string with [PATCH...] preserved
     """
     # Prefer series name
     name = series.get("name", "")
     if name:
-        return name
+        return clean_email_subject(name)
 
     # Fallback to first patch name
     patches = series.get("patches", [])
     if patches and len(patches) > 0:
-        return patches[0].get("name", "")
+        return clean_email_subject(patches[0].get("name", ""))
 
     return ""
 
@@ -746,8 +748,8 @@ def aggregate_results(state: PatchworkAgentState) -> PatchworkAgentState:
         # Format author with email
         author_str = f"{author} &lt;{email}&gt;" if email else author
 
-        # Format subject as link
-        subject_str = f"[{format_text_for_markdown(subject)}]({web_url})" if web_url else format_text_for_markdown(subject)
+        # Format subject as plain text (avoid double brackets from markdown link wrapping)
+        subject_str = format_text_for_markdown(subject)
 
         # Format lore link with version and total
         lore_link = f"[LORE {version},{total}]({archive_url})" if archive_url else ""

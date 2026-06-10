@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 # Add project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import format_text_for_markdown, monitor_process_with_progress, handle_process_timeout
+from utils import format_text_for_markdown, clean_email_subject, monitor_process_with_progress, handle_process_timeout
 from model import ModelInference, ModelRequest
 
 @dataclass
@@ -148,21 +148,17 @@ def parse_patch(state: LKMLAgentState) -> LKMLAgentState:
         with open(file_to_parse, 'r', encoding='utf-8') as file:
             content = file.read()
 
-        # 提取主题：优先提取 PATCHSET 标题，回退从所有 Subject 行中找原始标题（不含 Re:/Fwd:）
-        subject_match = re.search(r'Subject: \[PATCH.*\] (.*)', content)
-        if subject_match:
-            state.subject = subject_match.group(1)
-        else:
-            # 从所有 Subject 行中优先选择不含回复前缀的原始标题
-            all_subjects = re.findall(r'Subject: (.*)', content)
-            for subj in all_subjects:
-                subj_stripped = subj.strip()
-                if not re.match(r'^(\s*(Re|Fwd|回复|转发)\s*:\s*)+', subj_stripped):
-                    state.subject = subj_stripped
-                    break
-            # 若全部都是回复帖，取第一个并剥离前缀
-            if not state.subject and all_subjects:
-                state.subject = re.sub(r'^(\s*(Re|Fwd|回复|转发)\s*:\s*)+', '', all_subjects[0]).strip()
+        # 提取主题：从所有 Subject 行中找原始标题，统一用 clean_email_subject 清理
+        # clean_email_subject 只剥离 Re:/Fwd: 前缀，保留 [PATCH...] 等实质内容
+        all_subjects = re.findall(r'Subject: (.*)', content)
+        for subj in all_subjects:
+            subj_stripped = subj.strip()
+            if not re.match(r'^(\s*(Re|Fwd|回复|转发)\s*:\s*)+', subj_stripped):
+                state.subject = clean_email_subject(subj_stripped)
+                break
+        # 若全部都是回复帖，取第一个并剥离前缀
+        if not state.subject and all_subjects:
+            state.subject = clean_email_subject(all_subjects[0])
 
         # 提取版本
         version_match = re.search(r'Subject:.*v([0-9]{1,}).*', content)
@@ -318,9 +314,9 @@ def output_results(state: LKMLAgentState) -> LKMLAgentState:
     formatted_summary = format_text_for_markdown(state.summary)
 
     if not state.total:
-        print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{state.version} ☐☑✓ | [{state.date}, LORE]({state.archive_url}) |")
+        print(f"| {state.date} | {state.author} <{state.email}> | {state.subject} | {formatted_summary} | v{state.version} ☐☑✓ | [{state.date}, LORE]({state.archive_url}) |")
     else:
-        print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | v{state.version} ☐☑✓ | [{state.date}, LORE v{state.version}, {state.current}/{state.total}]({state.archive_url}) |")
+        print(f"| {state.date} | {state.author} <{state.email}> | {state.subject} | {formatted_summary} | v{state.version} ☐☑✓ | [{state.date}, LORE v{state.version}, {state.current}/{state.total}]({state.archive_url}) |")
 
     # 如果是 detail 级别，打印详细分析
     # detail 模式下始终输出详细分析内容，verbose 只控制标题显示
@@ -472,8 +468,8 @@ def parse_thread(state: DiscussionAgentState) -> DiscussionAgentState:
 
     for msg in mbox:
         subject = msg["Subject"] or ""
-        # Remove Re: prefix to get clean subject
-        clean_subject = re.sub(r'^Re:\s*', '', subject).strip()
+        # Remove Re:/Fwd: prefix to get clean subject, keep [PATCH...] intact
+        clean_subject = clean_email_subject(subject)
 
         from_str = msg["From"] or ""
         # Extract author name and email
@@ -520,8 +516,8 @@ def parse_thread(state: DiscussionAgentState) -> DiscussionAgentState:
 
     # ===== 通过引用关系图识别线程根邮件 =====
     # 策略:
-    # 1. 统计每个邮件被其他邮件引用的次数，被引用最多的即为线程根
-    # 2. 若无明确引用关系，优先选择 cover letter ([PATCH 0/N] 模式)
+    # 1. 优先选择 cover letter ([PATCH 0/N] 模式) — 补丁系列的真正起点
+    # 2. 若无 cover letter，选择被引用最多的候选（讨论型线程的根）
     # 3. 若仍无明确候选，选择日期最早的邮件
 
     # 收集线程内所有 message-id
@@ -548,20 +544,22 @@ def parse_thread(state: DiscussionAgentState) -> DiscussionAgentState:
         if not irt or irt not in all_msg_ids:
             root_candidates.append(e)
 
-    # 优先级1：被其他邮件引用最多的候选（真正的线程根）
+    # 优先级1：cover letter ([PATCH 0/N] 模式)
+    # 补丁系列的标题应取 cover letter，而非某个具体补丁
+    # 在所有邮件中搜索（不限于 root_candidates），因为 cover letter 可能引用了前版系列
     original_email = None
-    for candidate in root_candidates:
-        mid = candidate["message_id"]
-        if mid in ref_counts:
-            if original_email is None or ref_counts[mid] > ref_counts.get(original_email["message_id"], 0):
-                original_email = candidate
+    for e in emails:
+        if re.search(r'\[PATCH\s+0/\d+\]', e["subject"]):
+            original_email = e
+            break
 
-    # 优先级2：cover letter ([PATCH 0/N] 模式)
+    # 优先级2：被其他邮件引用最多的候选（真正的线程根）
     if original_email is None:
         for candidate in root_candidates:
-            if re.search(r'\[PATCH\s+0/\d+\]', candidate["subject"]):
-                original_email = candidate
-                break
+            mid = candidate["message_id"]
+            if mid in ref_counts:
+                if original_email is None or ref_counts[mid] > ref_counts.get(original_email["message_id"], 0):
+                    original_email = candidate
 
     # 优先级3：最早的候选邮件
     if original_email is None and root_candidates:
@@ -703,7 +701,7 @@ def output_discussion(state: DiscussionAgentState) -> DiscussionAgentState:
 
     formatted_summary = format_text_for_markdown(state.summary)
 
-    print(f"| {state.date} | {state.author} <{state.email}> | [{state.subject}]({state.web_url}) | {formatted_summary} | {state.reply_count} | [{state.date}, LORE]({state.archive_url}) |")
+    print(f"| {state.date} | {state.author} <{state.email}> | {state.subject} | {formatted_summary} | {state.reply_count} | [{state.date}, LORE]({state.archive_url}) |")
 
     # detail level: print detailed analysis
     # detail 模式下始终输出详细分析内容，verbose 只控制标题显示

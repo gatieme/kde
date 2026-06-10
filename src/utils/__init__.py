@@ -6,6 +6,7 @@ from .text_formatter import (
     chinese_to_english_punctuation,
     add_space_after_punctuation,
     replace_newline_with_br,
+    clean_email_subject,
     format_text_for_markdown
 )
 
@@ -25,6 +26,7 @@ __all__ = [
     'chinese_to_english_punctuation',
     'add_space_after_punctuation',
     'replace_newline_with_br',
+    'clean_email_subject',
     'format_text_for_markdown',
     # Process monitoring
     'monitor_process_with_progress',
