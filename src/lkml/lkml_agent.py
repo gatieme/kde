@@ -511,37 +511,86 @@ def parse_thread(state: DiscussionAgentState) -> DiscussionAgentState:
         }
         emails.append(email_data)
 
-        # Identify original email: one without In-Reply-To
-        if not in_reply_to:
-            if original_email is None or not original_email.get("in_reply_to"):
-                original_email = email_data
+        # 仅收集邮件数据，线程根邮件将在收集完毕后通过引用关系图确定
 
     if not emails:
         raise Exception("mbox 文件中没有找到任何邮件")
 
     state.thread_emails = emails
 
+    # ===== 通过引用关系图识别线程根邮件 =====
+    # 策略:
+    # 1. 统计每个邮件被其他邮件引用的次数，被引用最多的即为线程根
+    # 2. 若无明确引用关系，优先选择 cover letter ([PATCH 0/N] 模式)
+    # 3. 若仍无明确候选，选择日期最早的邮件
+
+    # 收集线程内所有 message-id
+    all_msg_ids = set()
+    for e in emails:
+        if e["message_id"]:
+            all_msg_ids.add(e["message_id"])
+
+    # 统计引用计数：每个邮件被其他邮件的 In-Reply-To / References 引用的次数
+    ref_counts = {}
+    for e in emails:
+        irt = e["in_reply_to"]
+        if irt and irt in all_msg_ids:
+            ref_counts[irt] = ref_counts.get(irt, 0) + 1
+        refs_str = e.get("references", "")
+        for ref_id in re.findall(r'<([^>]+)>', refs_str):
+            if ref_id in all_msg_ids:
+                ref_counts[ref_id] = ref_counts.get(ref_id, 0) + 1
+
+    # 候选根邮件：In-Reply-To 为空 或指向线程外的邮件
+    root_candidates = []
+    for e in emails:
+        irt = e["in_reply_to"]
+        if not irt or irt not in all_msg_ids:
+            root_candidates.append(e)
+
+    # 优先级1：被其他邮件引用最多的候选（真正的线程根）
+    original_email = None
+    for candidate in root_candidates:
+        mid = candidate["message_id"]
+        if mid in ref_counts:
+            if original_email is None or ref_counts[mid] > ref_counts.get(original_email["message_id"], 0):
+                original_email = candidate
+
+    # 优先级2：cover letter ([PATCH 0/N] 模式)
+    if original_email is None:
+        for candidate in root_candidates:
+            if re.search(r'\[PATCH\s+0/\d+\]', candidate["subject"]):
+                original_email = candidate
+                break
+
+    # 优先级3：最早的候选邮件
+    if original_email is None and root_candidates:
+        original_email = root_candidates[0]
+
+    # 兜底：使用第一封邮件
+    if original_email is None:
+        original_email = emails[0]
+
     # Set original email metadata
-    if original_email:
-        state.subject = original_email["subject"]
-        state.author = original_email["from_name"]
-        state.email = original_email["from_email"]
-        state.date = original_email["date"]
+    state.subject = original_email["subject"]
+    state.author = original_email["from_name"]
+    state.email = original_email["from_email"]
+    state.date = original_email["date"]
 
-        # Format date
-        try:
-            date_value = int(datetime.datetime.strptime(
-                original_email["date"], '%a, %d %b %Y %H:%M:%S %z'
-            ).timestamp())
-            state.date = datetime.datetime.fromtimestamp(date_value).strftime('%Y/%m/%d')
-        except (ValueError, OSError):
-            # Date parsing failed, keep original string
-            pass
+    # Format date
+    try:
+        date_value = int(datetime.datetime.strptime(
+            original_email["date"], '%a, %d %b %Y %H:%M:%S %z'
+        ).timestamp())
+        state.date = datetime.datetime.fromtimestamp(date_value).strftime('%Y/%m/%d')
+    except (ValueError, OSError):
+        # Date parsing failed, keep original string
+        pass
 
-        # 链接始终使用用户指定的 lkml_id（权威来源），而非从邮件内容提取的 message_id
-        # 因为线程的原始邮件可能与用户指定的起始邮件不同
-        state.web_url = f"https://lore.kernel.org/all/{state.lkml_id}"
-        state.archive_url = state.web_url
+    # 链接始终使用用户指定的 lkml_id（权威来源），而非从邮件内容提取的 message_id
+    # 因为线程的原始邮件可能与用户指定的起始邮件不同
+    state.web_url = f"https://lore.kernel.org/all/{state.lkml_id}"
+    state.archive_url = state.web_url
 
     state.reply_count = len(emails) - 1  # Original email is not a reply
 
