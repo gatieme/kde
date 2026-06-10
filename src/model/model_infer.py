@@ -61,7 +61,7 @@ class ModelInference:
                 if self.verbose >= 2:
                     print(thinking_chunk, end='', flush=True)
                 answer += thinking_chunk
-                if pbar:
+                if pbar and pbar.n < pbar.total:
                     pbar.update(1)
             elif answer_chunk != '':
                 if not done_thinking:
@@ -69,7 +69,7 @@ class ModelInference:
                 if self.verbose >= 2:
                     print(answer_chunk, end='', flush=True)
                 answer += answer_chunk
-                if pbar:
+                if pbar and pbar.n < pbar.total:
                     pbar.update(1)
         
         if pbar:
