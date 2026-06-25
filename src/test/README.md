@@ -48,6 +48,7 @@ test/
 ├── test_rss.sh              # RSS agent 专门测试
 ├── test_cgit.sh             # CGit agent 专门测试
 ├── test_verbose.sh          # 详细模式（verbose）测试
+├── test_patchwork.sh        # Patchwork agent 专门测试
 ├── test.sh                  # 通用测试脚本
 ├── test_all_commands.py     # Python 测试框架
 ├── test_cgit_workflow_order.py
@@ -72,7 +73,7 @@ test/
 
 - **CGit 简单模式测试（通过 kde.py）** - 通过 kde.py 测试 CGit agent 的简单模式分析
 - **CGit 详细模式测试（通过 kde.py）** - 通过 kde.py 测试 CGit agent 的详细模式分析
-- **CGit 详细模式。verbose 测试（通过 kde.py）** - 通过 kde.py 测试 CGit agent 的详细模式分析（带进度条）
+- **CGit 详细模式 verbose 测试（通过 kde.py）** - 通过 kde.py 测试 CGit agent 的详细模式分析（带进度条）
 
 ### 3. RSS 相关测试
 
@@ -82,16 +83,24 @@ test/
 - **RSS LWN 源限制文章数测试** - 测试 RSS agent 分析 LWN 源的 2 篇文章
 - **RSS Phoronix 源限制文章数测试** - 测试 RSS agent 分析 Phoronix 源的 3 篇文章
 - **RSS Phoronix 源 verbose 测试** - 测试 RSS agent 分析 Phoronix 源的文章（带进度条）
-- **`RSS agent 帮助信息测试** - 测试 RSS agent 的帮助信息显示
+- **RSS agent 帮助信息测试** - 测试 RSS agent 的帮助信息显示
 
-### 4. 详细模式（verbose）测试
+### 4. Patchwork 相关测试
+
+- **Patchwork 简单模式测试（通过 kde.py）** - 通过 kde.py 测试 Patchwork agent 的简单模式分析
+- **Patchwork 详细模式测试（通过 kde.py）** - 通过 kde.py 测试 Patchwork agent 的详细模式分析
+- **Patchwork 最近 N 天测试** - 测试 Patchwork agent 分析最近 N 天的补丁系列
+- **Patchwork 日期范围测试** - 测试 Patchwork agent 分析指定日期范围的补丁系列
+- **Patchwork 项目名称测试** - 测试 Patchwork agent 按项目名称筛选补丁系列
+
+### 5. 详细模式（verbose）测试
 
 - **LKML verbose 测试** - 测试 LKML agent 的详细模式输出
 - **CGit verbose 测试** - 测试 CGit agent 的详细模式输出
 - **RSS verbose 测试** - 测试 RSS agent 的详细模式输出
-- **不同级别 verbose 测试** - 测试不同级别的详细模式`输出（-v, -vv, -vvv）`
+- **不同级别 verbose 测试** - 测试不同级别的详细模式输出（-v, -vv, -vvv）
 
-### 5. 帮助信息测试
+### 6. 帮助信息测试
 
 - **帮助信息测试** - 测试显示帮助信息
 
@@ -118,7 +127,7 @@ chmod +x test.sh
 
 ```bash
 cd test
-chmod +x test_all.sh test_lkml.sh test_rss.sh test_cgit.sh test_verbose.sh
+chmod +x test_all.sh test_lkml.sh test_rss.sh test_cgit.sh test_verbose.sh test_patchwork.sh
 ./test_all.sh
 ```
 
@@ -154,6 +163,14 @@ chmod +x test_rss.sh
 cd test
 chmod +x test_verbose.sh
 ./test_verbose.sh
+```
+
+#### 运行 Patchwork agent 专项测试：
+
+```bash
+cd test
+chmod +x test_patchwork.sh
+./test_patchwork.sh
 ```
 
 ### 运行集成测试

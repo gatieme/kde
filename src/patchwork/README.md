@@ -40,11 +40,14 @@ Patchwork 模块提供与 kernel.org Patchwork 系统的集成，用于获取和
 
 ```
 patchwork/
-├── get_patchwork_project.sh    # 获取所有项目列表
-├── get_patchwork_series.sh     # 获取指定项目的补丁系列
-├── batch.sh                    # 批量处理脚本
+├── patchwork_agent.py          # LangGraph 工作流实现（1518行）
+├── __init__.py                 # 模块初始化，导出 run_patchwork_agent、build_patchwork_agent
+├── get_patchwork_project.sh    # 获取项目列表（43行）
+├── get_patchwork_series.sh     # 获取补丁系列（231行）
+├── batch.sh                    # 批量处理脚本（18行）
 ├── project/                    # 项目数据目录
-│   └── projects_list.md       # 项目列表
+│   ├── projects_list.md        # 项目列表
+│   └── projects_list.json      # 项目列表 JSON
 └── README.md                   # 本文件
 ```
 
@@ -343,6 +346,100 @@ cd test
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+### 状态定义（PatchworkAgentState）
+
+Agent 工作流的核心数据结构，贯穿所有节点：
+
+```python
+@dataclass
+class PatchworkAgentState:
+    messages: Annotated[List[Dict[str, Any]], add_messages]
+    project_id: int = 0           # Patchwork 项目 ID
+    project_name: str = ""        # 项目名称
+    date: str = ""                # 单日期或起始日期
+    end_date: str = ""            # 结束日期
+    days: int = 0                 # 最近 N 天
+    level: str = "simple"         # 分析级别
+    max_series: int = 0           # 最大处理 series 数
+    max_parallel: int = 1         # 并发线程数
+    series_list: List[Dict] = field(default_factory=list)
+    processed_results: List[Dict] = field(default_factory=list)
+    summaries: List[str] = field(default_factory=list)
+    verbose: int = 0
+    work_dir: str = ""
+```
+
+### 工作流节点详解
+
+| 步骤 | 函数 | 说明 |
+|:----:|:----:|:----:|
+| 1 | `fetch_project_info` | 加载项目列表，通过 ID 或名称查找项目 |
+| 2 | `calculate_date_range` | 根据参数计算日期范围（单日期/范围/最近N天） |
+| 3 | `fetch_series_list` | 调用 Patchwork API 获取 series 列表 |
+| 4 | `filter_and_sort` | 过滤和排序 series |
+| 5 | `process_series` | 并行处理 series（ThreadPoolExecutor），detail 模式调用 LKML Agent |
+| 6 | `aggregate_results` | 汇总所有处理结果 |
+| 7 | `output_results` | Markdown 表格输出 |
+| 8 | `cache_results` | 缓存结果到 output/patchwork/ |
+
+### 字段提取函数
+
+用于从 Patchwork API 响应中提取结构化信息：
+
+| 函数 | 说明 |
+|:----:|:----:|
+| `extract_date` | 提取提交日期 |
+| `extract_author` | 提取作者名称 |
+| `extract_email` | 提取作者邮箱 |
+| `extract_subject` | 提取补丁主题/标题 |
+| `extract_version` | 提取补丁版本号（如 v1, v2） |
+| `extract_web_url` | 提取 Patchwork Web URL |
+| `extract_archive_url` | 提取 Lore.kernel.org 归档链接 |
+| `extract_message_id_from_cover` | 从 cover letter 提取 Message-ID |
+
+### 缓存机制（fetch_with_cache）
+
+`fetch_with_cache` 函数提供带本地 MD5 缓存的 HTTP 请求能力：
+
+- **缓存键**: 对请求 URL 做 MD5 哈希，作为本地文件名
+- **缓存路径**: `output/patchwork/cache/<md5_hash>.json`
+- **缓存策略**: 先查本地文件，命中则直接返回；未命中则发起 HTTP 请求并写入缓存
+- **过期控制**: 无自动过期，可通过 `git clean -fdX` 清除
+
+### 项目列表查找机制
+
+支持三种方式定位 Patchwork 项目：
+
+1. **`load_projects_list()`** - 从 `project/projects_list.json` 加载本地项目列表
+2. **`fetch_projects_from_api()`** - 调用 Patchwork API 远程获取项目列表并缓存
+3. **`find_project_id_by_name()`** - 通过项目名称（支持模糊匹配）查找对应 ID
+
+查找流程：优先本地加载 → 本地不存在则从 API 获取 → 用户输入名称则进行匹配。
+
+### 并发处理说明
+
+`process_series` 节点使用 `ThreadPoolExecutor` 实现并发：
+
+- **线程数**: 由 `max_parallel` 参数控制，默认为 1（串行）
+- **适用场景**: 大量 series 需要处理时，并发可显著缩短总耗时
+- **风险提示**: 高并发可能触发 Patchwork API 限制，建议 `max_parallel ≤ 3`
+- **错误隔离**: 单个 series 处理失败不影响其他 series，错误记录到 `processed_results`
+
+### 内置测试代码
+
+`patchwork_agent.py` 包含各阶段功能测试代码（行 1082-1518），覆盖：
+
+| 测试编号 | 测试范围 |
+|:-------:|:-------:|
+| US-003 | 项目查找（ID / 名称 / 模糊匹配） |
+| US-004 | 日期范围计算（单日期 / 范围 / 最近N天） |
+| US-005 | Series 列表获取与过滤 |
+| US-006 | 并发处理与结果聚合 |
+| US-007 | 输出格式化与缓存 |
+| US-008 | 完整工作流端到端测试 |
+
+通过 `python patchwork/patchwork_agent.py --test` 可直接运行内置测试。
 
 ### 与 Shell 脚本对比
 

@@ -67,10 +67,11 @@ RSS Agent 是一个基于 LangGraph 开发的智能 RSS 分析工具，用于自
 
 ```
 rss/
-├── rss_agent.py        # LangGraph 工作流
-├── dual_rss_agent.py    # 双源分析（旧版）
-├── detect_anti_crawler.py  # 反爬虫检测
-└── README.md           # 本文件
+├── rss_agent.py           # LangGraph 工作流（主 agent）
+├── dual_rss_agent.py      # 双源分析 agent（旧版，使用 OpenAI API，已被 rss_agent.py 取代）
+├── detect_anti_crawler.py # 反爬虫检测独立脚本
+├── __init__.py            # 不存在（模块不可通过 import rss 直接导入）
+└── README.md              # 本文件
 ```
 
 ## 工作流程
@@ -110,13 +111,49 @@ RSS Agent 的工作流程由以下几个主要步骤组成：
   - **requests** - 标准 HTTP 请求库,配合优化的 Headers
   - **httpx** - 现代 HTTP 客户端,支持 HTTP/2
   - **Playwright** - 真实浏览器模拟,支持 JavaScript 执行、Cookie、LocalStorage
-- **多 HTTP 后端** - 自动检测和选择最佳访问方式
+- **多 HTTP 后端** - 自动检测和选择最佳访问方式，提供四种后端：
+  - **`fetch_with_cloudflare`** - Cloudflare Browser Rendering API，需配置 `CLOUDFLARE_API_KEY`，通过 Cloudflare Workers 在边缘节点渲染页面，绕过 Cloudflare 自身的反爬虫保护
+  - **`fetch_with_requests`** - 标准 HTTP 请求，配合优化 Headers（User-Agent、Accept 等），适用于无反爬虫机制的站点
+  - **`fetch_with_httpx`** - 现代 HTTP 客户端，支持 HTTP/2，异步友好，作为 requests 的升级替代
+  - **`fetch_with_playwright`** - 真实浏览器模拟，支持 JavaScript 执行、Cookie、LocalStorage，具备反自动化检测伪装（UA/地理位置/时区），适用于 Cloudflare/Turnstile 保护的站点
 - **内容解析** - 使用 feedparser 和 BeautifulSoup4 解析 RSS 和 HTML
 - **模型推理** - 集成 ModelScope Qwen3-235B-A22B 模型进行摘要生成
 - **结果展示** - 以 Markdown 格式展示分析结果
 - **进度条实现** - 使用 tqdm 库实现进度条显示
 - **日志控制** - 通过 verbose 级别参数控制日志输出
 - **缓存系统** - 基于文章链接哈希的磁盘缓存,支持持久化存储
+
+### 反爬虫检测脚本（detect_anti_crawler.py）
+
+`detect_anti_crawler.py` 是一个独立的反爬虫检测脚本，用于探测目标站点的防护机制，决定后续应采用哪种 HTTP 后端。
+
+**四层递进检测**：
+
+| 层级 | 方式 | 说明 |
+|:----:|:-----|:-----|
+| 1 | 基础 HTTP 请求 | 资源路径直连，不携带任何特殊 Header，测试站点是否裸露可访问 |
+| 2 | 带 UA 的 HTTP 请求 | 添加标准浏览器 User-Agent，模拟普通浏览器访问 |
+| 3 | 完整浏览器头 HTTP 请求 | 模拟完整浏览器请求头（Accept、Accept-Language、Referer 等），接近真实浏览器指纹 |
+| 4 | Playwright 浏览器请求 | 使用真实浏览器发起请求，支持 JavaScript 执行，最接近人类用户行为 |
+
+**检测标志**：
+
+- **Cloudflare 防护** - 响应中包含 Cloudflare 特征（如 `cf-ray` Header、Cloudflare 错误页）
+- **Turnstile 验证** - 页面中包含 Turnstile CAPTCHA 验证组件
+- **"verifying you are human"** - 页面中出现人机验证文本，标志站点有强反自动化机制
+
+### 旧版双源分析 Agent（dual_rss_agent.py）
+
+`dual_rss_agent.py` 是早期版本的双源分析 agent，使用 OpenAI API 进行摘要生成。该文件已被基于 LangGraph 和 ModelScope 的 `rss_agent.py` 完全取代，保留仅作参考。
+
+**与当前 rss_agent.py 的主要差异**：
+
+| 特性 | dual_rss_agent.py（旧版） | rss_agent.py（当前） |
+|------|--------------------------|---------------------|
+| 工作流引擎 | 无（线性流程） | LangGraph StateGraph |
+| 模型 API | OpenAI API | ModelScope Qwen3-235B-A22B |
+| 状态管理 | 函数参数传递 | AgentState dataclass |
+| 反爬虫处理 | 无 | 四层检测 + 四种 HTTP 后端 |
 
 ### 状态类定义
 
@@ -126,11 +163,13 @@ class AgentState:
     messages: Annotated[List[Dict[str, Any]], add_messages]
     articles: List[Dict[str, Any]] = field(default_factory=list)
     summaries: List[Dict[str, Any]] = field(default_factory=list)
-    protection_info: Dict[str, Any]] = field(default_factory=dict)
+    protection_info: Dict[str, Any] = field(default_factory=dict)
     work_dir: str = ""
 ```
 
 ## 使用说明
+
+> **注意**：`--level` 参数在 RSS 模块中用于**限制分析的文章数量**（而非分析级别），等同于 `--max-articles`。例如 `--level 5` 表示只分析 5 篇文章。
 
 ### 通过 kde.py 调用
 

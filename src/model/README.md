@@ -2,7 +2,7 @@
 
 ## 项目介绍
 
-Model Inference Module 是 KDE 项目的 AI 模型集成层，负责与 ModelScope API 交互，使用 Qwen3-235B-A22B 模型进行文本分析和推理。
+Model Inference Module 是 KDE 项目的 AI 模型集成层，负责与 ModelScope API 交互，使用 Qwen3-235B-A22B 模型进行文本分析和推理。支持三级 Fallback 链机制，当主模型额度耗尽（429）时自动切换到备选模型，确保推理任务不中断。
 
 ## 项目架构
 
@@ -32,10 +32,11 @@ Model Inference Module 是 KDE 项目的 AI 模型集成层，负责与 ModelSco
 | +---------------------------------------------------------------------------+     +----------------------------------------------------------------------------------------------------------------------------------------------------+     +--------------------------------------------------------------------------+ |
 | |                                                                           |     |                                                                                                                                                    |     |                                                                          | |
 | | "ModelRequest                                                             |---->| "ModelInference                                                                                                                                    |---->| "ModelScope API                                                                                             | |
-| |  set_request(type, content)                                                                              |     |   OpenAI Client ModelScope API                                                                                                         |     |   Qwen3-235B-A22B                                                                                           | |
-| |  get_messages() List[Dict                                                                           |     |   inference(messages) str                                                                                                             |     |   api-inference.modelscope.cn/v1/"                                                                          | |
-| |                                                                           |     |   Streaming with tqdm progress                                                                                                         |     |                                                                          | |
-| |                                                                           |     |   Config: Qwen3-235B-A22B, temp=0                                                                                               |     |                                                                          | |
+| |  set_request(type, content)                                              |     |   OpenAI Client ModelScope API                                                                                                         |     |   Qwen/Qwen3-235B-A22B (主模型)                                              | |
+| |  set_content(content)                                                    |     |   inference(messages) str                                                                                                             |     |   deepseek-ai/DeepSeek-V4-Pro (备选1)                                        | |
+| |  get_messages() List[Dict]                                               |     |   Streaming with tqdm progress                                                                                                         |     |   deepseek-ai/DeepSeek-V4-Flash (备选2)                                      | |
+| |  show()                                                                  |     |   Fallback: 429 → 自动切换备选模型                                                                                                      |     |   api-inference.modelscope.cn/v1/                                            | |
+| |                                                                           |     |   Config: Qwen3-235B-A22B, temp=0                                                                                                      |     |                                                                          | |
 | +---------------------------------------------------------------------------+     +----------------------------------------------------------------------------------------------------------------------------------------------------+     +--------------------------------------------------------------------------+ |
 |                                                                                                                                                                                                                                                                                                                           |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -70,6 +71,70 @@ model/
 - **贪心解码** - 默认 temperature=0，确保输出确定性
 - **进度可视化** - 使用 tqdm 库显示推理进度条
 - **日志控制** - 通过 verbose 级别控制日志输出
+
+### Fallback 链机制
+
+ModelInference 支持三级 fallback，确保推理任务在主模型额度耗尽时仍可完成：
+
+| 优先级 | 模型 ID | 说明 |
+|:------:|:---------|:-----|
+| 主模型 | `Qwen/Qwen3-235B-A22B` | 首选模型，推理质量最高 |
+| 备选1 | `deepseek-ai/DeepSeek-V4-Pro` | 第一备选，429 时自动切换 |
+| 备选2 | `deepseek-ai/DeepSeek-V4-Flash` | 第二备选，所有模型额度耗尽时使用 |
+
+**工作机制**：
+- 当主模型返回 `429 RateLimitError` 时，自动切换到下一个备选模型
+- 依次尝试所有备选模型，直到成功或全部耗尽
+- 所有模型额度耗尽时，抛出 `RateLimitError` 异常
+
+```python
+# 自定义 fallback 链（可选）
+custom_fallback = ['Qwen/Qwen3-235B-A22B', 'deepseek-ai/DeepSeek-V4-Pro']
+model = ModelInference(verbose=1, fallback_models=custom_fallback)
+```
+
+### ModelRequest Prompt 类型
+
+ModelRequest 支持 4 种 prompt 类型，通过 `messages_mapping` 字典映射到对应的 prompt 模板：
+
+| 类型名 | 用途 | System Prompt 概述 | 字数限制 |
+|:------:|:-----|:-------------------|:--------:|
+| `summary` | 邮件总结 | Linux 社区邮件总结专家，突出关键信息 | 300 字以内 |
+| `analysis` | 补丁深度分析 | Linux 补丁分析专家，全面分析功能、影响、风险 | 无限制 |
+| `discussion_summary` | 讨论总结 | Linux 内核社区讨论分析专家，总结议题和观点 | 300 字以内 |
+| `discussion_analysis` | 讨论深度分析 | Linux 内核社区讨论深度分析专家，全面深入分析 | 无限制 |
+
+**prompt 模板结构**：
+
+每种类型包含两条消息：
+- `system` 消息：定义角色和任务要求
+- `user` 消息：指定具体操作指令（"请按照系统设定的要求..."）
+
+调用 `set_request(request, content)` 时，会从 `messages_mapping` 中复制对应模板，并追加一条 `user` 消息包含实际内容。
+
+### model_api.py 说明
+
+`model_api.py` 是一个简单的独立 API 调用示例脚本（25 行），用于快速测试 ModelScope API 连通性：
+
+```python
+# model_api.py 核心逻辑
+from model_infer import ModelInference
+from model_request import ModelRequest
+
+mr = ModelRequest("summary", content)
+mi = ModelInference()
+mi.inference(mr.get_messages())
+```
+
+**用途**：
+- 验证 API 密钥配置是否正确
+- 测试模型推理基本流程
+- 独立调试模型连接问题
+
+**使用方式**：
+```bash
+python model_api.py <文件路径>
+```
 
 ## 使用说明
 
@@ -180,11 +245,27 @@ class ModelInference:
 
 ```python
 class ModelRequest:
-    def __init__(self):
-        """初始化请求构建器"""
+    def __init__(self, request="summary", content=None):
+        """初始化请求构建器
+
+        Args:
+            request: 请求类型 (summary/analysis/discussion_summary/discussion_analysis)
+            content: 请求内容字符串
+        """
+
+    def set_request(self, request, content):
+        """设置请求类型和内容
+
+        同时设置 request 类型（从 messages_mapping 选择模板）和 content 内容。
+        如果类型发生变化，会重新加载对应的 prompt 模板。
+
+        Args:
+            request: 请求类型 (summary/analysis/discussion_summary/discussion_analysis)
+            content: 请求内容字符串（可为 None，仅切换模板）
+        """
 
     def set_content(self, content):
-        """设置请求内容
+        """仅设置内容（不改变请求类型）
 
         Args:
             content: 请求内容字符串
@@ -194,8 +275,11 @@ class ModelRequest:
         """获取消息列表
 
         Returns:
-            list: 消息列表
+            list: 包含 system/user 消息的完整消息列表
         """
+
+    def show(self):
+        """显示请求信息（打印消息列表）"""
 ```
 
 ## 注意事项
@@ -205,6 +289,7 @@ class ModelRequest:
 3. **推理时间** - 大型模型推理可能需要较长时间，建议使用进度条
 4. **Token 限制** - 注意输入和输出的 token 限制
 5. **温度设置** - 生产环境建议使用 temperature=0 确保输出确定性
+6. **Fallback 链** - 429 额度耗尽时自动切换备选模型，无需手动干预
 
 ## 代码规范
 
@@ -229,7 +314,7 @@ class ModelRequest:
 ### 性能优化
 
 - 优化流式输出性能
-- 添加请求重试机制
+- Fallback 链已实现自动切换，可考虑添加指数退避重试
 - 实现请求队列管理
 - 添加并发推理支持
 

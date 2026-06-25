@@ -2,10 +2,11 @@
 
 ## 项目介绍
 
-LKML Agent 是一个专门用于分析 Linux 内核邮件列表（LKML）的智能工具集，使用 LangGraph 实现状态管理和工作流。提供两种分析模式：
+LKML Agent 是一个专门用于分析 Linux 内核邮件列表（LKML）的智能工具集，使用 LangGraph 实现状态管理和工作流。提供三种分析模式：
 
 - **补丁分析模式** - 分析 LKML 补丁，提取补丁元数据并生成摘要和分析
 - **讨论分析模式** - 分析 LKML 讨论线程，提取关键观点和共识，了解社区讨论动态
+- **全量分析模式** - 同时执行补丁分析和讨论分析，顺序执行两个 workflow
 
 ## 项目架构
 
@@ -58,9 +59,11 @@ LKML Agent 是一个专门用于分析 Linux 内核邮件列表（LKML）的智�
 ```
 lkml/
 ├── lkml_agent.py       # LangGraph 工作流实现
-├── lkml.py             # 核心补丁分析器（遗留）
+├── lkml.py             # 核心补丁分析器（遗留版本，功能已被 lkml_agent.py 覆盖）
 ├── __init__.py         # 模块初始化
 ├── get_b4_series.sh    # B4 系列获取辅助脚本
+├── cvt_lkml_to_lore.sh # LKML URL → LORE URL 转换脚本
+├── AGENTS.md           # 模块知识库文档
 └── README.md           # 本文件
 ```
 
@@ -88,7 +91,7 @@ lkml/
 | +------------------------------------------------------+     +-----------------------------------------------------+     +-----------------------------------------------------------+     +----------------------------------------------------------+     +--------------------------------------------------------+ |   +-------+
 | |                                                      |     |                                                     |     |                                                           |     |                                                          |     |                                                        | |   |       |
 | | "fetch_thread                                     |---->| "parse_thread                                   |---->| "generate_discussion_summary                             |---->| "analyze_discussion                                     |---->| "output_discussion                                     |---->| Cache |
-| |  b4 am, download mbox"                           |     |  extract emails, parse replies"              |     |  AI summary, key points"                                |     |  AI analysis, detail level only"                     |     |  Markdown output"                                    |     |                                            | |   |       |
+| |  b4 mbox, curl fallback"                         |     |  extract emails, parse replies"              |     |  AI summary, key points"                                |     |  AI analysis, detail level only"                     |     |  Markdown output"                                    |     |                                            | |   |       |
 | |                                                      |     |                                                     |     |                                                           |     |                                                          |     |                                                        | |   |       |
 | +------------------------------------------------------+     +-----------------------------------------------------+     +-----------------------------------------------------------+     +----------------------------------------------------------+     +--------------------------------------------------------+ |   +-------+
 |                                                                                                                                                                                                                                                              |
@@ -97,11 +100,46 @@ lkml/
 
 | 步骤 | 函数 | 说明 |
 |:----:|:-----|:-----|
-| 1 | fetch_thread | 使用 b4 工具下载指定 message-id 的讨论线程 mbox |
+| 1 | fetch_thread | 使用 b4 工具下载指定 message-id 的讨论线程 mbox；b4 失败时自动使用 curl 从 lore.kernel.org 下载 .mbox.gz 文件（三级回退策略） |
 | 2 | parse_thread | 解析 mbox 文件,提取所有邮件并识别回复关系 |
 | 3 | generate_discussion_summary | 使用 AI 生成讨论摘要,提取关键观点和共识 |
 | 4 | analyze_discussion | 在 detail 级别下进行深入讨论分析 |
 | 5 | output_discussion | 根据级别参数输出分析结果 |
+
+### 全量分析模式（All Mode）
+
+同时执行补丁分析和讨论分析，顺序执行两个 workflow，先 patch 后 discussion。
+
+**ASCII 架构图：**
+
+```
++------------------------------------------------------------------+
+|                    "LKML All Agent Workflow"                      |
+|                                                                   |
+|  +---------------------------+    +---------------------------+   |
+|  |                           |    |                           |   |
+|  |  "Phase 1: Patch Workflow"|    |  "Phase 2: Discussion    |   |
+|  |                           |    |   Workflow"               |   |
+|  |  fetch_patch → parse →    |    |                           |   |
+|  |  summary → analyze →      |--->|  fetch_thread → parse →   |   |
+|  |  output                   |    |  summary → analyze →      |   |
+|  |                           |    |  output                   |   |
+|  +---------------------------+    +---------------------------+   |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+| 步骤 | 函数 | 说明 |
+|:----:|:-----|:-----|
+| 1 | run_all_agent | 顺序调用 `run_lkml_agent()` 和 `run_discussion_agent()` |
+| 2 | Phase 1 | 执行完整的补丁分析 workflow（fetch → parse → summary → analyze → output） |
+| 3 | Phase 2 | 执行完整的讨论分析 workflow（fetch_thread → parse_thread → summary → analyze → output） |
+
+**使用示例：**
+
+```bash
+python3 ../kde.py --lkml <message-id> --level detail --mode all -v
+```
 
 ## 功能说明
 
@@ -122,7 +160,10 @@ lkml/
 #### 讨论分析模式
 
 - **线程下载** - 使用 b4 工具下载完整的讨论线程 mbox 文件
+- **curl fallback 机制** - 当 b4 mbox 失败时，自动从 lore.kernel.org 下载 .mbox.gz 文件并解压为 .mbx，这是三级回退策略：① message-id 命名的 .mbx → ② 新增的 .mbx → ③ 最近修改的 .mbx
 - **邮件解析** - 解析 mbox 文件中的所有邮件,识别回复关系和时间线
+- **邮件正文提取** - `_extract_email_body()` 自动去除引用内容（`>` 开头的行）和签名区（`-- \n` 分隔符之后）
+- **长线程截断** - `_format_thread_emails()` 格式化邮件列表为 AI 输入文本，超过 23 条时自动截断为前 20 条 + 后 3 条（保留结论性回复）
 - **关键观点提取** - 使用 AI 提取讨论中的关键观点、技术方案和共识
 - **回复统计** - 自动统计回复数量和参与人员
 - **智能摘要** - 生成讨论摘要,简洁呈现讨论主题和核心内容
@@ -141,6 +182,15 @@ lkml/
 - **缓存系统** - 自动创建缓存目录并持久化存储补丁文件
 
 ### 状态类定义
+
+### lkml.py 遗留版本
+
+`lkml.py` 是项目的早期实现，采用传统的类继承方式（`LKML` 类），包含补丁下载、解析、输出等基本功能。该文件目前已被 `lkml_agent.py` 的 LangGraph 工作流完全覆盖：
+
+- **lkml.py**：基于类的线性流程，手动串联各步骤，无状态管理
+- **lkml_agent.py**：基于 LangGraph 的声明式工作流，支持补丁/讨论/全量三种模式，具备状态管理和条件分支
+
+lkml.py 仅作为遗留参考保留，不建议在新功能中使用。
 
 #### 补丁分析状态类 (LKMLAgentState)
 
@@ -244,6 +294,20 @@ python3 ../kde.py --lkml <message-id> --level detail --mode discussion
 python3 ../kde.py --lkml <message-id> --level detail --mode discussion -v
 ```
 
+#### 全量分析模式
+
+**同时执行补丁分析和讨论分析（简单模式）**
+
+```bash
+python3 ../kde.py --lkml <message-id> --level simple --mode all
+```
+
+**同时执行补丁分析和讨论分析（详细模式，显示进度条）**
+
+```bash
+python3 ../kde.py --lkml <message-id> --level detail --mode all -v
+```
+
 ### 直接调用
 
 也可以直接调用 lkml_agent.py 进行测试：
@@ -258,7 +322,7 @@ python3 lkml_agent.py --message_id=<message-id> --level=detail
 | 参数 | 说明 | 可选值 | 默认值 |
 |------|------|--------|--------|
 | `<message-id>` | LKML 补丁/讨论的 message-id | - | 必填 |
-| `--mode` | 分析模式 | patch, discussion | patch |
+| `--mode` | 分析模式 | patch, discussion, all | patch |
 | `simple|detail` | 分析级别 | simple, detail | simple |
 | `-v, --verbose` | 详细模式，显示进度条和详细日志 | 多次使用增加详细程度 | 0 |
 
@@ -305,6 +369,14 @@ python3 ../kde.py --lkml 20260415000910.2h5misvwc45bdumu@airbuntu --level simple
 
 ```bash
 python3 ../kde.py --lkml 20260415000910.2h5misvwc45bdumu@airbuntu --level detail --mode discussion -v
+```
+
+### 全量分析示例
+
+**同时分析补丁和讨论（详细模式，显示进度条）**
+
+```bash
+python3 ../kde.py --lkml 20260122161647.142704-2-realwujing@gmail.com --level detail --mode all -v
 ```
 
 ## 输出示例
@@ -368,8 +440,10 @@ output/lkml/<message-id>/
 ├── patchset/              # b4 am 下载的补丁文件
 │   ├── <message-id>.cover   # Cover 文件
 │   └── <message-id>.mbx     # MailBox 文件
-└── discussion/              # b4 mbox 下载的讨论线程
-    └── <message-id>.mbx     # MailBox 文件
+└── discussion/              # b4 mbox / curl fallback 下载的讨论线程
+    ├── <message-id>.mbx     # MailBox 文件（b4 mbox 下载）
+    ├── thread.mbox.gz       # curl fallback 下载的压缩文件（临时）
+    └── thread.mbx           # curl fallback 解压后的 MailBox 文件
 ```
 
 ### 缓存特性
