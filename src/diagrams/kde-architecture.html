@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KDE 多 Agent 系统架构 - 整体仓库架构图</title>
+<style>
+  /* ===== 全局样式 (扁平化图标风格) ===== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #ffffff;
+    color: #1e293b;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+  }
+
+  /* ===== 导出工具栏 (白色扁平风格) ===== */
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    gap: 10px;
+    padding: 10px 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 1200px;
+    justify-content: center;
+  }
+
+  .toolbar button {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .toolbar button:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  }
+
+  .toolbar button:active {
+    transform: translateY(0);
+  }
+
+  .toolbar button .icon {
+    font-size: 15px;
+  }
+
+  /* ===== 标题区域 ===== */
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+
+  .header p {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 400;
+  }
+
+  /* ===== SVG 容器 (白色扁平风格) ===== */
+  .svg-container {
+    width: 100%;
+    max-width: 1200px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+
+  .svg-container svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .svg-container svg text {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* ===== Toast 提示 (白色扁平风格) ===== */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 24px;
+    color: #1e293b;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    z-index: 1000;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<!-- 导出工具栏 -->
+<div class="toolbar">
+  <button onclick="copySVG()" title="复制 SVG 到剪贴板">
+    <span class="icon">📋</span> Copy SVG
+  </button>
+  <button onclick="exportPNG()" title="导出为 PNG 图片">
+    <span class="icon">🖼️</span> PNG
+  </button>
+  <button onclick="exportPDF()" title="导出为 PDF 文档">
+    <span class="icon">📄</span> PDF
+  </button>
+</div>
+
+<!-- 标题 -->
+<div class="header">
+  <h1>KDE 多 Agent 系统架构</h1>
+  <p>Kernel Development Explorer — LangGraph + ModelScope Multi-Agent System</p>
+</div>
+
+<!-- SVG 架构图 -->
+<div class="svg-container" id="svgContainer">
+<svg id="archSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 750" width="1100" height="750">
+
+  <!-- SVG 内部样式 -->
+  <style>
+    text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+  </style>
+
+<!-- ===== 定义区域 ===== -->
+<defs>
+  <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+    <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+  </filter>
+  <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+  </marker>
+  <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#059669"/>
+  </marker>
+  <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#ea580c"/>
+  </marker>
+  <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+  </marker>
+  <marker id="arrowCyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#0891b2"/>
+  </marker>
+  <marker id="arrowDarkBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#1d4ed8"/>
+  </marker>
+  <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+  </marker>
+</defs>
+
+<!-- ===== 白色背景 ===== -->
+<rect x="0" y="0" width="1100" height="750" fill="#ffffff" rx="8"/>
+
+<!-- ===== 标题区域 ===== -->
+<text x="550" y="18" fill="#1e293b" font-size="20" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">KDE 多 Agent 系统架构</text>
+<text x="550" y="33" fill="#94a3b8" font-size="11" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Kernel Development Explorer · LangGraph + ModelScope Multi-Agent</text>
+
+<!-- ===== Layer 1 - CLI 入口层 ===== -->
+<rect x="25" y="45" width="1050" height="95" fill="#ffffff" rx="12" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="8,4"/>
+<rect x="30" y="50" width="180" height="22" fill="#f1f5f9" rx="4" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="120" y="65" fill="#475569" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Layer 1 · CLI 入口层</text>
+
+<!-- kde.py 节点 -->
+<rect x="430" y="55" width="240" height="80" fill="#2563eb" rx="8" filter="url(#shadow)"/>
+<text x="550" y="80" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">kde.py</text>
+<text x="550" y="97" fill="#cbd5e1" font-size="11" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">argparse 命令路由</text>
+<!-- 参数徽章 -->
+<rect x="445" y="111" width="55" height="18" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+<text x="472" y="124" fill="#ffffff" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">--lkml</text>
+<rect x="505" y="111" width="45" height="18" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+<text x="527" y="124" fill="#ffffff" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">--rss</text>
+<rect x="555" y="111" width="50" height="18" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+<text x="580" y="124" fill="#ffffff" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">--cgit</text>
+<rect x="610" y="111" width="75" height="18" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+<text x="647" y="124" fill="#ffffff" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">--patchwork</text>
+
+<!-- ===== Layer 2 - Agent 层 ===== -->
+<rect x="25" y="155" width="1050" height="195" fill="#ffffff" rx="12" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="8,4"/>
+<rect x="30" y="160" width="160" height="22" fill="#f1f5f9" rx="4" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="110" y="175" fill="#475569" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Layer 2 · Agent 层</text>
+
+<!-- LKML Agent -->
+<g transform="translate(68, 175)">
+  <rect x="0" y="0" width="230" height="175" fill="#059669" rx="8" filter="url(#shadow)"/>
+  <text x="115" y="22" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">LKML Agent</text>
+  <text x="115" y="38" fill="#cbd5e1" font-size="11" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">补丁/讨论分析 · b4 am/mbox</text>
+  <!-- 运行模式徽章 -->
+  <rect x="10" y="48" width="55" height="18" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="37" y="61" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">patchset</text>
+  <rect x="70" y="48" width="55" height="18" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="97" y="61" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">discuss</text>
+  <rect x="130" y="48" width="40" height="18" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="150" y="61" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">all</text>
+  <!-- Workflow 节点链 -->
+  <rect x="10" y="75" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="29" y="89" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">fetch</text>
+  <rect x="53" y="75" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="72" y="89" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">parse</text>
+  <rect x="96" y="75" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="115" y="89" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">summary</text>
+  <rect x="139" y="75" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="158" y="89" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">analysis</text>
+  <rect x="182" y="75" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="201" y="89" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">output</text>
+  <!-- 节点间短横线 -->
+  <line x1="48" y1="85" x2="53" y2="85" stroke="#ffffff" stroke-width="1"/>
+  <line x1="91" y1="85" x2="96" y2="85" stroke="#ffffff" stroke-width="1"/>
+  <line x1="134" y1="85" x2="139" y2="85" stroke="#ffffff" stroke-width="1"/>
+  <line x1="177" y1="85" x2="182" y2="85" stroke="#ffffff" stroke-width="1"/>
+  <!-- State 字段摘要 -->
+  <text x="115" y="110" fill="#cbd5e1" font-size="8" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">State: lkml_id, level, subject, author</text>
+  <text x="115" y="122" fill="#cbd5e1" font-size="8" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">summary, analysis, content, version</text>
+  <text x="115" y="160" fill="#ffffff" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">lkml/lkml_agent.py</text>
+</g>
+
+<!-- RSS Agent -->
+<g transform="translate(315, 175)">
+  <rect x="0" y="0" width="230" height="175" fill="#ea580c" rx="8" filter="url(#shadow)"/>
+  <text x="115" y="22" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">RSS Agent</text>
+  <text x="115" y="38" fill="#cbd5e1" font-size="11" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">新闻源分析 · Playwright</text>
+  <!-- Workflow 节点链 -->
+  <rect x="10" y="52" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="29" y="66" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">detect</text>
+  <rect x="53" y="52" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="72" y="66" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">fetch</text>
+  <rect x="96" y="52" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="115" y="66" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">content</text>
+  <rect x="139" y="52" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="158" y="66" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">analyze</text>
+  <rect x="182" y="52" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="201" y="66" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">gen</text>
+  <rect x="10" y="78" width="38" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="29" y="92" fill="#ffffff" font-size="8" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">output</text>
+  <!-- 节点间短横线 -->
+  <line x1="48" y1="62" x2="53" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="91" y1="62" x2="96" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="134" y1="62" x2="139" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="177" y1="62" x2="182" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="48" y1="88" x2="10" y2="88" stroke="#ffffff" stroke-width="0"/>
+  <!-- State 字段摘要 -->
+  <text x="115" y="110" fill="#cbd5e1" font-size="8" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">State: articles, summaries</text>
+  <text x="115" y="122" fill="#cbd5e1" font-size="8" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">protection_info, work_dir</text>
+  <text x="115" y="160" fill="#ffffff" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">rss/rss_agent.py</text>
+</g>
+
+<!-- CGit Agent -->
+<g transform="translate(562, 175)">
+  <rect x="0" y="0" width="230" height="175" fill="#7c3aed" rx="8" filter="url(#shadow)"/>
+  <text x="115" y="22" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">CGit Agent</text>
+  <text x="115" y="38" fill="#cbd5e1" font-size="11" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Commit 分析 · wget + 跨模块联动</text>
+  <!-- Workflow 节点链 -->
+  <rect x="11" y="52" width="32" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="27" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">fetch</text>
+  <rect x="46" y="52" width="32" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="62" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">parse</text>
+  <rect x="81" y="52" width="32" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="97" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">analyze</text>
+  <rect x="116" y="52" width="32" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="132" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">output</text>
+  <rect x="151" y="52" width="32" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="167" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">patchset</text>
+  <rect x="186" y="52" width="32" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="202" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">lkml</text>
+  <!-- 节点间短横线 -->
+  <line x1="43" y1="62" x2="46" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="78" y1="62" x2="81" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="113" y1="62" x2="116" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="148" y1="62" x2="151" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="183" y1="62" x2="186" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <!-- State 字段摘要 -->
+  <text x="115" y="110" fill="#cbd5e1" font-size="8" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">State: commit_id, content</text>
+  <text x="115" y="122" fill="#cbd5e1" font-size="8" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">summary, patchset_link</text>
+  <text x="115" y="160" fill="#ffffff" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">cgit/cgit_agent.py</text>
+</g>
+
+<!-- Patchwork Agent -->
+<g transform="translate(809, 175)">
+  <rect x="0" y="0" width="230" height="175" fill="#0891b2" rx="8" filter="url(#shadow)"/>
+  <text x="115" y="22" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Patchwork Agent</text>
+  <text x="115" y="38" fill="#cbd5e1" font-size="11" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Series 批量分析 · ThreadPool</text>
+  <!-- Workflow 节点链 -->
+  <rect x="11" y="52" width="28" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="25" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">project</text>
+  <rect x="41" y="52" width="28" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="55" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">date</text>
+  <rect x="71" y="52" width="28" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="85" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">series</text>
+  <rect x="101" y="52" width="28" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="115" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">filter</text>
+  <rect x="131" y="52" width="28" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="145" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">process</text>
+  <rect x="161" y="52" width="28" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="175" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">aggregate</text>
+  <rect x="191" y="52" width="28" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="205" y="66" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">output</text>
+  <rect x="11" y="78" width="28" height="20" fill="#ffffff" rx="4" fill-opacity="0.25"/>
+  <text x="25" y="92" fill="#ffffff" font-size="7" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">cache</text>
+  <!-- 节点间短横线 -->
+  <line x1="39" y1="62" x2="41" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="69" y1="62" x2="71" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="99" y1="62" x2="101" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="129" y1="62" x2="131" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="159" y1="62" x2="161" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <line x1="189" y1="62" x2="191" y2="62" stroke="#ffffff" stroke-width="1"/>
+  <!-- State 字段摘要 -->
+  <text x="115" y="110" fill="#cbd5e1" font-size="8" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">State: projects, series_list</text>
+  <text x="115" y="122" fill="#cbd5e1" font-size="8" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">processed_results, cache_dir</text>
+  <text x="115" y="160" fill="#ffffff" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">patchwork/patchwork_agent.py</text>
+</g>
+
+<!-- ===== Layer 3 - 共享服务层 ===== -->
+<rect x="25" y="380" width="1050" height="120" fill="#ffffff" rx="12" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="8,4"/>
+<rect x="30" y="385" width="180" height="22" fill="#f1f5f9" rx="4" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="120" y="400" fill="#475569" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Layer 3 · 共享服务层</text>
+
+<!-- Model 模块 -->
+<g transform="translate(55, 395)">
+  <rect x="0" y="0" width="490" height="95" fill="#1d4ed8" rx="8" filter="url(#shadow)"/>
+  <text x="245" y="22" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Model</text>
+  <!-- ModelRequest 子组件 -->
+  <rect x="15" y="35" width="130" height="22" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+  <text x="80" y="50" fill="#ffffff" font-size="10" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">ModelRequest</text>
+  <text x="80" y="62" fill="#cbd5e1" font-size="8" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">4种prompt模板</text>
+  <!-- ModelInference 子组件 -->
+  <rect x="345" y="35" width="130" height="22" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+  <text x="410" y="50" fill="#ffffff" font-size="10" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">ModelInference</text>
+  <text x="410" y="62" fill="#cbd5e1" font-size="8" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">流式推理+fallback</text>
+  <!-- fallback 链 -->
+  <text x="245" y="82" fill="#cbd5e1" font-size="9" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Qwen3-235B → DeepSeek-V4-Pro → DeepSeek-V4-Flash</text>
+</g>
+
+<!-- Utils 模块 -->
+<g transform="translate(560, 395)">
+  <rect x="0" y="0" width="490" height="95" fill="#475569" rx="8" filter="url(#shadow)"/>
+  <text x="245" y="22" fill="#ffffff" font-size="16" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Utils</text>
+  <!-- text_formatter -->
+  <rect x="15" y="35" width="140" height="22" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+  <text x="85" y="50" fill="#ffffff" font-size="10" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">text_formatter</text>
+  <text x="85" y="62" fill="#cbd5e1" font-size="8" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">标点+空格+管线</text>
+  <!-- http_fetcher -->
+  <rect x="175" y="35" width="140" height="22" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+  <text x="245" y="50" fill="#ffffff" font-size="10" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">http_fetcher</text>
+  <text x="245" y="62" fill="#cbd5e1" font-size="8" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">requests/httpx/playwright</text>
+  <!-- process_monitor -->
+  <rect x="340" y="35" width="140" height="22" fill="#ffffff" rx="4" fill-opacity="0.2"/>
+  <text x="410" y="50" fill="#ffffff" font-size="10" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">process_monitor</text>
+  <text x="410" y="62" fill="#cbd5e1" font-size="8" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">进度条+超时</text>
+</g>
+
+<!-- ===== Layer 4 - 外部服务层 ===== -->
+<rect x="25" y="530" width="1050" height="115" fill="#ffffff" rx="12" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="8,4"/>
+<rect x="30" y="535" width="180" height="22" fill="#f1f5f9" rx="4" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="120" y="550" fill="#475569" font-size="11" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Layer 4 · 外部服务层</text>
+
+<!-- lore.kernel.org -->
+<rect x="64" y="555" width="185" height="60" fill="#ffffff" rx="8" stroke="#059669" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="156" y="577" fill="#059669" font-size="12" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">lore.kernel.org</text>
+<text x="156" y="593" fill="#94a3b8" font-size="9" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">LKML 邮件归档</text>
+
+<!-- git.kernel.org -->
+<rect x="261" y="555" width="185" height="60" fill="#ffffff" rx="8" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="353" y="577" fill="#7c3aed" font-size="12" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">git.kernel.org</text>
+<text x="353" y="593" fill="#94a3b8" font-size="9" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">CGit Commit 源</text>
+
+<!-- patchwork.kernel.org -->
+<rect x="458" y="555" width="185" height="60" fill="#ffffff" rx="8" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="550" y="577" fill="#0891b2" font-size="12" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">patchwork.kernel.org</text>
+<text x="550" y="593" fill="#94a3b8" font-size="9" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Patchwork API</text>
+
+<!-- Phoronix / LWN -->
+<rect x="655" y="555" width="185" height="60" fill="#ffffff" rx="8" stroke="#ea580c" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="747" y="577" fill="#ea580c" font-size="12" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Phoronix / LWN</text>
+<text x="747" y="593" fill="#94a3b8" font-size="9" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">RSS 新闻源</text>
+
+<!-- ModelScope API -->
+<rect x="852" y="555" width="185" height="60" fill="#ffffff" rx="8" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="944" y="577" fill="#1d4ed8" font-size="12" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">ModelScope API</text>
+<text x="944" y="593" fill="#94a3b8" font-size="9" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">OpenAI Compatible</text>
+
+<!-- ===== 箭头连接 ===== -->
+<!-- kde.py → 4个Agent -->
+<line x1="550" y1="135" x2="550" y2="148" stroke="#2563eb" stroke-width="1.5"/>
+<line x1="183" y1="148" x2="924" y2="148" stroke="#2563eb" stroke-width="1.5"/>
+<circle cx="550" cy="148" r="3" fill="#2563eb"/>
+<line x1="183" y1="148" x2="183" y2="175" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+<line x1="430" y1="148" x2="430" y2="175" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+<line x1="677" y1="148" x2="677" y2="175" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+<line x1="924" y1="148" x2="924" y2="175" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arrowBlue)"/>
+<text x="558" y="140" fill="#2563eb" font-size="9" font-weight="500" text-anchor="start" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">命令路由</text>
+
+<!-- Agent → Model (彩色实线) -->
+<line x1="183" y1="350" x2="183" y2="368" stroke="#059669" stroke-width="1.5"/>
+<line x1="183" y1="368" x2="300" y2="368" stroke="#059669" stroke-width="1.5"/>
+<line x1="300" y1="368" x2="300" y2="395" stroke="#059669" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+<line x1="430" y1="350" x2="430" y2="368" stroke="#ea580c" stroke-width="1.5"/>
+<line x1="430" y1="368" x2="360" y2="368" stroke="#ea580c" stroke-width="1.5"/>
+<text x="330" y="360" fill="#94a3b8" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">AI 推理</text>
+<line x1="677" y1="350" x2="677" y2="376" stroke="#7c3aed" stroke-width="1.5"/>
+<line x1="677" y1="376" x2="420" y2="376" stroke="#7c3aed" stroke-width="1.5"/>
+<line x1="924" y1="350" x2="924" y2="376" stroke="#0891b2" stroke-width="1.5"/>
+<line x1="924" y1="376" x2="480" y2="376" stroke="#0891b2" stroke-width="1.5"/>
+<circle cx="300" cy="368" r="2" fill="#1d4ed8"/>
+<circle cx="360" cy="368" r="2" fill="#1d4ed8"/>
+<circle cx="420" cy="368" r="2" fill="#1d4ed8"/>
+<circle cx="480" cy="368" r="2" fill="#1d4ed8"/>
+
+<!-- Agent → Utils (虚线) -->
+<line x1="183" y1="355" x2="183" y2="384" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="430" y1="355" x2="430" y2="384" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="677" y1="355" x2="677" y2="384" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="924" y1="355" x2="924" y2="384" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="183" y1="384" x2="924" y2="384" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="805" y1="384" x2="805" y2="395" stroke="#475569" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowGray)"/>
+<text x="755" y="378" fill="#94a3b8" font-size="9" font-weight="500" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">工具调用</text>
+
+<!-- CGit → LKML (联动分析) -->
+<path d="M 562 262 C 532 282, 328 282, 298 262" stroke="#7c3aed" stroke-width="1.5" fill="none" marker-end="url(#arrowPurple)"/>
+<rect x="395" y="272" width="70" height="16" fill="#ffffff" rx="4"/>
+<text x="430" y="280" fill="#7c3aed" font-size="9" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">联动分析</text>
+
+<!-- Patchwork → LKML (detail模式联动) -->
+<path d="M 809 262 C 769 302, 338 302, 298 267" stroke="#0891b2" stroke-width="1.5" fill="none" marker-end="url(#arrowCyan)"/>
+<rect x="505" y="292" width="96" height="16" fill="#ffffff" rx="4"/>
+<text x="553" y="300" fill="#0891b2" font-size="9" font-weight="600" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">detail模式联动</text>
+
+<!-- Agent → 外部服务 (虚线) -->
+<line x1="183" y1="360" x2="183" y2="515" stroke="#059669" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="183" y1="515" x2="156" y2="515" stroke="#059669" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="156" y1="515" x2="156" y2="555" stroke="#059669" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowGreen)"/>
+<line x1="677" y1="360" x2="677" y2="520" stroke="#7c3aed" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="677" y1="520" x2="353" y2="520" stroke="#7c3aed" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="353" y1="520" x2="353" y2="555" stroke="#7c3aed" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowPurple)"/>
+<line x1="924" y1="360" x2="924" y2="525" stroke="#0891b2" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="924" y1="525" x2="550" y2="525" stroke="#0891b2" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="550" y1="525" x2="550" y2="555" stroke="#0891b2" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowCyan)"/>
+<line x1="430" y1="360" x2="430" y2="520" stroke="#ea580c" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="430" y1="520" x2="747" y2="520" stroke="#ea580c" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="747" y1="520" x2="747" y2="555" stroke="#ea580c" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowOrange)"/>
+<line x1="545" y1="442" x2="944" y2="525" stroke="#1d4ed8" stroke-width="1" stroke-dasharray="4,3"/>
+<line x1="944" y1="525" x2="944" y2="555" stroke="#1d4ed8" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowDarkBlue)"/>
+
+<!-- ===== 图例 ===== -->
+<rect x="850" y="650" width="230" height="90" fill="#ffffff" rx="8" stroke="#e2e8f0" stroke-width="1"/>
+<text x="965" y="665" fill="#1e293b" font-size="11" font-weight="bold" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">Legend</text>
+<line x1="860" y1="678" x2="890" y2="678" stroke="#2563eb" stroke-width="1.5"/>
+<text x="895" y="682" fill="#1e293b" font-size="9" font-weight="normal" text-anchor="start" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">实线蓝色 = 命令路由</text>
+<line x1="860" y1="692" x2="875" y2="692" stroke="#059669" stroke-width="1.5"/>
+<line x1="875" y1="692" x2="890" y2="692" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="895" y="696" fill="#1e293b" font-size="9" font-weight="normal" text-anchor="start" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">实线彩色 = AI 推理调用</text>
+<line x1="860" y1="706" x2="890" y2="706" stroke="#475569" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="895" y="710" fill="#1e293b" font-size="9" font-weight="normal" text-anchor="start" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">虚线灰色 = 工具调用</text>
+<path d="M 860 720 Q 875 714 890 720" stroke="#7c3aed" stroke-width="1.5" fill="none"/>
+<text x="895" y="724" fill="#1e293b" font-size="9" font-weight="normal" text-anchor="start" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">曲线箭头 = 跨模块联动</text>
+<rect x="860" y="729" width="30" height="10" fill="#ffffff" rx="3" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="895" y="738" fill="#1e293b" font-size="9" font-weight="normal" text-anchor="start" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">虚线矩形 = 外部数据源</text>
+
+<!-- ===== Footer ===== -->
+<text x="550" y="740" fill="#94a3b8" font-size="9" font-weight="normal" text-anchor="middle" font-family="'Inter', 'Segoe UI', system-ui, sans-serif">KDE Agent System · LangGraph + ModelScope · 2026</text>
+
+</svg>
+</div>
+
+<!-- Toast 提示 -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ===== Toast 提示 =====
+  function showToast(msg, duration = 2000) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
+  }
+
+  // ===== 复制 SVG =====
+  function copySVG() {
+    const svg = document.getElementById('archSvg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    navigator.clipboard.writeText(svgData).then(() => {
+      showToast('✓ SVG 已复制到剪贴板');
+    }).catch(() => {
+      const textarea = document.createElement('textarea');
+      textarea.value = svgData;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast('✓ SVG 已复制到剪贴板');
+    });
+  }
+
+  // ===== 导出 PNG =====
+  function exportPNG() {
+    const svg = document.getElementById('archSvg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+
+    const scale = 2;
+    canvas.width = 1100 * scale;
+    canvas.height = 750 * scale;
+
+    img.onload = function() {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(function(blob) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'kde-architecture.png';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        URL.revokeObjectURL(url);
+        showToast('✓ PNG 已下载');
+      }, 'image/png');
+    };
+
+    img.onerror = function() {
+      showToast('⚠ PNG 导出失败，请尝试 Copy 方式');
+      URL.revokeObjectURL(url);
+    };
+
+    img.src = url;
+  }
+
+  // ===== 导出 PDF (使用浏览器打印) =====
+  function exportPDF() {
+    const svg = document.getElementById('archSvg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+
+    const win = window.open('', '_blank');
+    win.document.write('<html><head><title>KDE Architecture</title>' +
+      '<style>body { margin: 0; background: #fff; } ' +
+      '@media print { body { margin: 0; } }</style></head>' +
+      '<body>' + svgData + '</body></html>');
+    win.document.close();
+    setTimeout(() => { win.print(); }, 500);
+    showToast('✓ PDF 导出窗口已打开');
+  }
+</script>
+
+</body>
+</html>

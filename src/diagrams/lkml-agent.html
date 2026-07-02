@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LKML Agent 架构 - 补丁与讨论分析</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #ffffff;
+    color: #1e293b;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+  }
+  .toolbar {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; gap: 10px; padding: 10px 16px;
+    background: #ffffff; border: 1px solid #e2e8f0;
+    border-radius: 10px; margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    width: 100%; max-width: 1200px; justify-content: center;
+  }
+  .toolbar button {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px; font-weight: 500; padding: 8px 16px;
+    border: 1px solid #e2e8f0; border-radius: 8px;
+    background: #f8fafc; color: #475569; cursor: pointer;
+    transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
+  }
+  .toolbar button:hover {
+    background: #2563eb; border-color: #2563eb; color: #ffffff;
+    transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  }
+  .toolbar button:active { transform: translateY(0); }
+  .toolbar button .icon { font-size: 15px; }
+  .header { text-align: center; margin-bottom: 16px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #1e293b; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .header p { font-size: 13px; color: #94a3b8; font-weight: 400; }
+  .svg-container {
+    width: 100%; max-width: 1200px; background: #ffffff;
+    border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  }
+  .svg-container svg { width: 100%; height: auto; }
+  .svg-container svg text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #ffffff; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 12px 24px; color: #1e293b;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px; z-index: 1000;
+    transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="copySVG()"><span class="icon">📋</span> Copy SVG</button>
+  <button onclick="exportPNG()"><span class="icon">🖼️</span> PNG</button>
+  <button onclick="exportPDF()"><span class="icon">📄</span> PDF</button>
+</div>
+
+<div class="header">
+  <h1>LKML Agent 架构</h1>
+  <p>补丁与讨论分析 · Patchset & Discussion Workflow</p>
+</div>
+
+<div class="svg-container" id="svgContainer">
+<svg id="archSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 900" width="1100" height="900">
+<style>text { font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }</style>
+
+<defs>
+  <filter id="shadow" x="-4%" y="-4%" width="108%" height="108%">
+    <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.1"/>
+  </filter>
+  <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#059669"/>
+  </marker>
+  <marker id="arrowGreenDark" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#047857"/>
+  </marker>
+  <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+  </marker>
+  <marker id="arrowCyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#0891b2"/>
+  </marker>
+  <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+  </marker>
+  <marker id="arrowDarkBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#1d4ed8"/>
+  </marker>
+</defs>
+
+<rect x="0" y="0" width="1100" height="900" fill="#ffffff" rx="8"/>
+
+<!-- 标题 -->
+<text x="550" y="18" fill="#1e293b" font-size="20" font-weight="bold" text-anchor="middle">LKML Agent 架构 · 补丁与讨论分析</text>
+<text x="550" y="33" fill="#94a3b8" font-size="11" text-anchor="middle">LangGraph StateGraph · Patchset + Discussion Workflows</text>
+
+<!-- ===== 运行模式入口 ===== -->
+<rect x="25" y="45" width="1050" height="70" fill="#ffffff" rx="12" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="8,4"/>
+<rect x="30" y="50" width="160" height="22" fill="#f1f5f9" rx="4" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="110" y="65" fill="#475569" font-size="11" font-weight="600" text-anchor="middle">运行模式入口</text>
+
+<!-- patchset 模式 -->
+<rect x="150" y="55" width="180" height="50" fill="#059669" rx="8" filter="url(#shadow)"/>
+<text x="240" y="78" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">patchset</text>
+<text x="240" y="95" fill="#cbd5e1" font-size="10" text-anchor="middle">PatchsetWorkflow</text>
+
+<!-- discuss 模式 -->
+<rect x="370" y="55" width="180" height="50" fill="#047857" rx="8" filter="url(#shadow)"/>
+<text x="460" y="78" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">discuss</text>
+<text x="460" y="95" fill="#cbd5e1" font-size="10" text-anchor="middle">DiscussionWorkflow</text>
+
+<!-- all 模式 -->
+<rect x="590" y="55" width="180" height="50" fill="#065f46" rx="8" filter="url(#shadow)"/>
+<text x="680" y="78" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle">all</text>
+<text x="680" y="95" fill="#cbd5e1" font-size="10" text-anchor="middle">组合调用</text>
+
+<!-- 被调用标注 -->
+<rect x="850" y="55" width="180" height="50" fill="#ffffff" rx="8" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="940" y="78" fill="#7c3aed" font-size="12" font-weight="bold" text-anchor="middle">被 CGit 调用</text>
+<text x="940" y="95" fill="#94a3b8" font-size="9" text-anchor="middle">跨模块 incoming</text>
+
+<!-- ===== Patchset Workflow ===== -->
+<rect x="25" y="125" width="1050" height="300" fill="#ffffff" rx="12" stroke="#059669" stroke-width="1" stroke-dasharray="8,4"/>
+<rect x="30" y="130" width="220" height="22" fill="#f1f5f9" rx="4" stroke="#059669" stroke-width="0.5"/>
+<text x="140" y="145" fill="#059669" font-size="11" font-weight="600" text-anchor="middle">Patchset Workflow (LKMLAgentState)</text>
+
+<!-- State 字段框 -->
+<rect x="40" y="165" width="160" height="250" fill="#ffffff" rx="8" stroke="#059669" stroke-width="1" filter="url(#shadow)"/>
+<text x="120" y="182" fill="#059669" font-size="11" font-weight="bold" text-anchor="middle">State 字段</text>
+<text x="120" y="200" fill="#1e293b" font-size="9" text-anchor="middle">lkml_id</text>
+<text x="120" y="215" fill="#1e293b" font-size="9" text-anchor="middle">level</text>
+<text x="120" y="230" fill="#1e293b" font-size="9" text-anchor="middle">work_dir, cover_file, mbx_file</text>
+<text x="120" y="245" fill="#1e293b" font-size="9" text-anchor="middle">date, author, email, version</text>
+<text x="120" y="260" fill="#1e293b" font-size="9" text-anchor="middle">subject, web_url</text>
+<text x="120" y="275" fill="#1e293b" font-size="9" text-anchor="middle">content</text>
+<text x="120" y="290" fill="#1e293b" font-size="9" text-anchor="middle">summary (default: TODO)</text>
+<text x="120" y="305" fill="#1e293b" font-size="9" text-anchor="middle">analysis</text>
+<text x="120" y="320" fill="#1e293b" font-size="9" text-anchor="middle">verbose</text>
+
+<!-- 节点链横排 -->
+<!-- fetch_patch -->
+<rect x="220" y="165" width="140" height="60" fill="#059669" rx="8" filter="url(#shadow)"/>
+<text x="290" y="185" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">fetch_patch</text>
+<text x="290" y="200" fill="#cbd5e1" font-size="9" text-anchor="middle">lkml_id → work_dir</text>
+<text x="290" y="212" fill="#cbd5e1" font-size="8" text-anchor="middle">依赖: b4 am</text>
+
+<!-- parse_patch -->
+<rect x="370" y="165" width="140" height="60" fill="#059669" rx="8" filter="url(#shadow)"/>
+<text x="440" y="185" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">parse_patch</text>
+<text x="440" y="200" fill="#cbd5e1" font-size="9" text-anchor="middle">cover_file → subject, author</text>
+<text x="440" y="212" fill="#cbd5e1" font-size="8" text-anchor="middle">依赖: File I/O</text>
+
+<!-- generate_summary -->
+<rect x="520" y="165" width="160" height="60" fill="#059669" rx="8" filter="url(#shadow)"/>
+<text x="600" y="185" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">generate_summary</text>
+<text x="600" y="200" fill="#cbd5e1" font-size="9" text-anchor="middle">cover内容 → summary</text>
+<text x="600" y="212" fill="#cbd5e1" font-size="8" text-anchor="middle">依赖: ModelInference</text>
+
+<!-- analyze_patch -->
+<rect x="690" y="165" width="140" height="60" fill="#059669" rx="8" filter="url(#shadow)"/>
+<text x="760" y="185" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">analyze_patch</text>
+<text x="760" y="200" fill="#cbd5e1" font-size="9" text-anchor="middle">cover+mbx → analysis</text>
+<text x="760" y="212" fill="#cbd5e1" font-size="8" text-anchor="middle">仅 detail 模式</text>
+
+<!-- output_results -->
+<rect x="840" y="165" width="140" height="60" fill="#059669" rx="8" filter="url(#shadow)"/>
+<text x="910" y="185" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">output_results</text>
+<text x="910" y="200" fill="#cbd5e1" font-size="9" text-anchor="middle">summary, analysis → Markdown</text>
+<text x="910" y="212" fill="#cbd5e1" font-size="8" text-anchor="middle">依赖: format_text_for_markdown</text>
+
+<!-- 节点间箭头 -->
+<line x1="360" y1="195" x2="370" y2="195" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreen)"/>
+<line x1="510" y1="195" x2="520" y2="195" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreen)"/>
+<line x1="680" y1="195" x2="690" y2="195" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreen)"/>
+<line x1="830" y1="195" x2="840" y2="195" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+<!-- prompt 标注 -->
+<rect x="520" y="235" width="160" height="18" fill="#f1f5f9" rx="4" stroke="#059669" stroke-width="0.5"/>
+<text x="600" y="248" fill="#059669" font-size="8" text-anchor="middle">prompt="summary"</text>
+<rect x="690" y="235" width="140" height="18" fill="#f1f5f9" rx="4" stroke="#059669" stroke-width="0.5"/>
+<text x="760" y="248" fill="#059669" font-size="8" text-anchor="middle">prompt="analysis"</text>
+
+<!-- 缓存路径 -->
+<rect x="220" y="270" width="830" height="25" fill="#f1f5f9" rx="4" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="635" y="285" fill="#475569" font-size="9" text-anchor="middle">缓存路径: output/lkml/{lkml_id}/patchset/ → cover_file + mbx_file</text>
+
+<!-- END 标记 -->
+<circle cx="980" cy="195" r="12" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+<text x="980" y="199" fill="#059669" font-size="9" font-weight="bold" text-anchor="middle">END</text>
+<line x1="980" y1="195" x2="968" y2="195" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+<!-- ===== Discussion Workflow ===== -->
+<rect x="25" y="435" width="1050" height="300" fill="#ffffff" rx="12" stroke="#047857" stroke-width="1" stroke-dasharray="8,4"/>
+<rect x="30" y="440" width="260" height="22" fill="#f1f5f9" rx="4" stroke="#047857" stroke-width="0.5"/>
+<text x="160" y="455" fill="#047857" font-size="11" font-weight="600" text-anchor="middle">Discussion Workflow (DiscussionAgentState)</text>
+
+<!-- State 字段框 -->
+<rect x="40" y="475" width="160" height="250" fill="#ffffff" rx="8" stroke="#047857" stroke-width="1" filter="url(#shadow)"/>
+<text x="120" y="492" fill="#047857" font-size="11" font-weight="bold" text-anchor="middle">State 字段</text>
+<text x="120" y="510" fill="#1e293b" font-size="9" text-anchor="middle">lkml_id</text>
+<text x="120" y="525" fill="#1e293b" font-size="9" text-anchor="middle">level</text>
+<text x="120" y="540" fill="#1e293b" font-size="9" text-anchor="middle">work_dir, mbx_file</text>
+<text x="120" y="555" fill="#1e293b" font-size="9" text-anchor="middle">thread_emails (List[Dict])</text>
+<text x="120" y="570" fill="#1e293b" font-size="9" text-anchor="middle">subject, author, email, date</text>
+<text x="120" y="585" fill="#1e293b" font-size="9" text-anchor="middle">web_url</text>
+<text x="120" y="600" fill="#1e293b" font-size="9" text-anchor="middle">reply_count (int)</text>
+<text x="120" y="615" fill="#1e293b" font-size="9" text-anchor="middle">summary (default: TODO)</text>
+<text x="120" y="630" fill="#1e293b" font-size="9" text-anchor="middle">analysis</text>
+<text x="120" y="645" fill="#1e293b" font-size="9" text-anchor="middle">verbose</text>
+
+<!-- fetch_thread -->
+<rect x="220" y="475" width="140" height="60" fill="#047857" rx="8" filter="url(#shadow)"/>
+<text x="290" y="495" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">fetch_thread</text>
+<text x="290" y="510" fill="#cbd5e1" font-size="9" text-anchor="middle">lkml_id → work_dir, mbx_file</text>
+<text x="290" y="522" fill="#cbd5e1" font-size="8" text-anchor="middle">依赖: b4 mbox + curl+gzip</text>
+
+<!-- parse_thread -->
+<rect x="370" y="475" width="140" height="60" fill="#047857" rx="8" filter="url(#shadow)"/>
+<text x="440" y="495" fill="#ffffff" font-size="12" font-weight="bold" text-anchor="middle">parse_thread</text>
+<text x="440" y="510" fill="#cbd5e1" font-size="9" text-anchor="middle">mbx → thread_emails, subject</text>
+<text x="440" y="522" fill="#cbd5e1" font-size="8" text-anchor="middle">依赖: mailbox.mbox</text>
+
+<!-- generate_discussion_summary -->
+<rect x="520" y="475" width="195" height="60" fill="#047857" rx="8" filter="url(#shadow)"/>
+<text x="617" y="495" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">generate_discussion_summary</text>
+<text x="617" y="510" fill="#cbd5e1" font-size="9" text-anchor="middle">thread_emails → summary</text>
+<text x="617" y="522" fill="#cbd5e1" font-size="8" text-anchor="middle">依赖: ModelInference</text>
+
+<!-- analyze_discussion -->
+<rect x="725" y="475" width="155" height="60" fill="#047857" rx="8" filter="url(#shadow)"/>
+<text x="802" y="495" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">analyze_discussion</text>
+<text x="802" y="510" fill="#cbd5e1" font-size="9" text-anchor="middle">thread_emails → analysis</text>
+<text x="802" y="522" fill="#cbd5e1" font-size="8" text-anchor="middle">仅 detail 模式</text>
+
+<!-- output_discussion -->
+<rect x="890" y="475" width="140" height="60" fill="#047857" rx="8" filter="url(#shadow)"/>
+<text x="960" y="495" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">output_discussion</text>
+<text x="960" y="510" fill="#cbd5e1" font-size="9" text-anchor="middle">summary, analysis → Markdown</text>
+<text x="960" y="522" fill="#cbd5e1" font-size="8" text-anchor="middle">依赖: format_text_for_markdown</text>
+
+<!-- 节点间箭头 -->
+<line x1="360" y1="505" x2="370" y2="505" stroke="#047857" stroke-width="2" marker-end="url(#arrowGreenDark)"/>
+<line x1="510" y1="505" x2="520" y2="505" stroke="#047857" stroke-width="2" marker-end="url(#arrowGreenDark)"/>
+<line x1="715" y1="505" x2="725" y2="505" stroke="#047857" stroke-width="2" marker-end="url(#arrowGreenDark)"/>
+<line x1="880" y1="505" x2="890" y2="505" stroke="#047857" stroke-width="2" marker-end="url(#arrowGreenDark)"/>
+
+<!-- prompt 标注 -->
+<rect x="520" y="545" width="195" height="18" fill="#f1f5f9" rx="4" stroke="#047857" stroke-width="0.5"/>
+<text x="617" y="558" fill="#047857" font-size="8" text-anchor="middle">prompt="discussion_summary"</text>
+<rect x="725" y="545" width="155" height="18" fill="#f1f5f9" rx="4" stroke="#047857" stroke-width="0.5"/>
+<text x="802" y="558" fill="#047857" font-size="8" text-anchor="middle">prompt="discussion_analysis"</text>
+
+<!-- 缓存路径 -->
+<rect x="220" y="580" width="810" height="25" fill="#f1f5f9" rx="4" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="625" y="595" fill="#475569" font-size="9" text-anchor="middle">缓存路径: output/lkml/{lkml_id}/discussion/ → mbx_file + thread_emails</text>
+
+<!-- END 标记 -->
+<circle cx="1030" cy="505" r="12" fill="#ffffff" stroke="#047857" stroke-width="2"/>
+<text x="1030" y="509" fill="#047857" font-size="9" font-weight="bold" text-anchor="middle">END</text>
+
+<!-- ===== 外部依赖 ===== -->
+<rect x="25" y="750" width="1050" height="95" fill="#ffffff" rx="12" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="8,4"/>
+<rect x="30" y="755" width="160" height="22" fill="#f1f5f9" rx="4" stroke="#e2e8f0" stroke-width="0.5"/>
+<text x="110" y="770" fill="#475569" font-size="11" font-weight="600" text-anchor="middle">外部依赖</text>
+
+<!-- b4 -->
+<rect x="55" y="775" width="175" height="50" fill="#ffffff" rx="8" stroke="#059669" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="142" y="797" fill="#059669" font-size="12" font-weight="bold" text-anchor="middle">b4</text>
+<text x="142" y="815" fill="#94a3b8" font-size="9" text-anchor="middle">subprocess 调用</text>
+
+<!-- mailbox.mbox -->
+<rect x="255" y="775" width="175" height="50" fill="#ffffff" rx="8" stroke="#047857" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="342" y="797" fill="#047857" font-size="12" font-weight="bold" text-anchor="middle">mailbox.mbox</text>
+<text x="342" y="815" fill="#94a3b8" font-size="9" text-anchor="middle">Python stdlib</text>
+
+<!-- ModelInference -->
+<rect x="455" y="775" width="175" height="50" fill="#ffffff" rx="8" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="542" y="797" fill="#1d4ed8" font-size="12" font-weight="bold" text-anchor="middle">ModelInference</text>
+<text x="542" y="815" fill="#94a3b8" font-size="9" text-anchor="middle">AI 推理服务</text>
+
+<!-- format_text_for_markdown -->
+<rect x="655" y="775" width="200" height="50" fill="#ffffff" rx="8" stroke="#475569" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="755" y="797" fill="#475569" font-size="12" font-weight="bold" text-anchor="middle">format_text_for_markdown</text>
+<text x="755" y="815" fill="#94a3b8" font-size="9" text-anchor="middle">Markdown 格式化</text>
+
+<!-- lore.kernel.org -->
+<rect x="875" y="775" width="175" height="50" fill="#ffffff" rx="8" stroke="#059669" stroke-width="1.5" stroke-dasharray="6,3" filter="url(#shadow)"/>
+<text x="962" y="797" fill="#059669" font-size="12" font-weight="bold" text-anchor="middle">lore.kernel.org</text>
+<text x="962" y="815" fill="#94a3b8" font-size="9" text-anchor="middle">LKML 邮件归档</text>
+
+<!-- ===== 跨模块调用标注 ===== -->
+<!-- 被 CGit Agent 调用 -->
+<path d="M 850 80 C 870 68, 900 68, 920 80" stroke="#7c3aed" stroke-width="1.5" fill="none"/>
+<line x1="850" y1="80" x2="850" y2="55" stroke="#7c3aed" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrowPurple)"/>
+<text x="870" y="70" fill="#7c3aed" font-size="9" font-weight="600" text-anchor="middle">incoming</text>
+
+<!-- 被 Patchwork Agent 调用 -->
+<rect x="850" y="100" width="180" height="18" fill="#ffffff" rx="4" stroke="#0891b2" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="940" y="112" fill="#0891b2" font-size="9" font-weight="600" text-anchor="middle">被 Patchwork Agent 调用 (detail模式)</text>
+
+<!-- ===== Footer ===== -->
+<text x="550" y="870" fill="#94a3b8" font-size="9" text-anchor="middle">KDE Agent System · LangGraph + ModelScope · 2026</text>
+
+<!-- ===== 图例 ===== -->
+<rect x="850" y="830" width="220" height="60" fill="#ffffff" rx="8" stroke="#e2e8f0" stroke-width="1"/>
+<text x="960" y="845" fill="#1e293b" font-size="11" font-weight="bold" text-anchor="middle">Legend</text>
+<line x1="860" y1="858" x2="890" y2="858" stroke="#059669" stroke-width="1.5"/>
+<text x="895" y="862" fill="#1e293b" font-size="9" text-anchor="start">实线绿色 = Patchset 流程</text>
+<line x1="860" y1="872" x2="890" y2="872" stroke="#047857" stroke-width="1.5"/>
+<text x="895" y="876" fill="#1e293b" font-size="9" text-anchor="start">深绿实线 = Discussion 流程</text>
+
+</svg>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function showToast(msg, duration = 2000) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
+  }
+  function copySVG() {
+    const svg = document.getElementById('archSvg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    navigator.clipboard.writeText(svgData).then(() => showToast('✓ SVG 已复制到剪贴板')).catch(() => {
+      const ta = document.createElement('textarea'); ta.value = svgData;
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta); showToast('✓ SVG 已复制到剪贴板');
+    });
+  }
+  function exportPNG() {
+    const svg = document.getElementById('archSvg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    canvas.width = 1100 * 2; canvas.height = 900 * 2;
+    img.onload = function() {
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(function(blob) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'lkml-agent.png'; a.click();
+        URL.revokeObjectURL(a.href); URL.revokeObjectURL(url); showToast('✓ PNG 已下载');
+      }, 'image/png');
+    };
+    img.onerror = function() { showToast('⚠ PNG 导出失败'); URL.revokeObjectURL(url); };
+    img.src = url;
+  }
+  function exportPDF() {
+    const svg = document.getElementById('archSvg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const win = window.open('', '_blank');
+    win.document.write('<html><head><title>LKML Agent Architecture</title><style>body { margin: 0; background: #fff; } @media print { body { margin: 0; } }</style></head><body>' + svgData + '</body></html>');
+    win.document.close(); setTimeout(() => { win.print(); }, 500); showToast('✓ PDF 导出窗口已打开');
+  }
+</script>
+
+</body>
+</html>
