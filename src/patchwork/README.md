@@ -8,11 +8,11 @@ Patchwork 模块提供与 kernel.org Patchwork 系统的集成，用于获取和
 
 ### 整体架构图
 
-![Patchwork Integration Architecture](../diagrams/patchwork.svg)
+![Patchwork Integration Architecture](../diagrams/patchwork/patchwork.svg)
 
 **手绘风格架构图**：
 
-如需查看手绘风格的架构图，请打开 `../diagrams/patchwork.excalidraw.json` 文件：
+如需查看手绘风格的架构图，请打开 `../diagrams/patchwork/patchwork.excalidraw.json` 文件：
 
 1. 访问 https://excalidraw.com
 2. 点击 "Open" 或拖放文件

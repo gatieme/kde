@@ -1,0 +1,59 @@
+{
+  "canvas": { "width": 1210, "height": 1138, "fps": 20, "frames": 41 },
+  "signature": "@岚叔",
+  "title": {
+    "prefix": "The internals of",
+    "highlight": "Patchwork",
+    "subtitle": "Series 批量分析 · ThreadPool · shell + LangGraph"
+  },
+  "input_title": "CLI Entry · --patchwork",
+  "inputs": [
+    { "label": "project", "icon": "folder", "color": "#7ee3d6" },
+    { "label": "date", "icon": "file", "color": "#f4b64e" },
+    { "label": "series", "icon": "file", "color": "#22c86f" },
+    { "label": "batch", "icon": "folder", "color": "#ff7ab6" }
+  ],
+  "core": {
+    "title": "Patchwork Pipeline",
+    "subtitle": "(3 shell scripts · get → filter → batch)",
+    "cards": [
+      { "title": "get_project", "body": "项目列表\nprojects_list.md", "icon": "scan" },
+      { "title": "get_series", "body": "按项目+日期\n拉取 series", "icon": "shield" },
+      { "title": "batch", "body": "ThreadPool\n批量处理", "icon": "package" }
+    ]
+  },
+  "decision": { "title": "Filtered?", "body": "日期过滤\nseries 筛选" },
+  "output": { "label": "Report", "icon": "file" },
+  "loop_label": "project → series → filter → process → aggregate → output",
+  "retry_label": "API 限流 / ThreadPool 重试",
+  "left_panel": {
+    "title": "Sources",
+    "badge": "read only",
+    "cards": [
+      { "title": "patchwork.API", "body": "kernel.org\nREST API", "icon": "folder" },
+      { "title": "project", "body": "项目列表\n列表过滤", "icon": "db" },
+      { "title": "date", "body": "日期范围\nseries 筛选", "icon": "hash" }
+    ]
+  },
+  "center_panel": {
+    "title": "State + ThreadPool",
+    "subtitle": "(patchwork/patchwork_agent.py)",
+    "footer": "ThreadPool · 缓存",
+    "cards": [
+      { "title": "Projects", "body": "项目列表", "icon": "db" },
+      { "title": "Series", "body": "补丁序列\n列表", "icon": "file" },
+      { "title": "Filter", "body": "日期\n过滤", "icon": "hash" },
+      { "title": "ThreadPool", "body": "并发\n处理", "icon": "shield" }
+    ]
+  },
+  "right_panel": {
+    "title": "Output Cache",
+    "incoming_label": "Aggregate",
+    "return_label": "Reusable",
+    "cards": [
+      { "title": "series", "body": "output/patchwork\nseries 缓存", "icon": "package" },
+      { "title": ".md", "body": "聚合报告\n批量输出", "icon": "file" },
+      { "title": "Cache", "body": "去重\nhash 缓存", "icon": "db" }
+    ]
+  }
+}

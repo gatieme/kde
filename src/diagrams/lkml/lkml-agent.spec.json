@@ -1,0 +1,59 @@
+{
+  "canvas": { "width": 1210, "height": 1138, "fps": 20, "frames": 41 },
+  "signature": "@岚叔",
+  "title": {
+    "prefix": "The internals of",
+    "highlight": "LKML Agent",
+    "subtitle": "补丁/讨论分析 · b4 am + mbox · LangGraph state workflow"
+  },
+  "input_title": "CLI Entry · --lkml",
+  "inputs": [
+    { "label": "msg-id", "icon": "folder", "color": "#22c86f" },
+    { "label": "lore", "icon": "file", "color": "#7ee3d6" },
+    { "label": "b4", "icon": "file", "color": "#f4b64e" },
+    { "label": "--level", "icon": "folder", "color": "#ff7ab6" }
+  ],
+  "core": {
+    "title": "LKML Pipeline",
+    "subtitle": "(fetch → parse → summary → analyze → output)",
+    "cards": [
+      { "title": "Fetch", "body": "b4 am 拉取\nmbox 进度条", "icon": "scan" },
+      { "title": "Analyze", "body": "AI 摘要 300字\ndetail 级分析", "icon": "shield" },
+      { "title": "Output", "body": "Markdown 表格\n.cover .mbx", "icon": "package" }
+    ]
+  },
+  "decision": { "title": "Cached?", "body": "命中即跳过\n否则 AI 推理" },
+  "output": { "label": "Report", "icon": "file" },
+  "loop_label": "fetch → parse → summary → analyze → output → cache",
+  "retry_label": "b4 超时 / 模型 fallback",
+  "left_panel": {
+    "title": "Sources",
+    "badge": "read only",
+    "cards": [
+      { "title": "lore.kernel.org", "body": "LKML 邮件归档\nb4 am 拉取", "icon": "folder" },
+      { "title": "b4 tool", "body": "mbox 格式\n补丁应用", "icon": "file" },
+      { "title": "--level", "body": "simple / detail\nall 模式", "icon": "hash" }
+    ]
+  },
+  "center_panel": {
+    "title": "State Fields",
+    "subtitle": "(lkml/lkml_agent.py)",
+    "footer": "LangGraph · State",
+    "cards": [
+      { "title": "State", "body": "lkml_id\nlevel", "icon": "db" },
+      { "title": "Parse", "body": "subject\nauthor", "icon": "file" },
+      { "title": "Summary", "body": "300字\n摘要", "icon": "hash" },
+      { "title": "Analysis", "body": "detail\n分析", "icon": "shield" }
+    ]
+  },
+  "right_panel": {
+    "title": "Output Cache",
+    "incoming_label": "Aggregate",
+    "return_label": "Reusable",
+    "cards": [
+      { "title": ".cover", "body": "补丁封面\n文件", "icon": "package" },
+      { "title": ".mbx", "body": "mbox\n邮件归档", "icon": "file" },
+      { "title": ".md", "body": "分析报告\n表格", "icon": "file" }
+    ]
+  }
+}

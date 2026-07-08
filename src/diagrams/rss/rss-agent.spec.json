@@ -1,0 +1,59 @@
+{
+  "canvas": { "width": 1210, "height": 1138, "fps": 20, "frames": 41 },
+  "signature": "@岚叔",
+  "title": {
+    "prefix": "The internals of",
+    "highlight": "RSS Agent",
+    "subtitle": "新闻源分析 · Playwright + 反爬检测 · LangGraph"
+  },
+  "input_title": "CLI Entry · --rss",
+  "inputs": [
+    { "label": "RSS", "icon": "folder", "color": "#22c86f" },
+    { "label": "Article", "icon": "file", "color": "#ff7ab6" },
+    { "label": "Browser", "icon": "file", "color": "#7ee3d6" },
+    { "label": "--level", "icon": "folder", "color": "#f4b64e" }
+  ],
+  "core": {
+    "title": "RSS Pipeline",
+    "subtitle": "(detect → fetch → analyze → summary → output)",
+    "cards": [
+      { "title": "Detect", "body": "Cloudflare\nTurnstile 检测", "icon": "scan" },
+      { "title": "Analyze", "body": "Playwright 抓取\n内核关键词", "icon": "shield" },
+      { "title": "Output", "body": "AI 分类摘要\nMarkdown", "icon": "package" }
+    ]
+  },
+  "decision": { "title": "Protected?", "body": "有反爬\n需浏览器" },
+  "output": { "label": "Report", "icon": "file" },
+  "loop_label": "detect → fetch → content → analyze → summary → output",
+  "retry_label": "反爬拦截 / Playwright 重试",
+  "left_panel": {
+    "title": "News Sources",
+    "badge": "read only",
+    "cards": [
+      { "title": "Phoronix", "body": "Linux 硬件\n内核新闻", "icon": "folder" },
+      { "title": "LWN", "body": "内核周报\n深度文章", "icon": "file" },
+      { "title": "Multi-src", "body": "feedparser\n多源聚合", "icon": "file" }
+    ]
+  },
+  "center_panel": {
+    "title": "Anti-Crawler + State",
+    "subtitle": "(rss/rss_agent.py)",
+    "footer": "Playwright · httpx",
+    "cards": [
+      { "title": "Browser", "body": "真实指纹\n鼠标滚动", "icon": "shield" },
+      { "title": "Cookie", "body": "localStorage\n多步导航", "icon": "db" },
+      { "title": "State", "body": "articles\nsummaries", "icon": "hash" },
+      { "title": "Protect", "body": "protection\n_info", "icon": "file" }
+    ]
+  },
+  "right_panel": {
+    "title": "Output Cache",
+    "incoming_label": "Aggregate",
+    "return_label": "Reusable",
+    "cards": [
+      { "title": ".txt", "body": "MD5 hash\n文章缓存", "icon": "package" },
+      { "title": ".md", "body": "新闻摘要\n分类", "icon": "file" },
+      { "title": "Classify", "body": "内核相关\n补丁链接", "icon": "db" }
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "canvas": { "width": 1210, "height": 1138, "fps": 20, "frames": 41 },
+  "signature": "@岚叔",
+  "title": {
+    "prefix": "The internals of",
+    "highlight": "CGit Agent",
+    "subtitle": "Commit 分析 · 跨模块联动 LKML · LangGraph"
+  },
+  "input_title": "CLI Entry · --cgit",
+  "inputs": [
+    { "label": "commit", "icon": "folder", "color": "#bd54d3" },
+    { "label": "kernel", "icon": "file", "color": "#7ee3d6" },
+    { "label": "wget", "icon": "file", "color": "#f4b64e" },
+    { "label": "--level", "icon": "folder", "color": "#22c86f" }
+  ],
+  "core": {
+    "title": "CGit Pipeline",
+    "subtitle": "(fetch → parse → analyze → patchset → output)",
+    "cards": [
+      { "title": "Fetch", "body": "wget 抓取\n作者/日期/主题", "icon": "scan" },
+      { "title": "Analyze", "body": "AI 摘要\nAI 分析", "icon": "shield" },
+      { "title": "Link", "body": "提取 Link\n联动 LKML", "icon": "package" }
+    ]
+  },
+  "decision": { "title": "Has Link?", "body": "有 patchset\n递归调 LKML" },
+  "output": { "label": "Report", "icon": "file" },
+  "loop_label": "fetch → parse → analyze → patchset → lkml → output",
+  "retry_label": "wget 超时 / 无 Link 跳过",
+  "left_panel": {
+    "title": "Sources",
+    "badge": "read only",
+    "cards": [
+      { "title": "git.kernel.org", "body": "CGit commit\n源", "icon": "folder" },
+      { "title": "wget", "body": "HTTP 抓取\n超时控制", "icon": "file" },
+      { "title": "commit-id", "body": "输入参数\nSHA hash", "icon": "hash" }
+    ]
+  },
+  "center_panel": {
+    "title": "State + LKML Link",
+    "subtitle": "(cgit/cgit_agent.py)",
+    "footer": "LangGraph · 递归联动",
+    "cards": [
+      { "title": "State", "body": "commit_id\ncontent", "icon": "db" },
+      { "title": "Summary", "body": "AI 摘要", "icon": "file" },
+      { "title": "Patchset", "body": "Link regex\n提取", "icon": "hash" },
+      { "title": "LKML", "body": "递归调用\n联动", "icon": "shield" }
+    ]
+  },
+  "right_panel": {
+    "title": "Output Cache",
+    "incoming_label": "Aggregate",
+    "return_label": "Reusable",
+    "cards": [
+      { "title": "commit", "body": "output/cgit\ncommit 文件", "icon": "package" },
+      { "title": ".md", "body": "分析表格\n输出", "icon": "file" },
+      { "title": "LKML", "body": "联动报告\npatchset", "icon": "db" }
+    ]
+  }
+}

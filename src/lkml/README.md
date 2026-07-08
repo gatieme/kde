@@ -12,13 +12,13 @@ LKML Agent 是一个专门用于分析 Linux 内核邮件列表（LKML）的智�
 
 ### 整体架构图
 
-![LKML Agent Architecture](../diagrams/lkml-agent.svg)
+![LKML Agent Architecture](../diagrams/lkml/lkml-agent.svg)
 
 **手绘风格架构图**：
 
 手绘风格架构图：
 
-![Hand-drawn LKML Agent](diagrams/lkml-agent.excalidraw.svg)
+![Hand-drawn LKML Agent](../diagrams/lkml/lkml-agent.excalidraw.svg)
 
 要查看可编辑的 Excalidraw 原始文件，请打开：
 

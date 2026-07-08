@@ -94,6 +94,11 @@ kde/
 │   ├── test/                   # 测试套件
 │   ├── output/                 # 统一缓存目录
 │   └── diagrams/               # 架构图
+│       ├── lkml/               # LKML Agent 架构图
+│       ├── rss/                # RSS Agent 架构图
+│       ├── cgit/               # CGit Agent 架构图
+│       ├── patchwork/          # Patchwork 架构图
+│       └── (系统级图)          # architecture / kde-overview / cache-system 等
 └── README.md                   # 本文件
 ```
 

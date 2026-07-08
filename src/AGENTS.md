@@ -47,8 +47,11 @@ kde/
 │   ├── test_*.sh      # Per-agent test scripts
 │   └── test_*.py      # Python unit tests
 └── diagrams/           # Architecture diagrams
-    ├── architecture.svg
-    └── architecture.excalidraw.*
+    ├── lkml/           # LKML Agent diagrams
+    ├── rss/            # RSS Agent diagrams
+    ├── cgit/           # CGit Agent diagrams
+    ├── patchwork/      # Patchwork diagrams
+    └── (root)          # System-level: architecture, kde-overview, cache-system, model-inference, test-suite
 ```
 
 ## WHERE TO LOOK

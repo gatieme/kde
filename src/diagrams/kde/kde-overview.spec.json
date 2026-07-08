@@ -1,0 +1,138 @@
+{
+  "canvas": {
+    "width": 1210,
+    "height": 1138,
+    "fps": 20,
+    "frames": 41
+  },
+  "signature": "@岚叔",
+  "title": {
+    "prefix": "The internals of",
+    "highlight": "KDE Agents",
+    "subtitle": "Kernel Development Explorer · LangGraph + ModelScope 多 Agent 系统"
+  },
+  "input_title": "CLI Entry · kde.py",
+  "inputs": [
+    {
+      "label": "--lkml",
+      "icon": "folder",
+      "color": "#22c86f"
+    },
+    {
+      "label": "--rss",
+      "icon": "file",
+      "color": "#ff7ab6"
+    },
+    {
+      "label": "--cgit",
+      "icon": "file",
+      "color": "#bd54d3"
+    },
+    {
+      "label": "--patchwork",
+      "icon": "folder",
+      "color": "#7ee3d6"
+    }
+  ],
+  "core": {
+    "title": "Agent Pipeline",
+    "subtitle": "(LangGraph state workflow · 4 agents 共用)",
+    "cards": [
+      {
+        "title": "Fetch",
+        "body": "lore/git/RSS\nPlaywright+httpx",
+        "icon": "scan"
+      },
+      {
+        "title": "Analyze",
+        "body": "Qwen3-235B\n4 prompt 模板",
+        "icon": "shield"
+      },
+      {
+        "title": "Output",
+        "body": "Markdown\nhash 缓存",
+        "icon": "package"
+      }
+    ]
+  },
+  "decision": {
+    "title": "Cached?",
+    "body": "命中即跳过\n否则调用模型"
+  },
+  "output": {
+    "label": "Report",
+    "icon": "file"
+  },
+  "loop_label": "fetch → parse → analyze → output → cache",
+  "retry_label": "反爬检测 / 模型 fallback",
+  "left_panel": {
+    "title": "External Sources",
+    "badge": "read only",
+    "cards": [
+      {
+        "title": "lore.kernel.org",
+        "body": "LKML 邮件归档\nb4 am / mbox",
+        "icon": "folder"
+      },
+      {
+        "title": "kernel.org",
+        "body": "CGit commits\nPatchwork API",
+        "icon": "db"
+      },
+      {
+        "title": "Phoronix/LWN",
+        "body": "RSS 新闻源\nPlaywright 抓取",
+        "icon": "file"
+      }
+    ]
+  },
+  "center_panel": {
+    "title": "Shared Services",
+    "subtitle": "(Model + Utils · Layer 3)",
+    "footer": "ModelScope · Qwen3-235B",
+    "cards": [
+      {
+        "title": "ModelRequest",
+        "body": "4 种\nprompt 模板",
+        "icon": "file"
+      },
+      {
+        "title": "ModelInfer",
+        "body": "流式推理\n+ fallback",
+        "icon": "shield"
+      },
+      {
+        "title": "formatter",
+        "body": "标点+空格\n清洗",
+        "icon": "hash"
+      },
+      {
+        "title": "fetcher",
+        "body": "requests\nhttpx 抓取",
+        "icon": "db"
+      }
+    ]
+  },
+  "right_panel": {
+    "title": "Output Cache",
+    "incoming_label": "Aggregate",
+    "return_label": "Reusable",
+    "cards": [
+      {
+        "title": "LKML",
+        "body": ".cover .mbx\n补丁归档",
+        "icon": "package"
+      },
+      {
+        "title": "RSS",
+        "body": ".txt\n新闻摘要",
+        "icon": "file"
+      },
+      {
+        "title": "CGit / PW",
+        "body": "commit\nseries 文件",
+        "icon": "db"
+      }
+    ]
+  }
+}

@@ -8,13 +8,13 @@ CGit Agent 是一个专门用于分析 Linux 内核 git commit 的智能工具�
 
 ### 整体架构图
 
-![CGit Agent Architecture](../diagrams/cgit-agent.svg)
+![CGit Agent Architecture](../diagrams/cgit/cgit-agent.svg)
 
 **手绘风格架构图**：
 
 手绘风格架构图：
 
-![Hand-drawn CGit Agent](diagrams/cgit-agent.excalidraw.svg)
+![Hand-drawn CGit Agent](../diagrams/cgit/cgit-agent.excalidraw.svg)
 
 要查看可编辑的 Excalidraw 原始文件，请打开：
 
